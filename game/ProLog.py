@@ -65,6 +65,7 @@ class LeanCoP(AbstractGame):
     def make_image(self,state_index):
         "Visszaadja az adott állapotot. Ez az amit a GNN-nek kell kezelnie."
         "leancop_ml/montecarlo.py/row:174 helyen lévő data formátumú kellene."
+        return self.gnnInput
 
 
 problem = "leancop/pelletier21.p"
