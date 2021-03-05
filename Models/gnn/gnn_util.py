@@ -151,8 +151,10 @@ def prolog_to_str(x):
         else: return x
     else: return str(x)
 
-def input2graph(prolog, curr_lit, all_goals, path, actions):
+def input2graph(prolog, gnn_input):
+    curr_lit, path, all_goals, ext_clauses, ext_mask, _ext_perm = gnn_input
     graph = TermGraph(PrologDecoder(prolog))
+    
     graph.add_clause([curr_lit], 0)
     mask = [0]
     graph.add_clause(all_goals, 1)
@@ -161,50 +163,11 @@ def input2graph(prolog, curr_lit, all_goals, path, actions):
         graph.add_clause([p], 2)
         mask += [0]
     graph.ini_var = 3
-    ext_axioms, red_axioms, para_axioms = actions
-    for axiom in ext_axioms:
+    for axiom in ext_clauses:
         graph.reset_vars()
         graph.add_clause(axiom, 3)
-        mask += [1] + [0] * (len(axiom)-1)
-    for axiom in red_axioms:
-        graph.reset_vars()
-        graph.add_clause(axiom, 4)
-        mask += [1] + [0] * (len(axiom)-1)
-    for axiom in para_axioms:
-        graph.reset_vars()
-        graph.add_clause(axiom, 5)
-        mask += [1] + [0] * (len(axiom)-1)
+    mask += ext_mask
     data = graph.export_indices()
     data = GraphData(data)
     data.axiom_mask = mask
     return data
-
-def input2graph_orig(prolog, curr_lit, all_goals, path, actions):
-    graph = TermGraph(PrologDecoder(prolog))
-    graph.add_clause(all_goals, 0)
-    mask = [0] * len(all_goals)
-    for p in path:
-        graph.add_clause([p], 1)
-        mask += [0]
-    graph.ini_var = 3
-    ext_axioms, red_axioms, para_axioms = actions
-    for axiom in ext_axioms:
-        graph.reset_vars()
-        graph.add_clause(axiom, 2)
-        mask += [1] + [0] * (len(axiom)-1)
-    for axiom in red_axioms:
-        graph.reset_vars()
-        graph.add_clause(axiom, 2)
-        mask += [1] + [0] * (len(axiom)-1)
-    for axiom in para_axioms:
-        graph.reset_vars()
-        graph.add_clause(axiom, 2)
-        mask += [1] + [0] * (len(axiom)-1)
-    data = graph.export_indices()
-    data = GraphData(data)
-    data.axiom_mask = mask
-    return data
-
-        
-
-
