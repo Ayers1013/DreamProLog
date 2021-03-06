@@ -1,10 +1,10 @@
 from typing import List
 
-from game import Action, AbstractGame
-from gym_wrappers import ScalingObservationWrapper
+#from game import Action#, AbstractGame
+#from gym_wrappers import ScalingObservationWrapper
 import pyswip
 
-class LeanCoP(AbstractGame):
+class LeanCoP:
     def __init__(self,problem):
 
         self.small_reward = 0.01 # TODO
@@ -58,7 +58,7 @@ class LeanCoP(AbstractGame):
         "Találtunk-e megoldást?"
         return a.result != 0
 
-    def legal_actions(self)->List[Action]:
+    def legal_actions(self):
         "Visszaadja egy adott álapotban lévő lehetséges lépéseket."
         return self.actions # TODO agree on adequate format
     

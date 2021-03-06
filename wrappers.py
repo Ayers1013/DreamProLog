@@ -120,6 +120,8 @@ class Atari:
     return self._env.render(mode)
 
 
+
+
 class CollectDataset:
 
   def __init__(self, env, callbacks=None, precision=32):
