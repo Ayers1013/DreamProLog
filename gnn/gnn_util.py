@@ -171,3 +171,4 @@ def input2graph(prolog, gnn_input):
     data = GraphData(data)
     data.axiom_mask = mask
     return data
+ 
