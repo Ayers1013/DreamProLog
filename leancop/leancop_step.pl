@@ -30,6 +30,18 @@
 :- [leancop21_swi]. % load program for asserting clauses
 :- ensure_loaded(embed).
 
+init_python(File, Settings, GnnInput, SimpleFeatures, Result):-
+    init(File, Settings, State),
+    state2gnnInput(State, GnnInput),
+    simple_features(State, SimpleFeatures),
+    State = state(_, _Actions, Result).
+
+step_python(ActionIndex, GnnInput, SimpleFeatures, Result):-
+    step(ActionIndex, State),
+    state2gnnInput(State, GnnInput),
+    simple_features(State, SimpleFeatures),
+    State = state(_, _Actions, Result).
+
 
 init(File):-
     Settings = [conj,nodef,comp(10),

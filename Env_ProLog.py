@@ -1,5 +1,6 @@
 import pyswip
 import threading
+import sys
 
 #import gym
 import numpy as np
@@ -21,15 +22,14 @@ class ProLog:
         with self.LOCK:
             self.prolog = pyswip.Prolog()
         self.prolog.consult("leancop/leancop_step.pl")
-        settings = "[conj, nodef, verbose, print_proof]"
+        self.settings = "[conj, nodef, verbose, print_proof]"
         problem=next(self.problems)
-        query = 'init("{}",{},state(Tableau, Actions, Result)), state2gnnInput(state(Tableau, Actions, Result),GnnInput)'.format(problem, settings)
+        query = 'init_python("{}",{},GnnInput, SimpleFeatures, Result)'.format(problem, self.settings)
         print("Query:\n   ", query, "\n")
-        result = list(self.prolog.query(query))[0]        
-        self.tableau = result["Tableau"]
-        self.actions = result["Actions"]
+        result = list(self.prolog.query(query))[0]
         self.result = result["Result"]
         self.gnnInput = result["GnnInput"]
+        self.simple_features = result["SimpleFeatures"]
 
         self.ext_action_size = len(self.gnnInput[4])
 
@@ -49,20 +49,16 @@ class ProLog:
     
     def step(self,action):
         #TODO output obs,reward,done, info
-        query = 'step({},state(Tableau, Actions, Result)), writeln(result-Result), !, state2gnnInput(state(Tableau, Actions, Result),GnnInput)'.format(action)
+        query = 'step_python({}, GnnInput, SimpleFeatures, Result)'.format(action)
         print("Query:\n   ", query, "\n")
         result = list(self.prolog.query(query))
         if len(result) == 0:
-            self.tableau = "failure"
-            self.actions = []
             self.result=-1
             reward = -1
         else:
-            print(result[0])
-            self.tableau = result[0]["Tableau"]
-            self.actions = result[0]["Actions"]
             self.result = result[0]["Result"]
             self.gnnInput = result[0]["GnnInput"]
+            self.simple_features = result[0]["SimpleFeatures"]
             if self.result == -1:
                 reward = -self.small_reward
             elif self.result == 1:
@@ -80,16 +76,14 @@ class ProLog:
             self.prolog=pyswip.Prolog()
 
         
-        self.prolog.consult("leancop/leancop_step.pl")
-        settings = "[conj, nodef, verbose, print_proof]"
+        # self.prolog.consult("leancop/leancop_step.pl") # TODO I think we don't need to reconsult
         problem=next(self.problems)
-        query = 'init("{}",{},state(Tableau, Actions, Result)), state2gnnInput(state(Tableau, Actions, Result),GnnInput)'.format(problem, settings)
+        query = 'init_python("{}",{},GnnInput, SimpleFeatures, Result)'.format(problem, self.settings)
         print("Query:\n   ", query, "\n")
         result = list(self.prolog.query(query))[0]        
-        self.tableau = result["Tableau"]
-        self.actions = result["Actions"]
         self.result = result["Result"]
         self.gnnInput = result["GnnInput"]
+        self.simple_features = result[0]["SimpleFeatures"]
 
         self.ext_action_size = len(self.gnnInput[4])
 
@@ -101,11 +95,11 @@ class ProLog:
         return self.result != 0
 
     def legal_actions(self):
-        return self.actions # TODO agree on adequate format
+        return None # TODO extract from self.gnnInput
     
     def make_image(self):
         return self.gnnInput
 
     def get_features(self):
         #Returns the features 
-        return None
+        return self.simple_features

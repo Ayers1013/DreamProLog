@@ -1,3 +1,5 @@
+:- use_module(library(assoc)).
+
 :- ensure_loaded(leancop_step).
 
 goals_length(State, L):-
@@ -10,21 +12,40 @@ goals_size(State, S):-
     sumlist(Sizes, S).
 
 
+simple_features(StateOrig, Features):-
+    copy_term(StateOrig, State),
 
-%% We do: number of goals, total symbol size of all goals, maximum goal size, maximum goal depth, length of the active path, number of current variable instantiations, and the two most common symbols and their frequencies. Some of the we added after observing that the learning can lead it astray - e.g. I vividly remember why we added the last two after watching deeper and deeper repetitions of the same rule.
+    State=state(Tableau, _Actions, _Result),
+    tab_comp(goal, Tableau, Goal),
+    tab_comp(path, Tableau, Path),
+    tab_comp(todos, Tableau, Todos),
+    numbervars([Goal, Path, Todos], 1000, _),
 
-%% Exact code:
-%% (* 10 artificial features *)
-%% let global_features maxf st =
-%%   let goals_length = goals_length st in
-%%   let goals_size = goals_size st in
-%%   let goals_max = fold_goals (fun sf l -> max sf (lit_size (fst st.sub) 0 l)) 0 st in
-%%   let path_len = List.length st.path in
-%%   let sub_len = snd st.sub in
-%%   let max_depth = fold_goals (fun sf l -> max sf (lit_depth (fst st.sub) l)) 0 st in
-%%   let ((mk1, mv1), (mk2, mv2)) = most_common (fold_goals (update_freq_lit (fst st.sub)) Im.empty st) in
-%%   [(maxf+1,goals_length); (maxf+2,goals_size); (maxf+3,goals_max); (maxf+4,path_len); (maxf+5, sub_len); (maxf+6, max_depth); (maxf+7, mk1); (maxf
-%% +8, mv1); (maxf+9, mk2); (maxf+10, mv2)];;
+    goals_list(Todos, [Goal], AllGoals),
+    length(Path, PathLen),
+    length(AllGoals, NumGoals),
+
+    goalStats(AllGoals, GoalsSymbolSize, MaxGoalSize, MaxGoalDepth, _TopSymbol1,  _TopSymbol2, TopFrequency1, TopFrequency2),
+    varStats(AllGoals, NumVar, NumVarOcc, NumVarOneOcc, NumVarMoreOcc, MostOcc, LeastOcc),
+    action_count_total(State, ACT),
+
+    Features = [
+        NumGoals,
+		GoalsSymbolSize,
+		MaxGoalSize,
+		MaxGoalDepth,
+		PathLen,
+		TopFrequency1,
+		TopFrequency2,
+        ACT,
+        NumVar,
+        NumVarOcc,
+        NumVarOneOcc,
+        NumVarMoreOcc,
+        MostOcc,
+        LeastOcc
+    ].
+
 
 %% EmbType in [both, state_only]
 logic_embed(StateOrig,FHash,EmbType, EmbStateP,EmbStateV,EmbActions):-
@@ -289,3 +310,46 @@ actions2Clauses(Actions, Clauses, Mask, Permutation):-
                 sum_list(Prefix, P)
             ), Permutation
            ).
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%                                                                                                                                                                     
+
+top_two_symbols(TermList, TopSymbol1, TopSymbol2, TopFrequency1, TopFrequency2, TopHash1, TopHash2):-
+    symbol_frequencies(TermList, Assoc),
+    assoc_to_list(Assoc, Pairs),
+    find_greatest_values(Pairs, xxx, xxx, 0, 0, TopSymbol1, TopSymbol2, TopFrequency1, TopFrequency2),
+    term_hash(TopSymbol1, TopHash1),
+    term_hash(TopSymbol2, TopHash2).
+
+find_greatest_values([], S1, S2, F1, F2, S1, S2, F1, F2).
+find_greatest_values([S-F|Pairs], AccS1, AccS2, AccF1, AccF2, S1, S2, F1, F2):-
+    ( F > AccF1 -> find_greatest_values(Pairs, S, AccS1, F, AccF1, S1, S2, F1, F2)
+    ; F > AccF2 -> find_greatest_values(Pairs, AccS1, S, AccF1, F, S1, S2, F1, F2)
+    ; find_greatest_values(Pairs, AccS1, AccS2, AccF1, AccF2, S1, S2, F1, F2)
+    ).
+
+symbol_frequencies(TermList, Assoc):-
+    empty_assoc(Assoc0),
+    symbol_frequencies2_list(TermList, Assoc0, Assoc).
+
+symbol_frequencies2(Term, Assoc0, Assoc):-
+    ( var(Term) -> Assoc = Assoc0
+    ; Term =.. ['$VAR'|_] -> Assoc = Assoc0
+    ; atomic(Term) -> bag_insert(Term, Assoc0, Assoc)
+    ; Term =.. [H|T],
+      bag_insert(H, Assoc0, Assoc1),
+      symbol_frequencies2_list(T, Assoc1, Assoc)
+    ).
+
+symbol_frequencies2_list([], Assoc, Assoc).
+symbol_frequencies2_list([L|Ls], Assoc0, Assoc):-
+    symbol_frequencies2(L, Assoc0, Assoc1),
+    symbol_frequencies2_list(Ls, Assoc1, Assoc).
+
+bag_insert(X,In,Out):-
+    (get_assoc(X, In, V) ->
+     V1 is V + 1
+    ;
+     V1 is 1
+     ),
+    put_assoc(X, In, V1, Out).
