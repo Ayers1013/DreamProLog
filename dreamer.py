@@ -166,6 +166,7 @@ def make_dataset(episodes, config):
 
 def make_env(config, logger, mode, train_eps, eval_eps):
   suite, task = config.task.split('_', 1)
+  print("Suite: "+suite)
   if suite == 'dmc':
     env = wrappers.DeepMindControl(task, config.action_repeat, config.size)
     env = wrappers.NormalizeActions(env)
@@ -177,6 +178,9 @@ def make_env(config, logger, mode, train_eps, eval_eps):
         sticky_actions=True,
         all_actions=True)
     env = wrappers.OneHotAction(env)
+  elif suite == 'prolog':
+    from Env_ProLog import ProLog
+    env=ProLog()
   else:
     raise NotImplementedError(suite)
   env = wrappers.TimeLimit(env, config.time_limit)
@@ -223,12 +227,13 @@ def main(logdir, config):
   config.log_every //= config.action_repeat
   config.time_limit //= config.action_repeat
   config.act = getattr(tf.nn, config.act)
-
+  
   if config.debug:
     tf.config.experimental_run_functions_eagerly(True)
   if config.gpu_growth:
     message = 'No GPU found. To actually train on CPU remove this assert.'
-    assert tf.config.experimental.list_physical_devices('GPU'), message
+    #TODO
+    #assert tf.config.experimental.list_physical_devices('GPU'), message
     for gpu in tf.config.experimental.list_physical_devices('GPU'):
       tf.config.experimental.set_memory_growth(gpu, True)
   assert config.precision in (16, 32), config.precision

@@ -224,3 +224,6 @@ debug:
   train_steps: 1
   batch_size: 10
   batch_length: 20
+
+prolog:
+  task: 'prolog_void'

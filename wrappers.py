@@ -159,6 +159,8 @@ class CollectDataset:
     return obs
 
   def _convert(self, value):
+    #TODO 
+
     value = np.array(value)
     if np.issubdtype(value.dtype, np.floating):
       dtype = {16: np.float16, 32: np.float32, 64: np.float64}[self._precision]
@@ -167,6 +169,8 @@ class CollectDataset:
     elif np.issubdtype(value.dtype, np.uint8):
       dtype = np.uint8
     else:
+      #TODO gnnInput
+      return value
       raise NotImplementedError(value.dtype)
     return value.astype(dtype)
 
