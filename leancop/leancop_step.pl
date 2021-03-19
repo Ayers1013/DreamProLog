@@ -65,9 +65,9 @@ init_pure(File,Settings,NewState):-
     %% AxPath='',
     file_directory_name(File, AxPath0),
     name(AxPath0, N0), name("/", N1), append(N0, N1, N), name(AxPath, N),
-    format("Trying to open file ~w...\n", [File]),
+    % format("Trying to open file ~w...\n", [File]),
     leancop_tptp2(File,AxPath,AxNames,Problem,Conj), !,
-    format("Successfully opened file ~w\n", [File]),
+    % format("Successfully opened file ~w\n", [File]),
     ( Conj\=[] -> Problem1=Problem ; Problem1=(~Problem) ),
     ( option(extra_axioms(ExtraAxioms)), atom_string(ExtraAxioms, AxiomFile), exists_file(AxiomFile) ->
       leancop_tptp2(AxiomFile,AxPath,AxNames,ProblemExtra,_), !,

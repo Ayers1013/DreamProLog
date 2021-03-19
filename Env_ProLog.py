@@ -34,7 +34,8 @@ class ProLog:
         with self.LOCK:
             self.prolog = pyswip.Prolog()
         self.prolog.consult("leancop/leancop_step.pl")
-        self.settings = "[conj, nodef, verbose, print_proof]"
+        # self.settings = "[conj, nodef, verbose, print_proof]"
+        self.settings = "[conj, nodef]"
         problem=next(self.problems)
         query = 'init_python("{}",{},GnnInput, SimpleFeatures, Result)'.format(problem, self.settings)
         #print("Query:\n   ", query, "\n")
