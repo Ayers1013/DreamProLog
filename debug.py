@@ -6,7 +6,7 @@ def debug_1():
     a=Pl()
     a.step(1)
 
-    from gnn.gnn_util import *
+    #from gnn.gnn_util import *
     graph=TermGraph(PrologDecoder(a.prolog))
 
     curr_lit, path, all_goals, ext_clauses, ext_mask, _ext_perm = a.make_image()
