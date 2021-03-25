@@ -99,6 +99,8 @@ class Logger:
     self._videos[name] = np.array(value)
 
   def write(self, fps=False):
+    #TODO I think It isnt necessary
+    return
     scalars = list(self._scalars.items())
     if fps:
       scalars.append(('fps', self._compute_fps(self.step)))
@@ -239,6 +241,7 @@ def sample_episodes(episodes, length=None, balance=False, seed=0):
     if length:
       total = len(next(iter(episode.values())))
       available = total - length
+      #TODO This caused a problem but I am not sure whether this is a proper solution
       if available < 1:
         print(f'Skipped short episode of length {available}.')
         continue
@@ -249,7 +252,7 @@ def sample_episodes(episodes, length=None, balance=False, seed=0):
       episode = {k: v[index: index + length] for k, v in episode.items()}
     yield episode
 
-
+#NOTE allow_pickle=True
 def load_episodes(directory, limit=None):
   directory = pathlib.Path(directory).expanduser()
   episodes = {}
@@ -257,7 +260,7 @@ def load_episodes(directory, limit=None):
   for filename in reversed(sorted(directory.glob('*.npz'))):
     try:
       with filename.open('rb') as f:
-        episode = np.load(f)
+        episode = np.load(f,allow_pickle=True)
         episode = {k: episode[k] for k in episode.keys()}
     except Exception as e:
       print(f'Could not load episode: {e}')
