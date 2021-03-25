@@ -18,5 +18,5 @@ graph.ini_var = 3
 for axiom in ext_clauses:
     graph.reset_vars()
     graph.add_clause(axiom, 3) 
-    #print(graph.node_d.items())
+    print(graph.node_d.items())
 mask += ext_mask

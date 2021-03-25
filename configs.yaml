@@ -227,3 +227,4 @@ debug:
 
 prolog:
   task: 'prolog_void'
+  batch_length: 1

@@ -296,11 +296,23 @@ def main(logdir, config):
       pass
 
 
+class LolArg:
+  def __init__(self):
+    self.configs=['defaults','prolog']
+    self.logdir='logdir'
+
 if __name__ == '__main__':
-  parser = argparse.ArgumentParser()
-  parser.add_argument('--configs', nargs='+', required=True)
-  parser.add_argument('--logdir', required=True)
-  args, remaining = parser.parse_known_args()
+  if(False):
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--configs', nargs='+', required=True)
+    parser.add_argument('--logdir', required=True)
+    args, remaining = parser.parse_known_args()
+  else:
+    #TODO remove this!!
+    args, remaining =LolArg(), []
+    #TODO ...
+  print(args,remaining)
+
   configs = yaml.safe_load(
       (pathlib.Path(__file__).parent / 'configs.yaml').read_text())
   config_ = {}
