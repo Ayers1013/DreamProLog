@@ -79,8 +79,8 @@ class ProLog:
             else:
                 reward = 0
 
-        return ({'image':self.gnnInput, 'ram': None, 'features': self.get_features()},
-        #return ({'image':np.zeros(16), 'ram': 0.0, 'features': self.get_features()},
+        #return ({'image':self.gnnInput, 'ram': None, 'features': self.get_features()},
+        return ({'image':np.zeros(16), 'ram': 0.0, 'features': self.get_features()},
             np.float64(reward), 
             self.terminal,
             {}) 
@@ -102,8 +102,8 @@ class ProLog:
 
         self.ext_action_size = len(self.gnnInput[4])
 
-        return {'image':self.gnnInput, 'ram': None, 'features': self.get_features()},
-        #return {'image':np.zeros(16), 'ram': 0.0, 'features': self.get_features()}
+        #return {'image':self.gnnInput, 'ram': None, 'features': self.get_features()},
+        return {'image':np.zeros(16), 'ram': 0.0, 'features': self.get_features()}
 
 
     @property
