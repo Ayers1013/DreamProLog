@@ -37,4 +37,13 @@ def debug_2():
 
     print("done")
 
+def debug_3():
+    from gnn_keras.graph_placeholder import GraphPlaceholder
+
+    graph=GraphPlaceholder()
+    print("Done")
+
+debug_3()
+
+
 
