@@ -264,7 +264,7 @@ def load_episodes(directory, limit=None):
         episode = {k: episode[k] for k in episode.keys()}
     except Exception as e:
       print(f'Could not load episode: {e}')
-      continue
+      continue 
     episodes[str(filename)] = episode
     total += len(episode['reward']) - 1
     if limit and total >= limit:

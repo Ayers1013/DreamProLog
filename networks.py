@@ -48,7 +48,7 @@ class RSSM(tools.Module):
           deter=self._cell.get_initial_state(None, batch_size, dtype))
     return state
 
-  @tf.function
+  #@tf.function
   def observe(self, embed, action, state=None):
     swap = lambda x: tf.transpose(x, [1, 0] + list(range(2, len(x.shape))))
     if state is None:
@@ -94,7 +94,7 @@ class RSSM(tools.Module):
       dist = tfd.MultivariateNormalDiag(mean, std)
     return dist
 
-  @tf.function
+  #@tf.function
   def obs_step(self, prev_state, prev_action, embed, sample=True):
     if not self._embed:
       self._embed = embed.shape[-1]

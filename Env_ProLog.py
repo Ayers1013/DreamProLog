@@ -10,6 +10,8 @@ class ActionSpace:
         self.n=_n
 
     def sample(self):
+        #arr=np.zeros(self.n)
+        #arr[np.random.randint(self.n)]=1.0
         return np.random.randint(self.n)
 
     @property
@@ -80,7 +82,7 @@ class ProLog:
                 reward = 0
 
         #return ({'image':self.gnnInput, 'ram': None, 'features': self.get_features()},
-        return ({'image':np.zeros(16), 'ram': 0.0, 'features': self.get_features()},
+        return ({'image':np.zeros(16)},#'features': self.get_features()},
             np.float64(reward), 
             self.terminal,
             {}) 
@@ -103,7 +105,7 @@ class ProLog:
         self.ext_action_size = len(self.gnnInput[4])
 
         #return {'image':self.gnnInput, 'ram': None, 'features': self.get_features()},
-        return {'image':np.zeros(16), 'ram': 0.0, 'features': self.get_features()}
+        return {'image':np.zeros(16)}#, 'features': self.get_features()}
 
 
     @property

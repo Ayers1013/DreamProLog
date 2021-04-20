@@ -22,7 +22,7 @@ from tensorflow_probability import distributions as tfd
 sys.path.append(str(pathlib.Path(__file__).parent))
 
 import exploration as expl
-import models
+import models_ProLog as models
 import tools
 import wrappers
 
@@ -60,7 +60,9 @@ class Dreamer(tools.Module):
         plan2explore=lambda: expl.Plan2Explore(config, self._wm, reward),
     )[config.expl_behavior]()
     # Train step to initialize variables including optimizer statistics.
-    self._train(next(self._dataset))
+
+    x=next(self._dataset)
+    self._train(x)
 
   def __call__(self, obs, reset, state=None, training=True):
     step = self._step.numpy().item()
@@ -129,7 +131,7 @@ class Dreamer(tools.Module):
       return tf.clip_by_value(tfd.Normal(action, amount).sample(), -1, 1)
     raise NotImplementedError(self._config.action_noise)
 
-  @tf.function
+  #@tf.function
   def _train(self, data):
     print('Tracing train function.')
     metrics = {}

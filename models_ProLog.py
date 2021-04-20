@@ -3,6 +3,7 @@ from tensorflow.keras.mixed_precision import experimental as prec
 
 import networks
 import tools
+import networks_ProLog
 
 
 class WorldModel(tools.Module):
@@ -10,8 +11,8 @@ class WorldModel(tools.Module):
   def __init__(self, step, config):
     self._step = step
     self._config = config
-    self.encoder = networks.ConvEncoder(
-        config.cnn_depth, config.act, config.encoder_kernels)
+    #NOTE to gnn
+    self.encoder = networks_ProLog.DummyEncoder()
     self.dynamics = networks.RSSM(
         config.dyn_stoch, config.dyn_deter, config.dyn_hidden,
         config.dyn_input_layers, config.dyn_output_layers, config.dyn_shared,
@@ -20,9 +21,9 @@ class WorldModel(tools.Module):
     self.heads = {}
     channels = (1 if config.atari_grayscale else 3)
     shape = config.size + (channels,)
-    self.heads['image'] = networks.ConvDecoder(
-        config.cnn_depth, config.act, shape, config.decoder_kernels,
-        config.decoder_thin)
+
+    #NOTE to gnn
+    self.heads['image'] = networks_ProLog.DummyDecoder()
     self.heads['reward'] = networks.DenseHead(
         [], config.reward_layers, config.units, config.act)
     if config.pred_discount:
