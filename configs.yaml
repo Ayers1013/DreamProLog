@@ -17,7 +17,7 @@ defaults:
   # Environment
   task: 'dmc_walker_walk'
   size: [64, 64]
-  envs: 1
+  envs: 2
   action_repeat: 2
   time_limit: 1000
   prefill: 2500
@@ -223,8 +223,9 @@ debug:
   prefill: 1
   train_steps: 1
   batch_size: 10
-  batch_length: 20
+  #batch_length: 20
 
 prolog:
   task: 'prolog_void'
-  batch_length: 1
+  batch_length: 2
+  actor_dist: 'onehot'

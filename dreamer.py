@@ -131,7 +131,7 @@ class Dreamer(tools.Module):
       return tf.clip_by_value(tfd.Normal(action, amount).sample(), -1, 1)
     raise NotImplementedError(self._config.action_noise)
 
-  #@tf.function
+  @tf.function
   def _train(self, data):
     print('Tracing train function.')
     metrics = {}
@@ -284,8 +284,8 @@ def main(logdir, config):
   while agent._step.numpy().item() < config.steps:
     logger.write()
     print('Start evaluation.')
-    video_pred = agent._wm.video_pred(next(eval_dataset))
-    logger.video('eval_openl', video_pred)
+    #video_pred = agent._wm.video_pred(next(eval_dataset))
+    #logger.video('eval_openl', video_pred)
     eval_policy = functools.partial(agent, training=False)
     tools.simulate(eval_policy, eval_envs, episodes=1)
     print('Start training.')
@@ -300,7 +300,7 @@ def main(logdir, config):
 
 class LolArg:
   def __init__(self):
-    self.configs=['defaults','prolog']
+    self.configs=['defaults','prolog','debug']
     self.logdir='logdir'
 
 if __name__ == '__main__':

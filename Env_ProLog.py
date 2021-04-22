@@ -64,6 +64,8 @@ class ProLog:
     
     def step(self,action):
         #TODO output obs,reward,done, info
+        if(action.shape!=(1)):
+            action=np.argmax(action)
         query = 'step_python({}, GnnInput, SimpleFeatures, Result)'.format(action)
         #print("Query:\n   ", query, "\n")
         result = list(self.prolog.query(query))
