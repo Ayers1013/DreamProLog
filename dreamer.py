@@ -33,7 +33,8 @@ class Dreamer(tools.Module):
     self._config = config
     self._logger = logger
     self._float = prec.global_policy().compute_dtype
-    self._should_log = tools.Every(config.log_every)
+    #NOTE We cant log the video
+    self._should_log = tools.Every(None)#tools.Every(config.log_every)
     self._should_train = tools.Every(config.train_every)
     self._should_pretrain = tools.Once()
     self._should_reset = tools.Every(config.reset_every)

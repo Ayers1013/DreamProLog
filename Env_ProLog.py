@@ -10,9 +10,11 @@ class ActionSpace:
         self.n=_n
 
     def sample(self):
-        #arr=np.zeros(self.n)
-        #arr[np.random.randint(self.n)]=1.0
-        return np.random.randint(self.n)
+        arr=np.zeros(self.n)
+        arr[np.random.randint(self.n)]=1.0
+        #BUG#002
+        return arr
+        #return np.random.randint(self.n)
 
     @property
     def shape(self):
@@ -64,6 +66,7 @@ class ProLog:
     
     def step(self,action):
         #TODO output obs,reward,done, info
+        #TODO BUG#001
         if(action.shape!=(1)):
             action=np.argmax(action)
         query = 'step_python({}, GnnInput, SimpleFeatures, Result)'.format(action)

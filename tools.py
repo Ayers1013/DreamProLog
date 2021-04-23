@@ -201,9 +201,12 @@ def simulate(agent, envs, steps=0, episodes=0, state=None):
           {k: np.array(action[k][i]) for k in action}
           for i in range(len(envs))]
     else:
+      #NOTE This caused a BUG#001
       action = np.array(action)
+      #pass
     assert len(action) == len(envs)
     # Step envs.
+
     results = [e.step(a) for e, a in zip(envs, action)]
     obs, _, done = zip(*[p[:3] for p in results])
     obs = list(obs)

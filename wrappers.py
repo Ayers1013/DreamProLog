@@ -138,9 +138,10 @@ class CollectDataset:
     obs = {k: self._convert(v) for k, v in obs.items()}
     transition = obs.copy()
 
-    a=np.zeros(self._env.action_space.shape)
-    a[action]=1.0
-    transition['action'] = a #action
+    #BUG#002
+    #a=np.zeros(self._env.action_space.shape)
+    #a[action]=1.0
+    transition['action'] = action#a 
     transition['reward'] = reward
     transition['discount'] = info.get('discount', np.array(1 - float(done)))
     self._episode.append(transition)
