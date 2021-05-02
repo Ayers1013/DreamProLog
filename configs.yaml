@@ -229,3 +229,4 @@ prolog:
   task: 'prolog_void'
   batch_length: 1
   actor_dist: 'onehot'
+  eval_every: 100
