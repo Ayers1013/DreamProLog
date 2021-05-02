@@ -55,7 +55,8 @@ class WorldModel(tools.Module):
         pred = head(inp, tf.float32)
         like = pred.log_prob(tf.cast(data[name], tf.float32))
         likes[name] = tf.reduce_mean(like) * self._scales.get(name, 1.0)
-      model_loss = kl_loss - sum(likes.values())
+      #NOTE Temporary no kl_loss
+      model_loss = -sum(likes.values())#kl_loss - sum(likes.values())
     model_parts = [self.encoder, self.dynamics] + list(self.heads.values())
     metrics = self._model_opt(model_tape, model_loss, model_parts)
     metrics.update({f'{name}_loss': -like for name, like in likes.items()})
