@@ -25,6 +25,8 @@ class ProLog:
     
     def __init__(self,problems=None):
         #problems is a generator function
+        self.step_limit=10
+        self.steps=0
         if problems==None:
             def gen():
                 while True:
@@ -66,6 +68,7 @@ class ProLog:
         return self.ext_action_size
     
     def step(self,action):
+        self.steps+=1
         #TODO output obs,reward,done, info
         #TODO BUG#001
         if(action.shape!=(1)):
@@ -85,7 +88,11 @@ class ProLog:
             elif self.result == 1:
                 reward = self.small_reward
             else:
-                reward = 0
+                if(self.steps==self.step_limit):
+                    self.result=-1
+                    reward=-1
+                else:
+                    reward = 0
 
         #return ({'image':self.gnnInput, 'ram': None, 'features': self.get_features()},
         return ({'image':np.zeros(16)},#'features': self.get_features()},
@@ -94,6 +101,7 @@ class ProLog:
             {}) 
     
     def reset(self):
+        self.steps=0
         #with self.LOCK:
         #    self.prolog=pyswip.Prolog()
 
