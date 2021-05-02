@@ -74,7 +74,7 @@ class ProLog:
         result = list(self.prolog.query(query))
         if len(result) == 0:
             self.result=-1
-            reward = -1
+            reward = -1 
         else:
             self.result = result[0]["Result"]
             self.gnnInput = result[0]["GnnInput"]
