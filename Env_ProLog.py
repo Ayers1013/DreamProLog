@@ -30,8 +30,8 @@ class ProLog:
         if problems==None:
             def gen():
                 while True:
-                    #yield "leancop/robinson_1p1__2.p"
-                    yield "leancop/pelletier21.p"
+                    yield "leancop/robinson_1p1__2.p"
+                    #yield "leancop/pelletier21.p"
             self.problems=gen()
         else:
             self.problems=problems

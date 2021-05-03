@@ -39,6 +39,7 @@ class WorldModel(tools.Module):
 
   def train(self, data):
     data = self.preprocess(data)
+    print(data)
     with tf.GradientTape() as model_tape:
       embed = self.encoder(data)
       post, prior = self.dynamics.observe(embed, data['action'])

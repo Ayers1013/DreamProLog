@@ -343,6 +343,7 @@ class ActionHead(tools.Module):
     elif self._dist == 'onehot':
       x = self.get(f'hout', tfkl.Dense, self._size)(x)
       x = tf.cast(x, tf.float32)
+      print(x)
       dist = tools.OneHotDist(x, dtype=dtype)
       dist = tools.DtypeDist(dist, dtype)
     elif self._dist == 'onehot_gumble':
