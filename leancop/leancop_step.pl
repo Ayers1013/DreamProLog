@@ -36,6 +36,7 @@ init_python(File, Settings, GnnInput, SimpleFeatures, Result):-
     simple_features(State, SimpleFeatures),
     State = state(_, _Actions, Result).
 
+step_python(-1, _, _, _):- !, fail.
 step_python(ActionIndex, GnnInput, SimpleFeatures, Result):-
     step(ActionIndex, State),
     state2gnnInput(State, GnnInput),
