@@ -86,7 +86,7 @@ class ProLog:
             if self.result == -1:
                 reward = -self.small_reward
             elif self.result == 1:
-                reward =10.0 #self.small_reward
+                reward =self.small_reward
             else:
                 if(self.steps==self.step_limit):
                     self.result=-1
