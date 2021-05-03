@@ -234,3 +234,4 @@ prolog:
   eval_every: 100
   steps: 1e6
   action_repeat: 1
+  prefill: 25000
