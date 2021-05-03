@@ -222,8 +222,10 @@ debug:
   pretrain: 1
   prefill: 1
   train_steps: 1
-  batch_size: 1
+  batch_size: 10
   #batch_length: 20
+
+  imag_horizon: 4
 
 prolog:
   task: 'prolog_void'

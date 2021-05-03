@@ -95,7 +95,7 @@ class ProLog:
                     reward = 0
 
         #return ({'image':self.gnnInput, 'ram': None, 'features': self.get_features()},
-        return ({'image':np.zeros(16)},#'features': self.get_features()},
+        return ({'image':np.ones(16)*self.steps*0.1},#'features': self.get_features()},
             np.float64(reward), 
             self.terminal,
             {}) 

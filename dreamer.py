@@ -112,7 +112,6 @@ class Dreamer(tools.Module):
       action = self._expl_behavior.actor(feat).sample()
     else:
       action = self._task_behavior.actor(feat).sample()
-    print(action)
     if self._config.actor_dist == 'onehot_gumble':
       action = tf.cast(
           tf.one_hot(tf.argmax(action, axis=-1), self._config.num_actions),
@@ -283,8 +282,6 @@ def main(logdir, config):
     agent._should_pretrain._once = False
 
   state = None
-  print("Pretrain done")
-  return
   while agent._step.numpy().item() < config.steps:
     logger.write()
     print('Start evaluation.')
@@ -304,7 +301,7 @@ def main(logdir, config):
 
 class LolArg:
   def __init__(self):
-    self.configs=['defaults','prolog','debug']
+    self.configs=['defaults','prolog']#,'debug']
     self.logdir='logdir'
 
 if __name__ == '__main__':
