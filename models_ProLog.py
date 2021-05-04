@@ -54,9 +54,11 @@ class WorldModel(tools.Module):
         inp = feat if grad_head else tf.stop_gradient(feat)
         pred = head(inp, tf.float32)
         like = pred.log_prob(tf.cast(data[name], tf.float32))
+        #NOTE debugging:
+        #debug_modee=pred.mode()
         likes[name] = tf.reduce_mean(like) * self._scales.get(name, 1.0)
-      #NOTE Temporary no kl_loss
-      model_loss = -sum(likes.values())#kl_loss - sum(likes.values())
+      #NOTE Temporary no kl_loss (inactivated)
+      model_loss = kl_loss - sum(likes.values())
     model_parts = [self.encoder, self.dynamics] + list(self.heads.values())
     metrics = self._model_opt(model_tape, model_loss, model_parts)
     metrics.update({f'{name}_loss': -like for name, like in likes.items()})
@@ -72,7 +74,10 @@ class WorldModel(tools.Module):
   def preprocess(self, obs):
     dtype = prec.global_policy().compute_dtype
     obs = obs.copy()
-    obs['image'] = tf.cast(obs['image'], dtype) / 255.0 - 0.5
+    #NOTE We have a simple array
+    #obs['image'] = tf.cast(obs['image'], dtype) / 255.0 - 0.5
+    obs['image']=tf.cast(obs['image'],dtype)
+    obs['image']=tf.math.tanh(obs['image']*0.1)
     obs['reward'] = getattr(tf, self._config.clip_rewards)(obs['reward'])
     if 'discount' in obs:
       obs['discount'] *= self._config.discount

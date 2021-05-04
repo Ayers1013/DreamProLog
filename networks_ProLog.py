@@ -9,7 +9,7 @@ import tools
 class DummyEncoder(tools.Module):
 
   def __init__(self):
-    self.dense1=tfkl.Dense(100)
+    self.dense1=tfkl.Dense(150)
     self.dense2=tfkl.Dense(200)
 
   def __call__(self, obs):
@@ -22,7 +22,7 @@ class DummyEncoder(tools.Module):
 class DummyDecoder(tools.Module):
 
   def __init__(self, shape=(1,14)):
-    self.dense1=tfkl.Dense(100)
+    self.dense1=tfkl.Dense(150)
     self.dense2=tfkl.Dense(14)
     self._shape=shape
 
