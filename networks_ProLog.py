@@ -9,22 +9,27 @@ import tools
 class DummyEncoder(tools.Module):
 
   def __init__(self):
-      self.dense=tfkl.Dense(200)
+    self.dense1=tfkl.Dense(100)
+    self.dense2=tfkl.Dense(200)
 
   def __call__(self, obs):
     x = tf.reshape(obs['image'], (-1,) + tuple(obs['image'].shape[-2:]))
-    x= self.dense(x)
+    x=self.dense1(x)
+    x= self.dense2(x)
     return x
 
 
 class DummyDecoder(tools.Module):
 
-  def __init__(self, shape=(1,16)):
-      self.dense=tfkl.Dense(16)
-      self._shape=shape
+  def __init__(self, shape=(1,14)):
+    self.dense1=tfkl.Dense(100)
+    self.dense2=tfkl.Dense(14)
+    self._shape=shape
 
   def __call__(self, obs, dtype=None):
-    return tfd.Independent(tfd.Normal(self.dense(obs), 1), len(self._shape))
+    obs=self.dense1(obs)
+    obs=self.dense2(obs)
+    return tfd.Independent(tfd.Normal(obs, 1), len(self._shape))
 
 
 class EncoderWrapper(tools.Module):
