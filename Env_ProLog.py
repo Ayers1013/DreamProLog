@@ -89,10 +89,12 @@ class ProLog:
         else:
             action = -1
         """
-        if(self.gnnInput[4][action]==0):
+        if(env.gnnInput[4][action]==0):
             action=-1
+        elif(action==0):
+            action=0
         else:
-            action=np.array(self.gnnInput[4][:action]).sum()
+            action=np.array(env.gnnInput[4][:action]).sum()
     
         # print(action)
 
