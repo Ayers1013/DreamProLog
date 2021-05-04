@@ -136,6 +136,7 @@ class ProLog:
         self.simple_features = result["SimpleFeatures"]
 
         self.ext_action_size = len(self.gnnInput[4])
+        self.action_perm = self.gnnInput[5]
 
         #return {'image':self.gnnInput, 'ram': None, 'features': self.get_features()},
         return {'image':np.zeros(16)}#, 'features': self.get_features()}
