@@ -301,7 +301,7 @@ def main(logdir, config):
 
 class LolArg:
   def __init__(self):
-    self.configs=['defaults','prolog']#,'debug']
+    self.configs=['defaults','prolog','debug']
     self.logdir='logdir'
 
 if __name__ == '__main__':

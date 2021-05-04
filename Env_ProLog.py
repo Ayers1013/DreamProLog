@@ -76,7 +76,7 @@ class ProLog:
         else:
             self.problems=problems
 
-        self.step_reward = 0.01
+        self.step_reward = 0.3#0.01
         self.success_reward = 1
         self.failure_reward = -0.1
         self.invalid_reward = -1
