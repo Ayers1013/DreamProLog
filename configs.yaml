@@ -235,3 +235,8 @@ prolog:
   steps: 1e6
   action_repeat: 1
   prefill: 2500
+  
+  model_lr: 3e-2
+  value_lr: 8e-3
+  actor_lr: 8e-3
+  opt_eps: 1e-3

@@ -55,7 +55,8 @@ class WorldModel(tools.Module):
         pred = head(inp, tf.float32)
         like = pred.log_prob(tf.cast(data[name], tf.float32))
         #NOTE debugging:
-        #debug_modee=pred.mode()
+        debug_mode=pred.mode()
+        debug_dif=debug_mode-data[name]
         likes[name] = tf.reduce_mean(like) * self._scales.get(name, 1.0)
       #NOTE Temporary no kl_loss (inactivated)
       model_loss = kl_loss - sum(likes.values())
