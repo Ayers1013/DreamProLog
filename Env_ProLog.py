@@ -81,14 +81,19 @@ class ProLog:
         if(action.shape!=(1)):
             action=np.argmax(action)
 
-        
+        """
         indices = np.where(self.action_perm==action)[0]
         # print(indices)
         if len(indices) > 0:
             action = indices[0]
         else:
             action = -1
-
+        """
+        if(self.gnnInput[4][action]==0):
+            action=-1
+        else:
+            action=np.array(self.gnnInput[4][:action]).sum()
+    
         # print(action)
 
         query = 'step_python({}, GnnInput, SimpleFeatures, Result)'.format(action)
