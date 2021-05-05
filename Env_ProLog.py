@@ -128,6 +128,7 @@ class ProLog:
         else:
             action = -1
         """
+        print(action)
         if(self.gnnInput[4][action]==0):
             action=-1
         elif(action==0):
@@ -135,8 +136,8 @@ class ProLog:
         else:
             action=np.array(self.gnnInput[4][:action]).sum()
     
-        # print(action)
-
+        
+        #action=0
         query = 'step_python({}, GnnInput, SimpleFeatures, Result)'.format(action)
         #print("Query:\n   ", query, "\n")
         result = list(self.prolog.query(query))
@@ -170,6 +171,7 @@ class ProLog:
             {}) 
     
     def reset(self):
+        print("_reset_")
         self.steps=0
         #with self.LOCK:
         #    self.prolog=pyswip.Prolog()
