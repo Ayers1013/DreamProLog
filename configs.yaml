@@ -240,3 +240,8 @@ prolog:
   value_lr: 8e-3
   actor_lr: 8e-3
   opt_eps: 1e-3
+  opt: 'sgd'
+  expl_until: 1000
+  expl_behavior: 'plan2explore'
+  disag_offset: 0
+

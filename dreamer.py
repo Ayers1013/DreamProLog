@@ -61,7 +61,7 @@ class Dreamer(tools.Module):
         plan2explore=lambda: expl.Plan2Explore(config, self._wm, reward),
     )[config.expl_behavior]()
     # Train step to initialize variables including optimizer statistics.
-
+    
     x=next(self._dataset)
     self._train(x)
 
