@@ -128,7 +128,7 @@ class ProLog:
         else:
             action = -1
         """
-        print(action)
+        #print(action)
         if(self.gnnInput[4][action]==0):
             action=-1
         elif(action==0):
@@ -171,7 +171,7 @@ class ProLog:
             {}) 
     
     def reset(self):
-        print("_reset_")
+        #print("_reset_")
         self.steps=0
         #with self.LOCK:
         #    self.prolog=pyswip.Prolog()
