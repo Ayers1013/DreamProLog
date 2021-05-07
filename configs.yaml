@@ -233,6 +233,7 @@ prolog:
   actor_dist: 'onehot'
   eval_every: 1e6
   train_every: 100
+  train_steps: 5
   steps: 1e6
   action_repeat: 1
   prefill: 2500

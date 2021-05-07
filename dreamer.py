@@ -235,6 +235,7 @@ def main(logdir, config):
     tf.config.experimental_run_functions_eagerly(True)
   if config.gpu_growth:
     message = 'No GPU found. To actually train on CPU remove this assert.'
+    print(message)
     #TODO
     #assert tf.config.experimental.list_physical_devices('GPU'), message
     for gpu in tf.config.experimental.list_physical_devices('GPU'):
