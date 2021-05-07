@@ -219,10 +219,10 @@ dmc:
 debug:
 
   debug: True
-  pretrain: 1
-  prefill: 1
-  train_steps: 1
-  batch_size: 10
+  #pretrain: 1
+  #prefill: 1
+  #train_steps: 1
+  #batch_size: 10
   #batch_length: 20
 
   imag_horizon: 4
