@@ -33,7 +33,7 @@ class Plan2Explore(tools.Module):
     self._behavior = models.ImagBehavior(config, world_model)
     self.actor = self._behavior.actor
     size = {
-        'embed': 32 * config.cnn_depth,
+        'embed': 200,
         'stoch': config.dyn_stoch,
         'deter': config.dyn_deter,
         'feat': config.dyn_stoch + config.dyn_deter,

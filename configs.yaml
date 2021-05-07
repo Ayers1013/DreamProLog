@@ -231,7 +231,8 @@ prolog:
   task: 'prolog_void'
   batch_length: 1
   actor_dist: 'onehot'
-  eval_every: 100
+  eval_every: 200
+  train_every: 100
   steps: 1e6
   action_repeat: 1
   prefill: 2500
