@@ -244,7 +244,7 @@ prolog:
   opt_eps: 1e-3
   opt: 'sgd'
   expl_until: 1e7
-  expl_behavior: 'plan2explore'
+  expl_behavior: 'greedy'
   disag_offset: 0
   disag_models: 3
   disag_target: 'embed'
