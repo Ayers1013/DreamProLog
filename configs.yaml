@@ -241,7 +241,11 @@ prolog:
   actor_lr: 8e-3
   opt_eps: 1e-3
   opt: 'sgd'
-  expl_until: 1000
+  expl_until: 1e7
   expl_behavior: 'plan2explore'
   disag_offset: 0
+  disag_models: 3
+  disag_target: 'embed'
+  disag_layers: 1
+  disag_units: 200
 
