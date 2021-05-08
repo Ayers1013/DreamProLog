@@ -99,8 +99,6 @@ class Logger:
     self._videos[name] = np.array(value)
 
   def write(self, fps=False):
-    #TODO I think It isnt necessary
-    return
     scalars = list(self._scalars.items())
     if fps:
       scalars.append(('fps', self._compute_fps(self.step)))
@@ -112,8 +110,8 @@ class Logger:
         tf.summary.scalar('scalars/' + name, value, self.step)
       for name, value in self._images.items():
         tf.summary.image(name, value, self.step)
-      for name, value in self._videos.items():
-        video_summary(name, value, self.step)
+      #for name, value in self._videos.items():
+      #  video_summary(name, value, self.step)
     self._writer.flush()
     self._scalars = {}
     self._images = {}

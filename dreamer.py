@@ -34,7 +34,7 @@ class Dreamer(tools.Module):
     self._logger = logger
     self._float = prec.global_policy().compute_dtype
     #NOTE We cant log the video
-    self._should_log = tools.Every(None)#tools.Every(config.log_every)
+    self._should_log = tools.Every(config.log_every)
     self._should_train = tools.Every(config.train_every)
     self._should_pretrain = tools.Once()
     self._should_reset = tools.Every(config.reset_every)
@@ -82,9 +82,9 @@ class Dreamer(tools.Module):
         for name, mean in self._metrics.items():
           self._logger.scalar(name, float(mean.result()))
           mean.reset_states()
-        openl = self._wm.video_pred(next(self._dataset))
-        self._logger.video('train_openl', openl)
-        self._logger.write(fps=True)
+        #openl = self._wm.video_pred(next(self._dataset))
+        #self._logger.video('train_openl', openl)
+        self._logger.write(fps=False)
     action, state = self._policy(obs, state, training)
     if training:
       self._step.assign_add(len(reset))
@@ -302,7 +302,7 @@ def main(logdir, config):
 
 class LolArg:
   def __init__(self):
-    self.configs=['defaults','prolog','debug']
+    self.configs=['defaults','prolog','prolog_easy']#,'debug']
     self.logdir='logdir'
 
 if __name__ == '__main__':

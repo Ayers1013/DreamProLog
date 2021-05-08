@@ -219,8 +219,8 @@ dmc:
 debug:
 
   debug: True
-  #pretrain: 1
-  #prefill: 1
+  pretrain: 5
+  prefill: 100
   #train_steps: 1
   #batch_size: 10
   #batch_length: 20
@@ -231,17 +231,18 @@ prolog:
   task: 'prolog_void'
   batch_length: 1
   actor_dist: 'onehot'
-  eval_every: 1e6
+  eval_every: 1e4
   train_every: 100
-  train_steps: 5
+  train_steps: 50
   steps: 1e6
   action_repeat: 1
   prefill: 2500
+  log_every: 1e2
   
-  model_lr: 3e-1
-  value_lr: 8e-2
-  actor_lr: 8e-2
-  opt_eps: 1e-2
+  model_lr: 3e-4
+  value_lr: 8e-5
+  actor_lr: 8e-5
+  opt_eps: 1e-5
   opt: 'sgd'
   expl_until: 1e7
   expl_behavior: 'greedy'
@@ -251,6 +252,7 @@ prolog:
   disag_layers: 1
   disag_units: 200
 
+prolog_easy:
   dyn_cell: 'gru'
   dyn_hidden: 100
   dyn_deter: 100
