@@ -164,7 +164,7 @@ class ProLog:
 
 
         return (
-            {'image':np.array(self.simple_features,np.float32)},
+            {'image':np.tanh(np.array(self.simple_features,np.float32)*0.1)},
             #{'image':np.ones(16)*self.steps*0.1},#'features': self.get_features()},
             np.float64(reward), 
             self.terminal,
@@ -192,7 +192,7 @@ class ProLog:
 
         #return {'image':self.gnnInput, 'ram': None, 'features': self.get_features()},
         #return {'image':np.zeros(16)}
-        return {'image':np.array(self.simple_features,np.float32)}
+        return {'image':np.tanh(np.array(self.simple_features,np.float32)*0.1)}
 
 
     @property
