@@ -23,7 +23,8 @@ class DummyDecoder(tools.Module):
 
   def __init__(self, shape=(1,14)):
     self.dense1=tfkl.Dense(150)
-    self.dense2=tfkl.Dense(14)
+    #Porlog:14, dummy: 25
+    self.dense2=tfkl.Dense(25)
     self._shape=shape
 
   def __call__(self, obs, dtype=None):

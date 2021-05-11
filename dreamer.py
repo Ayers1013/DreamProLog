@@ -184,6 +184,9 @@ def make_env(config, logger, mode, train_eps, eval_eps):
   elif suite == 'prolog':
     from Env_ProLog import ProLog
     env=ProLog()
+  elif suite == 'dummy':
+    from Env_ProLog import DummyEnv
+    env=DummyEnv()
   else:
     raise NotImplementedError(suite)
   env = wrappers.TimeLimit(env, config.time_limit)
@@ -303,7 +306,7 @@ def main(logdir, config):
 
 class LolArg:
   def __init__(self):
-    self.configs=['defaults','prolog','prolog_easy']#,'debug']
+    self.configs=['defaults','prolog','prolog_easy', 'dummy','debug']
     self.logdir='logdir'
 
 if __name__ == '__main__':

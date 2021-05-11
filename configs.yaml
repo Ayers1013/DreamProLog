@@ -232,8 +232,8 @@ prolog:
   batch_length: 1
   actor_dist: 'onehot'
   eval_every: 1e4
-  train_every: 1
-  train_steps: 50
+  train_every: 100
+  train_steps: 10
   steps: 1e6
   action_repeat: 1
   prefill: 2500
@@ -284,4 +284,5 @@ prolog_easy:
   reward_scale: 1.0
   weight_decay: 0.0
 
-
+dummy:
+  task: 'dummy_void'
