@@ -230,11 +230,11 @@ class ConvDecoder(tools.Module):
       mean = tf.cast(mean, dtype)
     return tfd.Independent(tfd.Normal(mean, 1), len(self._shape))
 
-
+#Note std=1.0 changed to std="learned"
 class DenseHead(tools.Module):
 
   def __init__(
-      self, shape, layers, units, act=tf.nn.elu, dist='normal', std=1.0):
+      self, shape, layers, units, act=tf.nn.elu, dist='normal', std='learned'):
     self._shape = (shape,) if isinstance(shape, int) else shape
     self._layers = layers
     self._units = units

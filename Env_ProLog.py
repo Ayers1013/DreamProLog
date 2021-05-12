@@ -258,7 +258,7 @@ class DummyEnv:
             reward=0.1
 
         if(self.pos_x==0 and self.pos_y==0):
-            reward=1.0
+            reward=100.0
             self.done=True
         elif(self.pos_x<0 or self.pos_y<0 or self.pos_x>= self.board_size or self.pos_y>= self.board_size):
             reward=-1.0

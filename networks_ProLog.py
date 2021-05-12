@@ -25,12 +25,15 @@ class DummyDecoder(tools.Module):
     self.dense1=tfkl.Dense(150)
     #Porlog:14, dummy: 25
     self.dense2=tfkl.Dense(25)
+    self.dense3=tfkl.Dense(25)
     self._shape=shape
 
   def __call__(self, obs, dtype=None):
     obs=self.dense1(obs)
-    obs=self.dense2(obs)
-    return tfd.Independent(tfd.Normal(obs, 1), len(self._shape))
+    mean=self.dense2(obs)
+    std=self.dense3(obs)
+    std=tf.keras.activations.sigmoid(std)
+    return tfd.Independent(tfd.Normal(mean,std+0.01), len(self._shape))
 
 
 class EncoderWrapper(tools.Module):

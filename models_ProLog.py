@@ -247,6 +247,8 @@ class ImagBehavior(tools.Module):
         self._config.actor_state_entropy(), 0):
       actor_target += self._config.actor_state_entropy() * state_ent[:-1]
     actor_loss = -tf.reduce_mean(weights[:-1] * actor_target)
+    #NOTE Temporary!!
+    actor_loss*=30.0
     return actor_loss, metrics
 
   def _update_slow_target(self):

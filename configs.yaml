@@ -230,14 +230,14 @@ debug:
 prolog:
   task: 'prolog_void'
   batch_length: 1
-  actor_dist: 'onehot'
+  actor_dist: 'trunc_normal' #'onehot'
   eval_every: 1e4
   train_every: 100
   train_steps: 10
   steps: 1e6
   action_repeat: 1
   prefill: 2500
-  log_every: 1e0
+  log_every: 3e1
   
   model_lr: 1e-2
   value_lr: 2e-3
