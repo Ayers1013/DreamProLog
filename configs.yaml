@@ -230,7 +230,7 @@ debug:
 prolog:
   task: 'prolog_void'
   batch_length: 1
-  actor_dist: 'trunc_normal' #'onehot'
+  actor_dist: 'normal' #'trunc_normal' #'onehot'
   eval_every: 1e4
   train_every: 100
   train_steps: 10
@@ -260,7 +260,7 @@ prolog_easy:
   dyn_discrete: 0
   dyn_input_layers: 1
   dyn_output_layers: 1
-  dyn_shared: False
+  dyn_shared: True
   dyn_mean_act: 'none'
   dyn_std_act: 'sigmoid2'
   dyn_min_std: 0.1
