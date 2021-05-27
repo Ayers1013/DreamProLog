@@ -1,8 +1,14 @@
 import tensorflow as tf
 import numpy as np
-from tensorflow.contrib.layers import fully_connected
+
+#NOTE fully_connected has been removed from tf2 
+#from tensorflow.contrib.layers import fully_connected
 from gnn.stop_watch import StopWatch
 from gnn.tf_helpers import *
+
+#NOTE need to redefine fully_connected
+
+fully_connected=lambda x, hidden: tf.keras.layers.Dense(hidden)(x)
 
 import gnn.debug_node
 from gnn.debug_node import tf_debug

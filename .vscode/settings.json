@@ -1,3 +1,6 @@
 {
-    "python.pythonPath": "C:\\Users\\Ayers\\Anaconda3\\envs\\tf2-gpu\\python.exe"
+    "python.pythonPath": "C:\\Users\\Ayers\\Anaconda3\\envs\\tf2-gpu\\python.exe",
+    "editor.tabSize": 2,
+    "editor.insertSpaces": true,
+    "editor.detectIndentation": true
 }

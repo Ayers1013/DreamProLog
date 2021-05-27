@@ -4,7 +4,10 @@ from tensorflow.keras import layers as tfkl
 from tensorflow_probability import distributions as tfd
 from tensorflow.keras.mixed_precision import experimental as prec
 
+from networks import DenseHead
+
 import tools
+
 
 class DummyEncoder(tools.Module):
 
@@ -13,7 +16,7 @@ class DummyEncoder(tools.Module):
     self.dense2=tfkl.Dense(200)
 
   def __call__(self, obs):
-    x = tf.reshape(obs['image'], (-1,) + tuple(obs['image'].shape[-2:]))
+    x = tf.reshape(obs, (-1,) + tuple(obs.shape[-2:]))
     x=self.dense1(x)
     x= self.dense2(x)
     return x
@@ -21,7 +24,7 @@ class DummyEncoder(tools.Module):
 
 class DummyDecoder(tools.Module):
 
-  def __init__(self, shape=(1,14)):
+  def __init__(self, shape=(1,25)):
     self.dense1=tfkl.Dense(150)
     #Porlog:14, dummy: 25
     self.dense2=tfkl.Dense(25)
@@ -35,22 +38,40 @@ class DummyDecoder(tools.Module):
     std=tf.keras.activations.sigmoid(std)
     return tfd.Independent(tfd.Normal(mean,std+0.01), len(self._shape))
 
-
-class EncoderWrapper(tools.Module):
+class ActionEncoder(tools.Module):
 
   def __init__(self):
-      self.dense=tfkl.Dense(16)
+    self.dense=tfkl.Dense(8)
 
   def __call__(self, obs):
-    x = tf.reshape(obs['image'], (-1,) + tuple(obs['image'].shape[-2:]))
-    return self.dense(x)
+    x=self.dense(obs)
+    return x
 
+class Encoder(tools.Module):
+  def __init__(self, input_pipes, action_embed):
+    self._input_pipes=input_pipes
+    self._action_embed=action_embed
+    self.encoders={}
 
-class DecoderWrapper(tools.Module):
+    #self.encoders['action_space']=ActionEncoder()
+    self.encoders['image']=DummyEncoder()
 
-  def __init__(self, shape=(1,16)):
-      self.dense=tfkl.Dense(16)
-      self._shape=shape
+    if('features' in self._input_pipes):
+      #NOTE config
+      self.encoders['features']=DummyEncoder()
+    
+    if(self._action_embed):
+      self.action_encoder=ActionEncoder()
 
-  def __call__(self, obs, dtype=None):
-    return tfd.Independent(tfd.Normal(self.dense(obs), 1), len(self._shape))
+  def __call__(self, obs):
+    embed={}
+    for pipe in self._input_pipes:
+      embed[pipe]=self.encoders[pipe](obs[pipe])
+
+    action_embed=None
+    if(self._action_embed):
+      action_embed=self.action_encoder(obs['action_space'])
+    
+    
+    return embed['image'], action_embed
+    

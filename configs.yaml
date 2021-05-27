@@ -260,7 +260,7 @@ prolog_easy:
   dyn_discrete: 0
   dyn_input_layers: 1
   dyn_output_layers: 1
-  dyn_shared: True
+  dyn_shared: False
   dyn_mean_act: 'none'
   dyn_std_act: 'sigmoid2'
   dyn_min_std: 0.1
@@ -286,3 +286,6 @@ prolog_easy:
 
 dummy:
   task: 'dummy_void'
+  #temp
+  input_pipes: ['image'] #[image, features]
+  action_embed: True

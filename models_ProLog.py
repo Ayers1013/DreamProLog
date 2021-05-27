@@ -12,7 +12,7 @@ class WorldModel(tools.Module):
     self._step = step
     self._config = config
     #NOTE to gnn
-    self.encoder = networks_ProLog.DummyEncoder()
+    self.encoder = networks_ProLog.Encoder(input_pipes=['image'],action_embed=False)#networks_ProLog.DummyEncoder()
     self.dynamics = networks.RSSM(
         config.dyn_stoch, config.dyn_deter, config.dyn_hidden,
         config.dyn_input_layers, config.dyn_output_layers, config.dyn_shared,
@@ -40,7 +40,7 @@ class WorldModel(tools.Module):
   def train(self, data):
     data = self.preprocess(data)
     with tf.GradientTape() as model_tape:
-      embed = self.encoder(data)
+      embed, action_embed = self.encoder(data)
       post, prior = self.dynamics.observe(embed, data['action'])
       kl_balance = tools.schedule(self._config.kl_balance, self._step)
       kl_free = tools.schedule(self._config.kl_free, self._step)
@@ -54,13 +54,11 @@ class WorldModel(tools.Module):
         inp = feat if grad_head else tf.stop_gradient(feat)
         pred = head(inp, tf.float32)
         like = pred.log_prob(tf.cast(data[name], tf.float32))
-        #NOTE debugging:
-        debug_mode=pred.mode()
-        debug_dif=debug_mode-data[name]
         likes[name] = tf.reduce_mean(like) * self._scales.get(name, 1.0)
-      #NOTE Temporary no kl_loss (inactivated)
       model_loss = kl_loss - sum(likes.values())
     model_parts = [self.encoder, self.dynamics] + list(self.heads.values())
+
+    #Logginh metrics
     metrics = self._model_opt(model_tape, model_loss, model_parts)
     metrics.update({f'{name}_loss': -like for name, like in likes.items()})
     metrics['kl_balance'] = kl_balance
@@ -77,9 +75,9 @@ class WorldModel(tools.Module):
     obs = obs.copy()
     #NOTE We have a simple array
     #obs['image'] = tf.cast(obs['image'], dtype) / 255.0 - 0.5
-    obs['image']=tf.cast(obs['image'],dtype)
-    obs['image']=tf.math.tanh(obs['image']*0.1)
-    obs['reward'] = getattr(tf, self._config.clip_rewards)(obs['reward'])
+    #obs['image']=tf.cast(obs['image'],dtype)
+    #obs['image']=tf.math.tanh(obs['image']*0.1)
+    #obs['reward'] = getattr(tf, self._config.clip_rewards)(obs['reward'])
     if 'discount' in obs:
       obs['discount'] *= self._config.discount
     for key, value in obs.items():
@@ -88,6 +86,8 @@ class WorldModel(tools.Module):
         obs[key] = tf.cast(value, dtype)
     return obs
 
+
+"""
   @tf.function
   def video_pred(self, data):
     data = self.preprocess(data)
@@ -100,7 +100,7 @@ class WorldModel(tools.Module):
     openl = self.heads['image'](self.dynamics.get_feat(prior)).mode()
     model = tf.concat([recon[:, :5] + 0.5, openl + 0.5], 1)
     error = (model - truth + 1) / 2
-    return tf.concat([truth, model, error], 2)
+    return tf.concat([truth, model, error], 2)"""
 
 
 class ImagBehavior(tools.Module):

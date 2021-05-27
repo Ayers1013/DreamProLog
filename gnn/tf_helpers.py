@@ -1,5 +1,20 @@
 import tensorflow as tf
-from tensorflow.contrib.layers import fully_connected
+#NOTE fully_connected has been removed from tf2 
+#from tensorflow.contrib.layers import fully_connected
+
+
+def fc_sup(**kwargs):
+    translate={
+        "num_outputs": "units",
+        "activation_fn": "activation",
+        "biases_initializer": "bias_initializer"
+    }
+    new_kwargs={}
+    for key in kwargs.keys():
+        new_kwargs[translate[key]]=kwargs[key]
+    return new_kwargs
+
+fully_connected=lambda x, **kwargs: tf.keras.layers.Dense(**fc_sup(**kwargs))(x)
 
 def tf_linear(x, num_outputs, activation_fn = None):
     return fully_connected(

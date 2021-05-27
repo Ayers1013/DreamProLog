@@ -14,7 +14,8 @@ class Segments:
         if nonzero: assertions = [tf.compat.v1.assert_less(0, lens)]
         else: assertions = []
 
-        with tf.name_scope(None, "segments") as scope:
+        #NOTE changed
+        with tf.name_scope("segments") as scope:
             with tf.control_dependencies(assertions):
 
                 self.lens = lens
@@ -63,7 +64,7 @@ class Segments:
 
     def collapse_nonzero(self, data, operations = [tf.math.segment_max, tf.math.segment_sum]):
 
-        with tf.name_scope(None, "collapse_nonzero") as scope:
+        with tf.name_scope("collapse_nonzero") as scope:
             res = [
                 op(data, self.segment_indices_nonzero)
                 for op in operations
@@ -75,7 +76,7 @@ class Segments:
 
         if self.nonzero_guarantee: return data
 
-        with tf.name_scope(None, "add_zeros") as scope:
+        with tf.name_scope("add_zeros") as scope:
             out_dim = [self.segment_num] + data.shape.dims[1:]
             return tf.scatter_nd(
                 tf.expand_dims(self.nonzero_indices, 1),
@@ -92,7 +93,7 @@ class Segments:
 
         if self.nonzero_guarantee: nonzero = True
 
-        with tf.name_scope(None, "mask_segments") as scope:
+        with tf.name_scope("mask_segments") as scope:
             mask = tf.cast(mask, bool)
             data_mask = self.fill(mask)
             masked_lens = tf.boolean_mask(self.lens, mask)
@@ -103,7 +104,7 @@ class Segments:
 
         if nonzero: assert(self.nonzero_guarantee)
 
-        with tf.name_scope(None, "mask_data") as scope:
+        with tf.name_scope("mask_data") as scope:
             new_lens = self.segment_sum(tf.cast(mask, tf.int32))
             new_data = tf.boolean_mask(data, tf.cast(mask, bool))
             return Segments(new_lens, nonzero), new_data
@@ -114,7 +115,7 @@ class Segments:
         if not isinstance(nonzero, Iterable):
             nonzero = [nonzero]*num_parts
 
-        with tf.name_scope(None, "partition_segments") as scope:
+        with tf.name_scope("partition_segments") as scope:
             data_parts = self.fill(partitions)
             parted_lens = tf.dynamic_partition(self.lens, partitions, num_parts)
             parted_data = tf.dynamic_partition(data, data_parts, num_parts)
@@ -137,7 +138,7 @@ class Segments:
             )
 
     def log_softmax(self, logits):
-        with tf.name_scope(None, "segments.log_softmax") as scope:
+        with tf.name_scope("segments.log_softmax") as scope:
             # numeric stability
             offset = tf.math.segment_max(logits, self.segment_indices_nonzero)
             logits_stab = logits - self.fill_nonzero(offset)
@@ -149,7 +150,7 @@ class Segments:
 
     def gather_nonzero(self, data, indices):
 
-        with tf.name_scope(None, "segments.gather") as scope:
+        with tf.name_scope("segments.gather") as scope:
             with tf.control_dependencies([tf.compat.v1.assert_non_negative(indices),
                                           tf.compat.v1.assert_less(indices, self.nonzero_lens)]):
 
@@ -244,7 +245,7 @@ class MergedSegments(Segments):
                     break
             else: nonzero = True
         
-        with tf.name_scope(None, "merged_segments") as scope:
+        with tf.name_scope("merged_segments") as scope:
             merged_lens = tf.stack([segments.lens for segments in segments_list], axis = 1)
             Segments.__init__(self, tf.reduce_sum(merged_lens, axis = 1), nonzero = nonzero)
 
@@ -265,7 +266,7 @@ class MergedSegments(Segments):
             ]
 
     def merge_data(self, data_list):
-        with tf.name_scope(None, "merge_data") as scope:
+        with tf.name_scope("merge_data") as scope:
             return tf.dynamic_stitch(self.stitch_indices, data_list)
 
 def merge_segments(seg_data_list, nonzero = False):
@@ -276,7 +277,7 @@ def merge_segments(seg_data_list, nonzero = False):
 
 def unpartition_segments(seg_data_list, partitions):
 
-    with tf.name_scope(None, "unpartition_segments") as scope:
+    with tf.name_scope("unpartition_segments") as scope:
 
         segments_list, data_list = zip(*seg_data_list)
         segment_num = 0

@@ -100,7 +100,7 @@ class Dreamer(tools.Module):
       action = tf.zeros((batch_size, self._config.num_actions), self._float)
     else:
       latent, action = state
-    embed = self._wm.encoder(self._wm.preprocess(obs))
+    embed, action_embed = self._wm.encoder(self._wm.preprocess(obs))
     latent, _ = self._wm.dynamics.obs_step(
         latent, action, embed, self._config.collect_dyn_sample)
     if self._config.eval_state_mean:
@@ -306,7 +306,7 @@ def main(logdir, config):
 
 class LolArg:
   def __init__(self):
-    self.configs=['defaults','prolog','prolog_easy', 'dummy','debug']
+    self.configs=['defaults','prolog','prolog_easy','dummy','debug']
     self.logdir='logdir'
 
 if __name__ == '__main__':
