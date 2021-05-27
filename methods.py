@@ -25,6 +25,7 @@ class FunTracker:
 
       output=f(*args,**kwargs)
       self.buffer['output'].append(output.numpy().copy())
+      self.step+=1
 
       return output
     return tracked_f

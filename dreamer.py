@@ -289,8 +289,8 @@ def main(logdir, config):
   
   #debugging
   from methods import Reconstructor
-  ReC=Reconstructor(agent._wm, 10)
-  ReC.train(agent._dataset,1000)
+  ReC=Reconstructor(agent._wm, 50)
+  ReC.train(agent._dataset,10000)
   ReC.tracker.summary()
 
 
