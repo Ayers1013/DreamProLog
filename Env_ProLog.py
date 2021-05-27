@@ -243,8 +243,15 @@ class DummyEnv:
 
         
         image=np.zeros(self.board_size**2)
+        dist=lambda x,y: abs(self.pos_x-x)+abs(self.pos_y-y)
+        _lambda=np.log(0.7)
         if(not self.done):
-            image[self.pos_x+self.pos_y*self.board_size]=1.0
+            #Trivial
+            #image[self.pos_x+self.pos_y*self.board_size]=1.0
+            for x in range(self.board_size):
+                for y in range(self.board_size):
+                    image[x+y*self.board_size]=dist(x,y)
+            image=np.exp(_lambda*image)
 
         return (
             {'image':image},

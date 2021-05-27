@@ -1,6 +1,7 @@
 import argparse
 import collections
 import functools
+from methods import Reconstructor
 import os
 import pathlib
 import sys
@@ -285,6 +286,13 @@ def main(logdir, config):
   if (logdir / 'variables.pkl').exists():
     agent.load(logdir / 'variables.pkl')
     agent._should_pretrain._once = False
+  
+  #debugging
+  from methods import Reconstructor
+  ReC=Reconstructor(agent._wm, 10)
+  ReC.train(agent._dataset,1000)
+  ReC.tracker.summary()
+
 
   state = None
   while agent._step.numpy().item() < config.steps:
