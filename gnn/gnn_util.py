@@ -171,4 +171,17 @@ def input2graph(prolog, gnn_input):
     data = GraphData(data)
     data.axiom_mask = mask
     return data
- 
+
+def input2actionGraph(prolog, gnn_input):
+    _curr_lit, _path, _all_goals, ext_clauses, ext_mask, _ext_perm = gnn_input
+    graph = TermGraph(PrologDecoder(prolog))
+    
+    graph.ini_var = 3
+    for axiom in ext_clauses:
+        graph.reset_vars()
+        graph.add_clause(axiom, 3)
+    mask = np.ones_like(ext_mask)
+    data = graph.export_indices()
+    data = GraphData(data)
+    data.axiom_mask = mask
+    return data
