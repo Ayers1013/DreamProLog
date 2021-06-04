@@ -46,9 +46,9 @@ class GraphNetwork(tf.Module):
             return self.session.run((self.value_predictions), d)
         
     def variables(self):
-        return [op for op in net.session.graph.get_operations() if op.op_def and op.op_def.name=='VarHandleOp']
+        return [op for op in self.session.graph.get_operations() if op.op_def and op.op_def.name=='VarHandleOp']
 
 
 graphNet=GraphNetwork()
 
-tf.reduce_sum(graphNet([data]))
+print(graphNet([data]))

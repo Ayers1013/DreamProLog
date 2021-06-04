@@ -9,7 +9,7 @@ from gnn.tf_helpers import *
 #NOTE need to redefine fully_connected
 
 fully_connected=lambda x, hidden: tf.keras.layers.Dense(hidden)(x)
-fully_connected=lambda x, hidden: tf.compat.v1.layers.dense(x, hidden)
+#fully_connected=lambda x, hidden: tf.compat.v1.layers.dense(x, hidden)
 
 import gnn.debug_node
 from gnn.debug_node import tf_debug

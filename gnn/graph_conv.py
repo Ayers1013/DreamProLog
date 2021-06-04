@@ -87,7 +87,7 @@ def graph_conv(tensors, s, output_dims = None, use_layer_norm = False):
     x = tf_linear(x, out_dim_symbols)
     #print(x)
     #print(x*tf.expand_dims(sy.sgn,1))
-    x = sy.segments.collapse((x*tf.expand_dims(sy.sgn,1))[0],
+    x = sy.segments.collapse(x*tf.expand_dims(sy.sgn,1),
                          operations = [tf.math.segment_mean, segment_minimax])
 
     #print("-"*50)
