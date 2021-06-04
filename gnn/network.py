@@ -9,6 +9,7 @@ from gnn.tf_helpers import *
 #NOTE need to redefine fully_connected
 
 fully_connected=lambda x, hidden: tf.keras.layers.Dense(hidden)(x)
+fully_connected=lambda x, hidden: tf.compat.v1.layers.dense(x, hidden)
 
 import gnn.debug_node
 from gnn.debug_node import tf_debug
@@ -69,6 +70,22 @@ def graphs_to_values_logits(graph_ph, config):
     logits = tf_linear_sq(hidden)
 
     return values, ax_segments_masked, logits
+
+def graphs_to_values(graph_ph, config):
+    x = graph_start(graph_ph, config.start_shape)
+    for n in range(config.layers):
+        x = graph_conv(x, graph_ph,
+                       output_dims = config.next_shape)
+
+    nodes, symbols, clauses = x
+
+    # values
+    x = fully_connected(clauses, config.hidden_val)
+    x = graph_ph.clause_nums.collapse(x, [tf.math.segment_max, tf.math.segment_mean])
+    x = fully_connected(x, config.hidden_val)
+    #x = tf_linear_sq(x, activation_fn = tf.sigmoid)
+    x=tf.keras.layers.Dense(32, activation=tf.sigmoid)(x)
+    return x
 
 def actor_critic_loss(val_est, act_segments, log_probs, actions, values, config):
 

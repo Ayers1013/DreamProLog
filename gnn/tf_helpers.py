@@ -12,6 +12,10 @@ def fc_sup(**kwargs):
     new_kwargs={}
     for key in kwargs.keys():
         new_kwargs[translate[key]]=kwargs[key]
+
+    #if("bias_initializer" in new_kwargs.keys()):
+    #    if(new_kwargs["bias_initializer"]==None):
+    #        new_kwargs["bias_initializer"]='zeros'
     return new_kwargs
 
 fully_connected=lambda x, **kwargs: tf.keras.layers.Dense(**fc_sup(**kwargs))(x)

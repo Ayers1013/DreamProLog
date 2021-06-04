@@ -1,6 +1,7 @@
 from collections import OrderedDict
 from itertools import chain
 import pyswip
+import numpy as np
 
 from gnn.graph_data import GraphData
 

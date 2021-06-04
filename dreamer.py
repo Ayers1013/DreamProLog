@@ -102,11 +102,14 @@ class Dreamer(tools.Module):
     else:
       latent, action = state
     embed, action_embed = self._wm.encoder(self._wm.preprocess(obs))
+    #feed the actor head with the embedding
+    self._task_behavior.actor.feed(action_embed)
+
     latent, _ = self._wm.dynamics.obs_step(
         latent, action, embed, self._config.collect_dyn_sample)
     if self._config.eval_state_mean:
       latent['stoch'] = latent['mean']
-    feat = self._wm.dynamics.get_feat(latent)
+    feat = self._wm.dynamics.get_feat(latent)#, action_embed
     if not training:
       action = self._task_behavior.actor(feat).mode()
     elif self._should_expl(self._step):
@@ -137,7 +140,10 @@ class Dreamer(tools.Module):
   def _train(self, data):
     print('Tracing train function.')
     metrics = {}
-    embed, post, feat, kl, mets = self._wm.train(data)
+    embed, post, feat, kl, mets, action_embed = self._wm.train(data)
+    #feed the actor head with the embedding
+    self._task_behavior.actor.feed(action_embed)
+
     metrics.update(mets)
     start = post
     if self._config.pred_discount:  # Last step could be terminal.
@@ -289,9 +295,9 @@ def main(logdir, config):
   
   #debugging
   from methods import Reconstructor
-  ReC=Reconstructor(agent._wm, 50)
-  ReC.train(agent._dataset,10000)
-  ReC.tracker.summary()
+  ReC=Reconstructor(agent._wm, 0)
+  ReC.train(agent._dataset,100)
+  #ReC.tracker.summary()
 
 
   state = None
@@ -314,7 +320,7 @@ def main(logdir, config):
 
 class LolArg:
   def __init__(self):
-    self.configs=['defaults','prolog','prolog_easy','dummy','debug']
+    self.configs=['defaults','prolog','prolog_easy','debug']
     self.logdir='logdir'
 
 if __name__ == '__main__':

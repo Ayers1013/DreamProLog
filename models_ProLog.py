@@ -12,7 +12,7 @@ class WorldModel(tools.Module):
     self._step = step
     self._config = config
     #NOTE to gnn
-    self.encoder = networks_ProLog.Encoder(input_pipes=['image'],action_embed=False)#networks_ProLog.DummyEncoder()
+    self.encoder = networks_ProLog.Encoder(input_pipes=['image'],action_embed=True)#networks_ProLog.DummyEncoder()
     self.dynamics = networks.RSSM(
         config.dyn_stoch, config.dyn_deter, config.dyn_hidden,
         config.dyn_input_layers, config.dyn_output_layers, config.dyn_shared,
@@ -67,7 +67,7 @@ class WorldModel(tools.Module):
     metrics['kl'] = tf.reduce_mean(kl_value)
     metrics['prior_ent'] = self.dynamics.get_dist(prior).entropy()
     metrics['post_ent'] = self.dynamics.get_dist(post).entropy()
-    return embed, post, feat, kl_value, metrics
+    return embed, post, feat, kl_value, metrics, action_embed
 
   @tf.function
   def preprocess(self, obs):
@@ -110,7 +110,7 @@ class ImagBehavior(tools.Module):
     self._world_model = world_model
     self._stop_grad_actor = stop_grad_actor
     self._reward = reward
-    self.actor = networks.ActionHead(
+    self.actor = networks_ProLog.ActionHead(
         config.num_actions, config.actor_layers, config.units, config.act,
         config.actor_dist, config.actor_init_std, config.actor_min_std,
         config.actor_dist, config.actor_temp, config.actor_outscale)

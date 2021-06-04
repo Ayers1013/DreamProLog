@@ -84,10 +84,11 @@ class Reconstructor(Method):
       feat = self._wm.dynamics.get_feat(post)
       pred=self._wm.heads['image'](feat)
       like=pred.log_prob(tf.cast(data['image'],tf.float32))
+      mse=tf.keras.losses.MeanSquaredError()(data['image'], pred.mode())
       model_loss=-tf.reduce_mean(like)
     model_parts=[self._wm.encoder, self._wm.heads['image']]
-    metrics=self._wm._model_opt(model_tape,model_loss, model_parts)
-
+    metrics=self._wm._model_opt(model_tape,model_loss, model_parts), mse
+    
     return metrics
 
 
@@ -98,6 +99,15 @@ class Reconstructor(Method):
         print(metrics)
         self.__call__(next(data_set))
 
+class OneStepLook(Method):
+  def __init__(self, worldModel, track_frequency=0):
+    super().__init__()
+    self._wm=worldModel
+    if(track_frequency):
+      self._freq=track_frequency
+      self.tracker=Tracker()
+      self.encode=self.tracker(input_keys=["input"],frequency=self._freq)(self.encode)
+      self.decode=self.tracker(input_keys=["input"],frequency=self._freq)(self.decode)
 
 
     
