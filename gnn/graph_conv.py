@@ -87,12 +87,14 @@ def graph_conv(tensors, s, output_dims = None, use_layer_norm = False):
     x = tf_linear(x, out_dim_symbols)
     #print(x)
     #print(x*tf.expand_dims(sy.sgn,1))
+    #x=x*tf.expand_dims(sy.sgn,1)
     x = sy.segments.collapse(x*tf.expand_dims(sy.sgn,1),
                          operations = [tf.math.segment_mean, segment_minimax])
 
     #print("-"*50)
     #print(x)
     #x=tf.cast(x,tf.int32)
+    x=tf.keras.layers.Dense(1)(x)
     out_symbols = layer([x, symbols], out_dim_symbols,
                         activation_fn = tf.tanh, add_bias = False)
 

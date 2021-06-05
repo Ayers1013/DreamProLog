@@ -1,8 +1,8 @@
-from Env_ProLog import ProLog
-from gnn.gnn_util import *
+#from Env_ProLog import ProLog
+#from gnn.gnn_util import *
 
 
-env=ProLog()
+#env=ProLog()
 import tensorflow as tf
 import tools
 from gnn.graph_placeholder import GraphPlaceholder

@@ -1,1 +1,1 @@
-from gnn.segments_orig import *
+from gnn.segments_keras import *

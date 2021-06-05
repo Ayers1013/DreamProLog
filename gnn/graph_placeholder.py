@@ -1,1 +1,1 @@
-from gnn.graph_placeholder_orig import *
+from gnn.graph_placeholder_keras import *

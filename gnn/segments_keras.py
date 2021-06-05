@@ -49,6 +49,7 @@ class Segments:
                 scattered = tf.cond(self.empty, scatter_empty, scatter_empty)#scatter_nonempty)
 
                 self.segment_indices_nonzero = tf.cumsum(scattered)
+                #self.segment_indices_nonzero=tf.reshape(self.segment_indices_nonzero, [None,])
 
                 if nonzero: self.segment_indices = self.segment_indices_nonzero
                 else:
@@ -84,7 +85,8 @@ class Segments:
 
     def collapse(self, data, *args, **kwargs):
 
-        x = self.collapse_nonzero(data, *args, **kwargs)
+        #x = self.collapse_nonzero(data, *args, **kwargs)
+        x=data
         x = self.add_zeros(x)
         return x
 
