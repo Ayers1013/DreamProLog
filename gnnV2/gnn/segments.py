@@ -1,19 +1,22 @@
 import tensorflow as tf
 import numpy as np
-from gnn.debug_node import tf_debug
+from tensorflow.python.util.nest import flatten
 from gnn.tf_helpers import *
 from collections.abc import Iterable
 
 # class encapsulating tf.segment_sum etc. offering basic functionalities
 
-class Segments:
-    def __init__(self, lens, nonzero = False):
 
+#lens: shape=(), dtype=tf.int32 
+class Segments(tf.Module):
+    def __init__(self, nonzero = False):
+        super().__init__()
         self.nonzero_guarantee = nonzero
 
+    def __call__(self, lens):
+        nonzero=self.nonzero_guarantee
         if nonzero: assertions = [tf.debugging.assert_less(0, lens)]
         else: assertions = []
-
         with tf.name_scope("segments") as scope:
             with tf.control_dependencies(assertions):
 
@@ -59,6 +62,7 @@ class Segments:
 
     def fill(self, constants):
         return tf.gather(constants, self.segment_indices)
+    
     def fill_nonzero(self, constants):
         return tf.gather(constants, self.segment_indices_nonzero)
 
@@ -85,7 +89,7 @@ class Segments:
 
     def collapse(self, data, *args, **kwargs):
 
-        #x = self.collapse_nonzero(data, *args, **kwargs)
+        x = self.collapse_nonzero(data, *args, **kwargs)
         x=data
         x = self.add_zeros(x)
         return x
@@ -214,98 +218,14 @@ class Segments:
         return self.cross_entropy(log_probs, target_probs, aggregate) \
             - self.entropy(probs = target_probs, aggregate = aggregate)
 
+#data:shape=(None,)+self.data_shape, dtype=
 class SegmentsPH(Segments):
-    def __init__(self, data_shape = (), dtype = tf.int32, nonzero = False):
+    def __init__(self, dtype = tf.int32, nonzero = False):
 
-        Segments.__init__(self, tf.keras.Input(shape=(), dtype=tf.int32), nonzero = nonzero)
+        Segments.__init__(self, nonzero = nonzero)
+        
 
-        if data_shape is None:
-            self.data = None
-        else:
-            self.data_shape = tuple(data_shape)
-            self.data = tf.keras.Input(shape=(None,)+self.data_shape, dtype=dtype)
-            self.empty_input = np.zeros((0,)+self.data_shape, dtype = dtype.as_numpy_dtype)
-
-    def feed(self, d, data):
-        lens = list(map(len, data))
+    def __call__(self, lens):
         if self.nonzero_guarantee: assert(0 not in lens)
 
-        d[self.lens] = lens
-        if self.data is not None:
-            nonempty_data = tuple(filter(lambda d: len(d) > 0, data))
-            if len(nonempty_data) == 0: flattened = self.empty_input
-            else: flattened = np.concatenate(nonempty_data)
-            d[self.data] = flattened
-
-class MergedSegments(Segments):
-    def __init__(self, segments_list, nonzero = False):
-
-        if not nonzero:
-            for segments in segments_list:
-                if not segments.nonzero_guarantee:
-                    break
-            else: nonzero = True
-        
-        with tf.name_scope("merged_segments") as scope:
-            merged_lens = tf.stack([segments.lens for segments in segments_list], axis = 1)
-            Segments.__init__(self, tf.reduce_sum(merged_lens, axis = 1), nonzero = nonzero)
-
-            offsets_list = tf.unstack(
-                tf.reshape(
-                    tf.cumsum(
-                        tf.reshape(merged_lens, [-1]),
-                        exclusive = True
-                    ),
-                    [-1, len(segments_list)],
-                ),
-                axis = 1
-            )
-            self.stitch_indices = [
-                segments.fill(offsets-segments.start_indices)
-                + tf.range(segments.data_len)
-                for segments, offsets in zip(segments_list, offsets_list)
-            ]
-
-    def merge_data(self, data_list):
-        with tf.name_scope("merge_data") as scope:
-            return tf.dynamic_stitch(self.stitch_indices, data_list)
-
-def merge_segments(seg_data_list, nonzero = False):
-
-    segments_list, data_list = zip(*seg_data_list)
-    segments = MergedSegments(segments_list, nonzero)
-    return segments, segments.merge_data(data_list)
-
-def unpartition_segments(seg_data_list, partitions):
-
-    with tf.name_scope("unpartition_segments") as scope:
-
-        segments_list, data_list = zip(*seg_data_list)
-        segment_num = 0
-        data_len = 0
-
-        nonzero = True
-        for s in segments_list:
-            segment_num = segment_num + s.segment_num
-            data_len = data_len + s.data_len
-            if not s.nonzero_guarantee: nonzero = False
-
-        lens_stitch_indices = tf.dynamic_partition(
-            tf.range(segment_num),
-            partitions,
-            len(seg_data_list),
-        )
-        segments = Segments(tf.dynamic_stitch(
-            lens_stitch_indices,
-            [ s.lens for s in segments_list ],
-        ), nonzero = nonzero)
-        data_stitch_indices = tf.dynamic_partition(
-            tf.range(data_len),
-            segments.fill(partitions),
-            len(seg_data_list),
-        )
-        data = tf.dynamic_stitch(
-            data_stitch_indices,
-            data_list,
-        )
-        return segments, data
+        super().__call__(lens)

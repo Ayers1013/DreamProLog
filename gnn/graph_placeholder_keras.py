@@ -6,9 +6,9 @@ class GraphHyperEdgesAPH:
     def __init__(self):
         with tf.name_scope("GraphHyperEdgesA"):
             self.segments = SegmentsPH(data_shape = None)
-            self.symbols = tf.keras.Input(shape=(), name="symbols", dtype=tf.int32)
-            self.nodes = tf.keras.Input(shape=(2), name="nodes", dtype=tf.int32)
-            self.sgn = tf.keras.Input(shape=(), name="sgn", dtype=tf.float32)
+            self.symbols = tf.keras.Input(shape=(), dtype=tf.int32)
+            self.nodes = tf.keras.Input(shape=(2), dtype=tf.int32)
+            self.sgn = tf.keras.Input(shape=(), dtype=tf.float32)
 
     @property
     def entry(self):
@@ -24,15 +24,15 @@ def feedGraphHyperEdgesAPH(data):
         data.lens,
         data.symbols,
         data.nodes,
-        data.sqn,
+        data.sgn,
     ]
 
 class GraphHyperEdgesBPH:
     def __init__(self):
         with tf.name_scope("GraphHyperEdgesB"):
             self.segments = SegmentsPH(data_shape = None, nonzero = True)
-            self.nodes = tf.keras.Input(shape=(3), name="nodes", dtype=tf.int32)
-            self.sgn = tf.keras.Input(shape=(), name="sgn", dtype=tf.float32)
+            self.nodes = tf.keras.Input(shape=(3), dtype=tf.int32)
+            self.sgn = tf.keras.Input(shape=(), dtype=tf.float32)
 
     @property
     def entry(self):
@@ -54,7 +54,7 @@ class GraphEdgesPH:
     def __init__(self, nonzero = False):
         with tf.name_scope("GraphEdges"):
             self.segments = SegmentsPH(data_shape = None, nonzero = nonzero)
-            self.data = tf.keras.Input(shape=(), name="data", dtype=tf.int32)
+            self.data = tf.keras.Input(shape=(), dtype=tf.int32)
 
     @property
     def entry(self):
@@ -79,14 +79,14 @@ class GraphPlaceholder():
             self.symbol_inputs = GraphHyperEdgesBPH()
             self.node_c_inputs = GraphEdgesPH()
             self.clause_inputs = GraphEdgesPH(nonzero = True)
-            self.ini_nodes = tf.keras.Input(shape=(), name="ini_nodes", dtype=tf.int32)
-            self.ini_symbols = tf.keras.Input(shape=(), name="ini_symbols", dtype=tf.int32)
-            self.ini_clauses = tf.keras.Input(shape=(), name="ini_clauses", dtype=tf.int32)
+            self.ini_nodes = tf.keras.Input(shape=(), dtype=tf.int32)
+            self.ini_symbols = tf.keras.Input(shape=(), dtype=tf.int32)
+            self.ini_clauses = tf.keras.Input(shape=(), dtype=tf.int32)
 
             self.node_nums   = SegmentsPH(data_shape = None, nonzero = True)
             self.symbol_nums = SegmentsPH(data_shape = None, nonzero = True)
             self.clause_nums = SegmentsPH(data_shape = None, nonzero = True)
-            self.axiom_mask = tf.keras.Input(shape=(), name="axiom_mask", dtype=tf.int32)
+            self.axiom_mask = tf.keras.Input(shape=(), dtype=tf.int32)
         
     @property
     def entry(self):
@@ -111,7 +111,7 @@ class GraphPlaceholder():
 
 
 
-def feedGraphPlaceholder(self, batch, non_destructive = False):
+def feedGraphPlaceholder( batch, non_destructive = False):
     if non_destructive: batch = [g.clone() for g in batch]
     node_nums = [g.num_nodes for g in batch]
     symbol_nums = [g.num_symbols for g in batch]

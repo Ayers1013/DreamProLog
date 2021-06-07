@@ -15,10 +15,10 @@ class GraphNetwork:
     def __init__(self):
         
         self.config=NetworkConfig()
-        
-        self.inputs=GraphPlaceholder()
-        self.values=graphs_to_values(self.inputs, self.config)
-        
+        with tf.Graph().as_default():
+            self.inputs=GraphPlaceholder()
+            self.values=graphs_to_values(self.inputs, self.config)
+            
         self.model=tf.keras.Model(inputs=self.inputs.entry, outputs=self.values)
         
     def __call__(self, data):
