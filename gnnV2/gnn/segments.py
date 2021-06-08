@@ -15,7 +15,7 @@ class Segments(tf.Module):
 
     def __call__(self, lens):
         nonzero=self.nonzero_guarantee
-        if nonzero: assertions = [tf.debugging.assert_less(0, lens)]
+        if nonzero: assertions = [tf.debugging.assert_less(0, tf.cast(lens, tf.int32))]
         else: assertions = []
         with tf.name_scope("segments") as scope:
             with tf.control_dependencies(assertions):
