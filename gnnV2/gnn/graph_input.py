@@ -52,9 +52,9 @@ class GraphInput(tf.Module):
         #Non_desctructive
         batch = [g.clone() for g in batch]
 
-        self.node_nums = [g.num_nodes for g in batch]
-        self.symbol_nums = [g.num_symbols for g in batch]
-        self.clause_nums = [g.num_clauses for g in batch]
+        self.node_nums([g.num_nodes for g in batch])
+        self.symbol_nums([g.num_symbols for g in batch])
+        self.clause_nums([g.num_clauses for g in batch])
 
         data = GraphData.ini_list()
         for g in batch: data.append(g)

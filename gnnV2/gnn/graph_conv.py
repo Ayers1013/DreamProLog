@@ -10,6 +10,7 @@ def gather_opt(params, indices): # if params = -1, uses zero tensor
 
 class graph_start(tf.Module):
     def __init__(self, start_dims, graph):
+        super().__init__()
         self.dim_nodes, self.dim_symbols, self.dim_clauses = start_dims
 
         self.node_emb=tf.Variable(tf.ones([4,self.dim_nodes]))
@@ -32,6 +33,7 @@ def segment_minimax(data, segment_indices):
 
 class graph_conv(tf.Module):
     def __init__(self, graph, output_dims = None, use_layer_norm = False):
+        super().__init__()
         self.output_dims=output_dims
         self.use_layer_norm=use_layer_norm
 
@@ -86,12 +88,12 @@ class graph_conv(tf.Module):
         x = tf.reshape(x, [-1, dim])
         x = tf_linear(x, out_dim_symbols)
         
-        x = sy.segments.collapse(x*tf.expand_dims(sy.sgn,1),
+        x = sy.segments.collapse(x*tf.cast(tf.expand_dims(sy.sgn,1), dtype=tf.float32),
                             operations = [tf.math.segment_mean, segment_minimax])
 
         
-        out_symbols = self.layer([x, symbols], out_dim_symbols,
-                            activation_fn = tf.tanh, add_bias = False)
+        #out_symbols = self.layer([x, symbols], out_dim_symbols,
+        #                    activation_fn = tf.tanh, add_bias = False)
 
         # out_clauses <- nodes, clauses
 
@@ -99,6 +101,9 @@ class graph_conv(tf.Module):
         x = c.segments.collapse(tf.gather(nodes, c.data),
                                 [tf.math.segment_max, tf.math.segment_mean])
 
-        out_clauses = self.layer([x, clauses], out_dim_clauses)
+        #out_clauses = self.layer([x, clauses], out_dim_clauses)
+
+        out_symbols=symbols
+        out_clauses=clauses
 
         return out_nodes, out_symbols, out_clauses

@@ -7,6 +7,8 @@ from gnn.tf_helpers import *
 from gnn.graph_input import GraphInput
 from gnn.segments import Segments
 from gnn.graph_conv import graph_start, graph_conv
+from gnn.graph_data import GraphData
+import tools
 
 class NetworkConfig:
     def __init__(self):
@@ -20,8 +22,9 @@ class NetworkConfig:
         self.entropy_regularization = 0.1
 
 
-class GraphNetwork(tf.Module):
+class GraphNetwork(tools.Module):
     def __init__(self, config=None):
+        super().__init__()
         if(config is None):
             self.config=NetworkConfig()
         else:
@@ -38,6 +41,11 @@ class GraphNetwork(tf.Module):
         self.dense3=tf.keras.layers.Dense(32, activation=tf.sigmoid)
 
     def __call__(self, graph_ph):
+        #From string
+        #data=GraphData()
+        #data.load_from_str(graph_ph[0])
+        #graph_ph=[data]
+
         self.input_layer(graph_ph)
         x=self.start_layer()
 
@@ -47,6 +55,7 @@ class GraphNetwork(tf.Module):
         nodes, symbols, clauses=x
         x=self.dense1(clauses)
         x = self.input_layer.clause_nums.collapse(x, [tf.math.segment_max, tf.math.segment_mean])
+        x=tf.reshape(x,shape=(1,-1))
         x=self.dense2(x)
         x=self.dense3(x)
         return x

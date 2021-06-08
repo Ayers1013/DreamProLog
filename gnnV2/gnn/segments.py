@@ -49,7 +49,7 @@ class Segments(tf.Module):
                         tf.ones([self.nonzero_num-1], dtype=tf.int32),
                         [self.data_len],
                     )
-                scattered = tf.cond(self.empty, scatter_empty, scatter_empty)#scatter_nonempty)
+                scattered = tf.cond(self.empty, scatter_empty, scatter_nonempty)
 
                 self.segment_indices_nonzero = tf.cumsum(scattered)
                 #self.segment_indices_nonzero=tf.reshape(self.segment_indices_nonzero, [None,])
