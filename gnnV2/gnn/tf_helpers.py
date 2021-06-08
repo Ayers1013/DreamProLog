@@ -63,7 +63,9 @@ def concatenate_layer(xl, num_outputs, activation_fn = tf.nn.relu, add_bias = Tr
         if res is None:
             if add_bias: res = tf_linear(x, num_outputs)
             else: res = tf_linear_nob(x, num_outputs)
-        else: res = res + tf_linear_nob(x, num_outputs)
+        else:
+            res = tf.keras.layers.concatenate([res, tf_linear_nob(x, num_outputs)], axis=0)
+            # res = res + tf_linear_nob(x, num_outputs)
 
     if activation_fn is not None: res = activation_fn(res)
     return res
