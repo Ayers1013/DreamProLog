@@ -111,7 +111,7 @@ class ImagBehavior(tools.Module):
     self._stop_grad_actor = stop_grad_actor
     self._reward = reward
     self.actor = networks_ProLog.ActionHead(
-        config.num_actions, config.actor_layers, config.units, config.act,
+        config.actor_layers, config.units, config.act,
         config.actor_dist, config.actor_init_std, config.actor_min_std,
         config.actor_dist, config.actor_temp, config.actor_outscale)
     self.value = networks.DenseHead(

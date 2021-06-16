@@ -2,24 +2,16 @@ import pyswip
 import threading
 import sys
 
+#graph_data test
+from gnn.graph_data import GraphData
+data=GraphData()
+#data.load_from_str("1 1 1 1 1 1 1 1 0 1 0 1,0 1 2 3 4 3 1 0 3 3,-1 -1 -1 -1 -1 -1 2 -1 -1 -1 4 -1 -1 -1 -1 -1 8 -1 10 -1,-1 1 1 -1 1 1 -1 1 1 -1;0 0 1 0 1 0 0 0 1 0 1 0,3 3 3 3,3 -1 5 -1 9 -1 11 -1,-1 1 1 -1;0 0 0 0 0 0 0 0 0 0 0 0,,,;2 2 1 4 1,0 -1 -1 7 -1 -1 1 -1 -1 6 -1 -1 2 -1 -1 3 2 -1 5 4 -1 9 8 -1 11 10 -1 4 -1 -1,-1 1 1 -1 1 -1 1 1 -1 1;2 2 0 1 0 1 2 1 0 1 0 1,0 1 2 4 2 3 3 5 4 4 5;1 1 2 2 3 2,0 0 1 3 5 6 7 1 9 6 11;0 0 1 0 1 0 0 0 3 0 3 0;1 1 0 1 0;0 1 3 3 3 3;0 0 0 0 0 0 1 0 0 0 0")
+data.load_from_str('1 1 1 1 1 1 1 0 1 1 0 1 1 0 0 1 1 1 1 1 0 1 1 0 0 1 1 1 1 1 0 1 0 1 1 1 0 1 0 0 1 1 0 0 1 0 1 1 0 0 1 0 0 1 1 1 1 0 0 1 1 1 1 0 0 1 0 0 1 1 1 1,0 0 1 2 3 2 4 2 4 3 4 2 3 3 2 4 5 4 2 5 5 3 4 2 2 4 4 4 4 4 4 4 4 5 5 4 4 4 4 2 2 4 3 3 4 4 4,-1 -1 -1 -1 -1 -1 2 -1 3 3 3 -1 4 5 7 -1 2 8 10 2 11 10 14 -1 13 15 13 14 17 -1 16 18 20 2 21 2 24 -1 23 25 23 24 27 23 26 28 30 -1 32 -1 31 33 30 32 36 36 38 39 39 38 42 43 42 45 45 43 48 49 51 52 50 53 48 51 49 52 57 58 57 -1 58 -1 60 61 63 64 66 67 65 68 63 66 64 67,-1 1 1 1 1 1 1 1 1 1 -1 1 1 1 1 -1 1 -1 1 1 1 1 -1 1 1 1 -1 -1 1 -1 -1 1 1 1 1 -1 1 1 1 1 1 -1 1 1 -1 1 1;0 0 2 2 1 0 0 1 0 0 1 1 0 2 1 0 1 1 0 0 1 1 0 2 1 0 1 1 0 0 2 1 1 0 0 0 1 0 1 1 0 0 2 0 0 1 0 0 2 1 1 1 0 0 0 0 0 2 1 0 1 0 0 2 1 1 1 0 0 0 0 0,2 4 3 2 4 2 3 4 3 3 2 4 2 5 4 5 5 2 4 3 2 4 4 2 4 4 4 4 4 4 5 4 4 4 5 4 2 2 4 3 4 4 4 3,3 -1 9 8 4 3 5 -1 6 5 8 -1 11 2 12 10 16 15 17 14 15 -1 19 18 18 -1 21 2 22 2 26 25 27 24 25 -1 29 28 28 23 31 -1 35 32 34 33 33 -1 37 36 40 39 41 38 44 43 46 45 47 43 50 49 55 51 56 52 54 53 53 52 59 58 60 -1 61 -1 62 61 65 64 70 66 71 67 69 68 68 67,1 1 1 1 1 1 1 -1 1 1 1 -1 1 1 -1 1 1 1 -1 1 1 -1 1 1 -1 1 -1 -1 1 1 1 1 1 -1 1 1 1 1 -1 1 1 1 -1 1;0 0 3 1 0 1 0 0 1 0 1 0 0 0 1 1 0 0 1 0 0 0 0 1 1 1 0 0 1 0 0 0 1 1 0 0 1 0 1 1 0 0 0 2 0 1 0 0 0 1 0 1 2 1 0 0 0 0 1 0 0 1 0 0 1 0 1 2 1 0 0 0,3 5 4 3 4 4 4 3 3 4 3 5 5 4 4 4 4 4 4 4 4 4 5 4 5 4 4 4 4 3 4 3 4 4,11 10 21 20 22 21 4 3 6 4 9 2 12 11 17 13 16 13 19 16 28 27 27 23 26 23 29 26 35 30 34 31 37 36 41 39 40 38 44 42 47 45 46 42 50 48 55 48 53 51 56 49 54 50 59 57 62 60 65 63 70 63 68 66 71 64 69 65,1 1 -1 1 1 1 -1 1 1 -1 1 1 1 -1 -1 1 -1 -1 1 -1 1 1 1 1 1 1 -1 1 -1 1 1 1 1 -1;2 1 10 7 22 5,0 -1 -1 1 -1 -1 2 -1 -1 3 2 -1 5 3 -1 8 7 -1 15 14 -1 18 17 -1 25 24 -1 31 30 -1 33 32 -1 60 57 -1 61 58 -1 4 3 3 11 10 2 16 13 15 17 13 14 28 27 23 65 63 64 68 66 67 6 4 5 9 2 8 12 11 10 19 16 18 22 21 2 29 26 28 34 31 33 35 30 32 37 36 36 40 38 39 41 39 38 44 42 43 46 42 45 47 45 43 54 50 53 55 48 51 56 49 52 59 57 58 62 60 61 69 65 68 70 63 66 71 64 67 21 20 2 26 23 25 27 23 24 50 48 49 53 51 52,-1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 -1 -1 -1 -1 1 -1 -1 1 -1 -1 1 1 -1 1 1 1 -1 -1 1 1 1 1 1 1 1;3 1 0 0 0 0 1 0 0 1 0 0 1 0 0 0 0 0 0 1 0 0 1 0 0 0 0 0 0 1 0 0 0 0 1 1 0 1 0 0 1 1 0 0 1 0 1 1 0 0 0 0 0 0 1 1 1 0 0 1 0 0 1 0 0 0 0 0 0 1 1 1,0 1 3 2 2 4 5 6 7 8 9 9 10 11 11 12 12 12 13 13 13 14 14 15 15 15;1 1 2 1 1 1 1 1 1 2 1 2 3 3 2 3,0 0 1 6 0 9 12 19 22 29 34 35 37 40 41 44 46 47 54 55 56 59 62 69 70 71;0 0 1 1 1 1 0 3 1 0 3 1 0 3 3 1 1 1 1 0 3 1 0 3 3 1 1 1 1 0 3 1 3 1 0 0 3 0 3 3 0 0 3 3 0 3 0 0 3 3 1 3 3 1 0 0 0 3 3 0 1 1 0 3 3 1 3 3 1 0 0 0;1 0 0 0 1 0;0 1 3 3 3 3 3 3 3 3 3 3 3 3 3 3;0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0')
+
+
 #import gym
 import numpy as np
-
-class ActionSpace:
-    def __init__(self, _n):
-        self.n=_n
-
-    def sample(self):
-        arr=np.zeros(self.n)
-        arr[np.random.randint(self.n)]=1.0
-        # arr[np.random.randint(4)]=1.0
-        #BUG#002
-        return arr
-        #return np.random.randint(self.n)
-
-    @property
-    def shape(self):
-        return self.n
+import tensorflow as tf
 
 class ProLog:
     LOCK=threading.Lock()
@@ -57,17 +49,8 @@ class ProLog:
         self.simple_features = result["SimpleFeatures"]
 
         self.ext_action_size = len(self.gnnInput[4])
+        #TODO action_perm is redundant
         self.action_perm = self.gnnInput[5]
-
-    @property
-    def observation_space(self):
-        #TODO
-        return 0
-
-    @property
-    def action_space(self):
-        #TODO Correct this!
-        return ActionSpace(self.ext_action_size)
 
     @property
     def action_space_size(self)->int:
@@ -81,14 +64,6 @@ class ProLog:
         if(action.shape!=(1)):
             action=np.argmax(action)
 
-        """
-        indices = np.where(self.action_perm==action)[0]
-        # print(indices)
-        if len(indices) > 0:
-            action = indices[0]
-        else:
-            action = -1
-        """
         #print(action)
         if(self.gnnInput[4][action]==0):
             action=-1
@@ -110,40 +85,14 @@ class ProLog:
             self.gnnInput = result[0]["GnnInput"]
             self.simple_features = result[0]["SimpleFeatures"]
             self.action_perm = self.gnnInput[5]
-            if self.result == -1:
-                reward = self.failure_reward
-            elif self.result == 1:
-                reward = self.success_reward
-            else:
-                if(self.steps==self.step_limit):
-                    self.result=-1
-                    reward = self.step_limit_reward
-                else:
-                    reward = self.step_reward
-
-        #return ({'image':self.gnnInput, 'ram': None, 'features': self.get_features()},
-
-        action_size=len(self.gnnInput[4])
-        action_space=np.zeros((action_size,32))
-        action_space[np.arange(action_size),np.arange(action_size)]=1.
-
-        return (
-            {'image':np.tanh(np.array(self.simple_features,np.float32)*0.1),
-            'features':np.tanh(np.array(self.simple_features,np.float32)*0.1),
-            'action_space':action_space},
-            #{'image':np.ones(16)*self.steps*0.1},#'features': self.get_features()},
-            np.float64(reward), 
-            self.terminal,
-            {}) 
+            reward=self.reward
+            
+        
+        return (self.image(), reward, self.terminal, {}) 
     
     def reset(self):
-        #print("_reset_")
         self.steps=0
-        #with self.LOCK:
-        #    self.prolog=pyswip.Prolog()
-
         
-        # self.prolog.consult("leancop/leancop_step.pl") # TODO I think we don't need to reconsult
         problem=next(self.problems)
         query = 'init_python("{}",{},GnnInput, SimpleFeatures, Result)'.format(problem, self.settings)
         #print("Query:\n   ", query, "\n")
@@ -156,6 +105,9 @@ class ProLog:
         self.ext_action_size = len(self.gnnInput[4])
         self.action_perm = self.gnnInput[5]
 
+        return self.image()
+
+    def image(self):
         action_size=len(self.gnnInput[4])
         action_space=np.zeros((action_size,32))
         action_space[np.arange(action_size),np.arange(action_size)]=1.
@@ -165,21 +117,58 @@ class ProLog:
         return {'image':np.tanh(np.array(self.simple_features,np.float32)*0.1),
             'features':np.tanh(np.array(self.simple_features,np.float32)*0.1),
             'action_space':action_space}
+            #'gnn': data.clone().convert_to_dict()}
+    
+    @property
+    def output_sign(self):
+        gnnSpec={
+            'node_inputs_1/lens': None, 
+            'node_inputs_1/symbols':tf.TensorSpec(shape=(None, None), dtype=tf.int32), 
+            'node_inputs_1/nodes':None, 
+            'node_inputs_1/sgn': None, 
+            'node_inputs_2/lens': None, 
+            'node_inputs_2/symbols': None, 
+            'node_inputs_2/nodes': None, 
+            'node_inputs_2/sgn': None, 
+            'node_inputs_3/lens': None, 
+            'node_inputs_3/symbols': None, 
+            'node_inputs_3/nodes': None, 
+            'node_inputs_3/sgn': None, 
+            'symbol_inputs/lens': None, 
+            'symbol_inputs/nodes': None, 
+            'symbol_inputs/sgn': None, 
+            'node_c_inputs/lens': None, 
+            'node_c_inputs/data': None, 
+            'clause_inputs/lens': None, 
+            'clause_inputs/data': None, 
+            'ini_nodes': None, 
+            'ini_symbols': None, 
+            'ini_clauses': None
+        }
 
+        return {
+            'image': tf.TensorSpec(shape=(None, None), dtype=tf.float32),
+            'features': tf.TensorSpec(shape=(None, None), dtype=tf.float32),
+            'action_space': tf.TensorSpec(shape=(None, None, 32), dtype=tf.float32)
+            }
 
     @property
     def terminal(self)->bool:
         return self.result != 0
 
-    def legal_actions(self):
-        return None # TODO extract from self.gnnInput
-    
-    def make_image(self):
-        return self.gnnInput
-
-    def get_features(self):
-        #Returns the features 
-        return self.simple_features
+    @property
+    def reward(self):
+        if self.result == -1:
+            reward = self.failure_reward
+        elif self.result == 1:
+            reward = self.success_reward
+        else:
+            if(self.steps==self.step_limit):
+                self.result=-1
+                reward = self.step_limit_reward
+            else:
+                reward = self.step_reward
+        return np.float64(reward)
 
 
 class DummyEnv:
@@ -199,10 +188,11 @@ class DummyEnv:
         #TODO
         return 0
 
+#TODO
     @property
     def action_space(self):
         #TODO Correct this!
-        return ActionSpace(4)
+        return None #ActionSpace(4)
 
     @property
     def action_space_size(self)->int:

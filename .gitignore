@@ -4,7 +4,9 @@ __pycache__/
 ./dist
 MUJOCO_LOG.TXT
 /LogDir
-/obsolate
+#/obsolate
 *.ipynb
 .ipynb_checkpoints/
 .vscode/
+common/
+dreamerV2/

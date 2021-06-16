@@ -77,10 +77,10 @@ class Encoder(tools.Module):
 class ActionHead(tools.Module):
 
   def __init__(
-      self, size, layers, units, act=tf.nn.elu, dist='trunc_normal',
+      self, layers, units, act=tf.nn.elu, dist='trunc_normal',
       init_std=0.0, min_std=0.1, action_disc=5, temp=0.1, outscale=0, action_embed=None):
     # assert min_std <= 2
-    self._size = size
+    self._size = 24
     self._layers = layers
     self._units = units
     self._dist = dist

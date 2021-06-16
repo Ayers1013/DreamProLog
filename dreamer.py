@@ -98,7 +98,7 @@ class Dreamer(tools.Module):
     if state is None:
       batch_size = len(obs['image'])
       latent = self._wm.dynamics.initial(len(obs['image']))
-      action = tf.zeros((batch_size, self._config.num_actions), self._float)
+      action = tf.zeros((batch_size, obs['action_space'].shape[1]), self._float)
     else:
       latent, action = state
     embed, action_embed = self._wm.encoder(self._wm.preprocess(obs))
@@ -162,14 +162,20 @@ def count_steps(folder):
   return sum(int(str(n).split('-')[-1][:-4]) - 1 for n in folder.glob('*.npz'))
 
 
-def make_dataset(episodes, config):
+def make_dataset(episodes, config, output_sign):
   example = episodes[next(iter(episodes.keys()))]
-  types = {k: v.dtype for k, v in example.items()}
-  shapes = {k: (None,) + v.shape[1:] for k, v in example.items()}
+  #types = {k: v.dtype for k, v in example.items()}
+  #shapes = {k: (None,) + v.shape[1:] for k, v in example.items()}
+  for k, v in example.items():
+    if(k not in output_sign.keys()):
+      output_sign[k]=tf.TensorSpec(shape=(None,)+v.shape[1:], dtype=v.dtype)
+
   generator = lambda: tools.sample_episodes(
       episodes, config.batch_length, config.oversample_ends)
-  dataset = tf.data.Dataset.from_generator(generator, types, shapes)
+  dataset = tf.data.Dataset.from_generator(generator, output_signature=output_sign)
   dataset = dataset.batch(config.batch_size, drop_remainder=True)
+  #dataset=dataset.apply(
+  #  tf.data.experimental.dense_to_ragged_batch(batch_size=config.batch_size, drop_remainder=True))
   dataset = dataset.prefetch(10)
   return dataset
 
@@ -275,19 +281,26 @@ def main(logdir, config):
   make = lambda mode: make_env(config, logger, mode, train_eps, eval_eps)
   train_envs = [make('train') for _ in range(config.envs)]
   eval_envs = [make('eval') for _ in range(config.envs)]
-  acts = train_envs[0].action_space
-  config.num_actions = acts.n if hasattr(acts, 'n') else acts.shape[0]
+  #acts = train_envs[0].action_space
+  #config.num_actions = acts.n if hasattr(acts, 'n') else acts.shape[0]
 
   prefill = max(0, config.prefill - count_steps(config.traindir))
   print(f'Prefill dataset ({prefill} steps).')
-  random_agent = lambda o, d, s: ([acts.sample() for _ in d], s)
+  def sample():
+        arr=np.zeros(24)
+        arr[np.random.randint(24)]=1.0
+        # arr[np.random.randint(4)]=1.0
+        #BUG#002
+        return arr
+  random_agent = lambda o, d, s: ([sample() for _ in d], s)
   tools.simulate(random_agent, train_envs, prefill)
   tools.simulate(random_agent, eval_envs, episodes=1)
   logger.step = config.action_repeat * count_steps(config.traindir)
 
   print('Simulate agent.')
-  train_dataset = make_dataset(train_eps, config)
-  eval_dataset = iter(make_dataset(eval_eps, config))
+  output_sign=train_envs[0].output_sign
+  train_dataset = make_dataset(train_eps, config, output_sign)
+  eval_dataset = iter(make_dataset(eval_eps, config, output_sign))
   agent = Dreamer(config, logger, train_dataset)
   if (logdir / 'variables.pkl').exists():
     agent.load(logdir / 'variables.pkl')
