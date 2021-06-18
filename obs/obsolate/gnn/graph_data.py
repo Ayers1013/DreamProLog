@@ -1,5 +1,4 @@
 import numpy as np
-from numpy.lib.function_base import _percentile_dispatcher
 
 def str_to_npa(s):
     if s == "": return np.zeros([0], dtype = int)
@@ -59,13 +58,11 @@ class GraphHyperEdgesA():
             map(str_to_npa, s.split(','))
         self.nodes = self.nodes.reshape((-1,2))
         return self
-
     def load_from_dict(self, d, prefix):
-        self.lens=np.array(d[prefix+"lens"])
-        self.symbols=np.array(d[prefix+"symbols"])
-        self.nodes=np.array(d[prefix+"nodes"])
-        self.sgn=np.array(d[prefix+"sgn"])
-
+        self.lens, self.symbols, self.nodes, self.sgn = (
+            np.array(d[prefix+name])
+            for name in ("lens", "symbols", "nodes", "sgn")
+        )
         self.nodes = self.nodes.reshape((-1,2))
         return self
 
@@ -126,10 +123,10 @@ class GraphHyperEdgesB():
         self.nodes = self.nodes.reshape((-1,3))
         return self
     def load_from_dict(self, d, prefix):
-        self.lens=np.array(d[prefix+"lens"])
-        self.nodes=np.array(d[prefix+"nodes"])
-        self.sgn=np.array(d[prefix+"sgn"])
-
+        self.lens, self.nodes, self.sgn = (
+            np.array(d[prefix+name])
+            for name in ("lens", "nodes", "sgn")
+        )
         self.nodes = self.nodes.reshape((-1,3))
         return self
 
@@ -181,14 +178,11 @@ class GraphEdges():
         self.lens, self.data = \
             map(str_to_npa, s.split(','))
         return self
-
     def load_from_dict(self, d, prefix):
         self.lens, self.data = (
             np.array(d[prefix+name])
             for name in ("lens", "data")
         )
-        self.lens=np.array(d[prefix+"lens"])
-        self.data=np.array(d[prefix+"data"])
         return self
 
     def convert_to_dict(self, prefix):
@@ -334,23 +328,16 @@ class GraphData():
         self.symbol_inputs = GraphHyperEdgesB().load_from_dict(d, prefix+"symbol_inputs/")
         self.node_c_inputs = GraphEdges().load_from_dict(d, prefix+"node_c_inputs/")
         self.clause_inputs = GraphEdges().load_from_dict(d, prefix+"clause_inputs/")
-        """
+
         self.ini_nodes, self.ini_symbols, self.ini_clauses = (
             np.array(d[prefix+name])
             for name in ("ini_nodes", "ini_symbols", "ini_clauses")
         )
-        """
-        self.ini_nodes=np.array(d[prefix+"ini_nodes"])
-        self.ini_symbols=np.array(d[prefix+"ini_symbols"])
-        self.ini_clauses=np.array(d[prefix+"ini_clauses"])
-
-
         self.axiom_mask = np.ones(len(self.clause_inputs.data), dtype = int)
 
         self.num_nodes = len(self.ini_nodes)
         self.num_symbols = len(self.ini_symbols)
         self.num_clauses = len(self.ini_clauses)
-        return self
 
     def convert_to_dict(self, prefix=""):
         d={}

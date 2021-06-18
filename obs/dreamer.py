@@ -23,10 +23,10 @@ from tensorflow_probability import distributions as tfd
 sys.path.append(str(pathlib.Path(__file__).parent))
 
 import exploration as expl
-import models
+import models_ProLog as models
 import tools
-from envs import make_env
-from tools import make_dataset
+import wrappers
+
 
 class Dreamer(tools.Module):
 
@@ -161,6 +161,82 @@ class Dreamer(tools.Module):
 def count_steps(folder):
   return sum(int(str(n).split('-')[-1][:-4]) - 1 for n in folder.glob('*.npz'))
 
+
+def make_dataset(episodes, config, output_sign):
+  example = episodes[next(iter(episodes.keys()))]
+  #types = {k: v.dtype for k, v in example.items()}
+  #shapes = {k: (None,) + v.shape[1:] for k, v in example.items()}
+  for k, v in example.items():
+    if(k not in output_sign.keys()):
+      output_sign[k]=tf.TensorSpec(shape=(None,)+v.shape[1:], dtype=v.dtype)
+
+  generator = lambda: tools.sample_episodes(
+      episodes, config.batch_length, config.oversample_ends)
+  dataset = tf.data.Dataset.from_generator(generator, output_signature=output_sign)
+  dataset = dataset.batch(config.batch_size, drop_remainder=True)
+  #dataset=dataset.apply(
+  #  tf.data.experimental.dense_to_ragged_batch(batch_size=config.batch_size, drop_remainder=True))
+  dataset = dataset.prefetch(10)
+  return dataset
+
+
+def make_env(config, logger, mode, train_eps, eval_eps):
+  suite, task = config.task.split('_', 1)
+  print("Suite: "+suite)
+  if suite == 'dmc':
+    env = wrappers.DeepMindControl(task, config.action_repeat, config.size)
+    env = wrappers.NormalizeActions(env)
+  elif suite == 'atari':
+    env = wrappers.Atari(
+        task, config.action_repeat, config.size,
+        grayscale=config.atari_grayscale,
+        life_done=False and (mode == 'train'),
+        sticky_actions=True,
+        all_actions=True)
+    env = wrappers.OneHotAction(env)
+  elif suite == 'prolog':
+    from Env_ProLog import ProLog
+    env=ProLog()
+  elif suite == 'dummy':
+    from Env_ProLog import DummyEnv
+    env=DummyEnv()
+  else:
+    raise NotImplementedError(suite)
+  env = wrappers.TimeLimit(env, config.time_limit)
+  callbacks = [functools.partial(
+      process_episode, config, logger, mode, train_eps, eval_eps)]
+  env = wrappers.CollectDataset(env, callbacks)
+  env = wrappers.RewardObs(env)
+  return env
+
+
+def process_episode(config, logger, mode, train_eps, eval_eps, episode):
+  directory = dict(train=config.traindir, eval=config.evaldir)[mode]
+  cache = dict(train=train_eps, eval=eval_eps)[mode]
+  filename = tools.save_episodes(directory, [episode])[0]
+  length = len(episode['reward']) - 1
+  score = float(episode['reward'].astype(np.float64).sum())
+  video = episode['image']
+  if mode == 'eval':
+    cache.clear()
+  if mode == 'train' and config.dataset_size:
+    total = 0
+    for key, ep in reversed(sorted(cache.items(), key=lambda x: x[0])):
+      if total <= config.dataset_size - length:
+        total += len(ep['reward']) - 1
+      else:
+        del cache[key]
+    logger.scalar('dataset_size', total + length)
+  cache[str(filename)] = episode
+  print(f'{mode.title()} episode has {length} steps and return {score:.3f}.')
+  logger.scalar(f'{mode}_return', score)
+  logger.scalar(f'{mode}_length', length)
+  logger.scalar(f'{mode}_episodes', len(cache))
+  if mode == 'eval' or config.expl_gifs:
+    logger.video(f'{mode}_policy', video[None])
+  logger.write()
+
+
 def main(logdir, config):
   logdir = pathlib.Path(logdir).expanduser()
   config.traindir = config.traindir or logdir / 'train_eps'
@@ -223,10 +299,6 @@ def main(logdir, config):
 
   print('Simulate agent.')
   output_sign=train_envs[0].output_sign
-
-  e=next(iter(tools.sample_episode4(train_eps)))
-  print(e)
-
   train_dataset = make_dataset(train_eps, config, output_sign)
   eval_dataset = iter(make_dataset(eval_eps, config, output_sign))
   agent = Dreamer(config, logger, train_dataset)

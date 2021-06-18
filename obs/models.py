@@ -10,8 +10,8 @@ class WorldModel(tools.Module):
   def __init__(self, step, config):
     self._step = step
     self._config = config
-    #NOTE to gnn
-    self.encoder = networks.Encoder(input_pipes=['image'],action_embed=True)#networks.DummyEncoder()
+    self.encoder = networks.ConvEncoder(
+        config.cnn_depth, config.act, config.encoder_kernels)
     self.dynamics = networks.RSSM(
         config.dyn_stoch, config.dyn_deter, config.dyn_hidden,
         config.dyn_input_layers, config.dyn_output_layers, config.dyn_shared,
@@ -20,9 +20,9 @@ class WorldModel(tools.Module):
     self.heads = {}
     channels = (1 if config.atari_grayscale else 3)
     shape = config.size + (channels,)
-
-    #NOTE to gnn
-    self.heads['image'] = networks.DummyDecoder()
+    self.heads['image'] = networks.ConvDecoder(
+        config.cnn_depth, config.act, shape, config.decoder_kernels,
+        config.decoder_thin)
     self.heads['reward'] = networks.DenseHead(
         [], config.reward_layers, config.units, config.act)
     if config.pred_discount:
@@ -39,7 +39,7 @@ class WorldModel(tools.Module):
   def train(self, data):
     data = self.preprocess(data)
     with tf.GradientTape() as model_tape:
-      embed, action_embed = self.encoder(data)
+      embed = self.encoder(data)
       post, prior = self.dynamics.observe(embed, data['action'])
       kl_balance = tools.schedule(self._config.kl_balance, self._step)
       kl_free = tools.schedule(self._config.kl_free, self._step)
@@ -56,8 +56,6 @@ class WorldModel(tools.Module):
         likes[name] = tf.reduce_mean(like) * self._scales.get(name, 1.0)
       model_loss = kl_loss - sum(likes.values())
     model_parts = [self.encoder, self.dynamics] + list(self.heads.values())
-
-    #Logginh metrics
     metrics = self._model_opt(model_tape, model_loss, model_parts)
     metrics.update({f'{name}_loss': -like for name, like in likes.items()})
     metrics['kl_balance'] = kl_balance
@@ -66,29 +64,22 @@ class WorldModel(tools.Module):
     metrics['kl'] = tf.reduce_mean(kl_value)
     metrics['prior_ent'] = self.dynamics.get_dist(prior).entropy()
     metrics['post_ent'] = self.dynamics.get_dist(post).entropy()
-    return embed, post, feat, kl_value, metrics, action_embed
+    return embed, post, feat, kl_value, metrics
 
   @tf.function
   def preprocess(self, obs):
     dtype = prec.global_policy().compute_dtype
     obs = obs.copy()
-    #NOTE We have a simple array
-    #obs['image'] = tf.cast(obs['image'], dtype) / 255.0 - 0.5
-    #obs['image']=tf.cast(obs['image'],dtype)
-    #obs['image']=tf.math.tanh(obs['image']*0.1)
-    #obs['reward'] = getattr(tf, self._config.clip_rewards)(obs['reward'])
+    obs['image'] = tf.cast(obs['image'], dtype) / 255.0 - 0.5
+    obs['reward'] = getattr(tf, self._config.clip_rewards)(obs['reward'])
     if 'discount' in obs:
       obs['discount'] *= self._config.discount
     for key, value in obs.items():
-      if key=='gnn':
-          pass   
       if tf.dtypes.as_dtype(value.dtype) in (
           tf.float16, tf.float32, tf.float64):
         obs[key] = tf.cast(value, dtype)
     return obs
 
-
-"""
   @tf.function
   def video_pred(self, data):
     data = self.preprocess(data)
@@ -101,7 +92,7 @@ class WorldModel(tools.Module):
     openl = self.heads['image'](self.dynamics.get_feat(prior)).mode()
     model = tf.concat([recon[:, :5] + 0.5, openl + 0.5], 1)
     error = (model - truth + 1) / 2
-    return tf.concat([truth, model, error], 2)"""
+    return tf.concat([truth, model, error], 2)
 
 
 class ImagBehavior(tools.Module):
@@ -112,7 +103,7 @@ class ImagBehavior(tools.Module):
     self._stop_grad_actor = stop_grad_actor
     self._reward = reward
     self.actor = networks.ActionHead(
-        config.actor_layers, config.units, config.act,
+        config.num_actions, config.actor_layers, config.units, config.act,
         config.actor_dist, config.actor_init_std, config.actor_min_std,
         config.actor_dist, config.actor_temp, config.actor_outscale)
     self.value = networks.DenseHead(
@@ -248,8 +239,6 @@ class ImagBehavior(tools.Module):
         self._config.actor_state_entropy(), 0):
       actor_target += self._config.actor_state_entropy() * state_ent[:-1]
     actor_loss = -tf.reduce_mean(weights[:-1] * actor_target)
-    #NOTE Temporary!!
-    actor_loss*=30.0
     return actor_loss, metrics
 
   def _update_slow_target(self):
