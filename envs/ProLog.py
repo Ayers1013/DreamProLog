@@ -23,7 +23,7 @@ class ProblemLibrary:
 class ProLog:
     LOCK=threading.Lock()
     
-    def __init__(self, gnn=True):
+    def __init__(self, gnn=False):
         #problems is a generator function
         self.gnn=gnn
 
