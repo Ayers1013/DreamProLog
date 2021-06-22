@@ -15,15 +15,15 @@ import tensorflow as tf
 
 class ProblemLibrary:
     def __init__(self, config=None):
-        self.problem="leancop/robinson_1p1__2.p"
-        #self.problem="leancop/pelletier21.p"
+        #self.problem="leancop/robinson_1p1__2.p"
+        self.problem="leancop/pelletier21.p"
     def get(self):
         return self.problem
 
 class ProLog:
     LOCK=threading.Lock()
     
-    def __init__(self, gnn=False):
+    def __init__(self, gnn=True):
         #problems is a generator function
         self.gnn=gnn
 
@@ -175,7 +175,7 @@ class ProLog:
         for name in outputs:
             if name=='symbol_inputs/nodes': gnnSpec[name]=tf.TensorSpec(shape=(None,3), dtype=tf.int32)
             elif name.find("/")!=-1 and name.split("/")[1]=='nodes': gnnSpec[name]=tf.TensorSpec(shape=(None,2), dtype=tf.int32)
-            else: gnnSpec[name]=tf.TensorSpec(shape=(None), dtype=tf.int32)
+            else: gnnSpec[name]=tf.TensorSpec(shape=(None,), dtype=tf.int32)
 
         sign={
             'image': tf.TensorSpec(shape=(None, None), dtype=tf.float32),

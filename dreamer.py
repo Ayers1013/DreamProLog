@@ -61,8 +61,7 @@ class Dreamer(tools.Module):
         random=lambda: expl.Random(config),
         plan2explore=lambda: expl.Plan2Explore(config, self._wm, reward),
     )[config.expl_behavior]()
-    # Train step to initialize variables including optimizer statistics.
-    
+    # Train step to initialize variables including optimizer statistics.    
     x=next(self._dataset)
     self._train(x)
 
@@ -211,8 +210,9 @@ def main(logdir, config):
   prefill = max(0, config.prefill - count_steps(config.traindir))
   print(f'Prefill dataset ({prefill} steps).')
   def sample():
-        arr=np.zeros(24)
-        arr[np.random.randint(24)]=1.0
+        act_size=train_envs[0].action_space_size
+        arr=np.zeros(act_size)
+        arr[np.random.randint(act_size)]=1.0
         # arr[np.random.randint(4)]=1.0
         #BUG#002
         return arr

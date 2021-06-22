@@ -94,6 +94,20 @@ def sample_episode4(episodes, length=None, balance=False, seed=0):
         episode = random.choice(list(episodes.values()))
         yield episode
 
+def deflatten(episode):
+  _episode={k:v for k,v in episode.items() if k.find('/')==-1}
+  for k,v in episode.items():
+    per=k.find('/')
+    if per!=-1:
+      key=k[:per]
+      if key not in _episode.keys():
+        _episode[key]={}
+      _episode[key][k[per+1:]]=v
+    
+  return _episode
+
+
+
 
 #NOTE allow_pickle=True
 def load_episodes(directory, limit=None):
@@ -105,6 +119,7 @@ def load_episodes(directory, limit=None):
       with filename.open('rb') as f:
         episode = np.load(f,allow_pickle=True)
         episode = {k: episode[k] for k in episode.keys()}
+        episode = deflatten(episode)
     except Exception as e:
       print(f'Could not load episode: {e}')
       continue 
@@ -118,9 +133,16 @@ def make_dataset(episodes, config, output_sign):
   example = episodes[next(iter(episodes.keys()))]
   #types = {k: v.dtype for k, v in example.items()}
   #shapes = {k: (None,) + v.shape[1:] for k, v in example.items()}
+  """
   for k, v in example.items():
     if(k not in output_sign.keys()):
-      output_sign[k]=tf.TensorSpec(shape=(None,)+v.shape[1:], dtype=v.dtype)
+      output_sign[k]=tf.TensorSpec(shape=(None,)+v.shape[1:], dtype=v.dtype)"""
+
+  output_sign.update({
+    'action': tf.TensorSpec(shape=(None,None), dtype=tf.float32),
+    'reward': tf.TensorSpec(shape=(None,), dtype=tf.float32),
+    'discount': tf.TensorSpec(shape=(None,), dtype=tf.float32)
+  })
 
   generator = lambda: sample_episode4(
       episodes, config.batch_length, config.oversample_ends)

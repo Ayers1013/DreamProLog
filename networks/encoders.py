@@ -58,7 +58,7 @@ class Encoder(tools.Module):
       self.encoders['features']=DummyEncoder()
     
     if(self._action_embed):
-      self.action_encoder=ActionEncoder(48)
+      self.action_encoder=ActionEncoder(18)
 
   def __call__(self, obs):
     embed={}
@@ -78,7 +78,7 @@ class ActionHead(tools.Module):
       self, layers, units, act=tf.nn.elu, dist='trunc_normal',
       init_std=0.0, min_std=0.1, action_disc=5, temp=0.1, outscale=0, action_embed=None):
     # assert min_std <= 2
-    self._size = 24
+    self._size = 9
     self._layers = layers
     self._units = units
     self._dist = dist

@@ -13,9 +13,9 @@ def transform_episode(episode):
         graphs=[GraphData().load_from_dict(g) for g in gnn_input]
 
         d={
-            'num_nodes':[len(e['ini_nodes']) for e in gnn_input],
-            'num_symbols':[len(e['ini_symbols']) for e in gnn_input],
-            'num_clauses':[len(e['ini_clauses']) for e in gnn_input]
+            'num_nodes':np.array([len(e['ini_nodes']) for e in gnn_input]),
+            'num_symbols':np.array([len(e['ini_symbols']) for e in gnn_input]),
+            'num_clauses':np.array([len(e['ini_clauses']) for e in gnn_input])
         }
 
         data = GraphData.ini_list()
@@ -26,6 +26,16 @@ def transform_episode(episode):
 
         episode['gnn']=d
     return episode
+
+def flatten_ep(episode):
+    _episode={k: v for k,v in episode.items() if not isinstance(v, dict)}
+    for key, item in episode.items():
+        if key not in _episode.keys():
+            _episode.update({key+"/"+nkey: v for nkey,v in flatten_ep(item).items()})
+
+    return _episode
+
+
 
 def save_episodes(directory, episodes):
   directory = pathlib.Path(directory).expanduser()
@@ -40,6 +50,7 @@ def save_episodes(directory, episodes):
     length = len(episode['reward'])
     filename = directory / f'{timestamp}-{identifier}-{length}.npz'
     with io.BytesIO() as f1:
+      episode=flatten_ep(episode)
       np.savez_compressed(f1, **episode)
       f1.seek(0)
       with filename.open('wb') as f2:

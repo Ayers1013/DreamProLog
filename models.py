@@ -81,10 +81,11 @@ class WorldModel(tools.Module):
       obs['discount'] *= self._config.discount
     for key, value in obs.items():
       if key=='gnn':
-          pass   
-      if tf.dtypes.as_dtype(value.dtype) in (
-          tf.float16, tf.float32, tf.float64):
-        obs[key] = tf.cast(value, dtype)
+        pass
+      else:
+        if tf.dtypes.as_dtype(value.dtype) in (
+            tf.float16, tf.float32, tf.float64):
+          obs[key] = tf.cast(value, dtype)
     return obs
 
 
