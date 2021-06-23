@@ -60,17 +60,32 @@ class Encoder(tools.Module):
     if(self._action_embed):
       self.action_encoder=ActionEncoder(18)
 
+    if('gnn' in self._input_pipes):
+      from gnn import GraphNetwork
+      def c_resize(x):
+        _x={}
+        for k,v in x.items():
+          _x[k]=tf.reshape(v, v.shape[1:])
+        return _x
+      self.encoders['gnn']=GraphNetwork(out_dim=200)
+      self._gnn_resize=c_resize
+
   def __call__(self, obs):
     embed={}
     for pipe in self._input_pipes:
-      embed[pipe]=self.encoders[pipe](obs[pipe])
+      x=obs[pipe]
+      if pipe=='gnn':
+        x=self._gnn_resize(x)
+      embed[pipe]=self.encoders[pipe](x)
+      if pipe=='gnn':
+        embed[pipe]=tf.reshape(embed[pipe], (1,)+embed[pipe].shape)
 
     action_embed=None
     if(self._action_embed):
       action_embed=self.action_encoder(obs['action_space'])
     
     
-    return embed['image'], action_embed
+    return embed['gnn'], action_embed
     
 class ActionHead(tools.Module):
 

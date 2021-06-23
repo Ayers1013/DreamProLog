@@ -23,7 +23,7 @@ class NetworkConfig:
 
 
 class GraphNetwork(tools.Module):
-    def __init__(self, config=None):
+    def __init__(self, out_dim=32, config=None):
         super().__init__()
         if(config is None):
             self.config=NetworkConfig()
@@ -38,7 +38,7 @@ class GraphNetwork(tools.Module):
 
         self.dense1=tf.keras.layers.Dense(self.config.hidden_val)
         self.dense2=tf.keras.layers.Dense(self.config.hidden_val)
-        self.dense3=tf.keras.layers.Dense(32, activation=tf.sigmoid, use_bias=True)
+        self.dense3=tf.keras.layers.Dense(out_dim, activation=tf.sigmoid, use_bias=True)
 
     #@tf.function
     def __call__(self, graph_ph):
