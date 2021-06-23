@@ -110,7 +110,19 @@ def simulate(agent, envs, steps=0, episodes=0, state=None):
       for index, result in zip(indices, results):
         obs[index] = result
     # Step agents.
-    obs = {k: np.stack([o[k] for o in obs]) for k in obs[0]}
+
+    #NOTE do sth with it, it's ugly
+    _obs=None
+    if('gnn' in obs[0]):
+      _obs={k: np.stack([o['gnn'][k] for o in obs]) for k in obs[0]['gnn']}
+      _obs.update({
+        'num_nodes':np.array([[len(e['gnn']['ini_nodes'])] for e in obs]),
+        'num_symbols':np.array([[len(e['gnn']['ini_symbols'])] for e in obs]),
+        'num_clauses':np.array([[len(e['gnn']['ini_clauses'])] for e in obs] )
+      })
+    obs = {k: np.stack([o[k] for o in obs]) for k in obs[0] if k!='gnn'}
+    if _obs!=None:
+      obs['gnn']=_obs
     action, agent_state = agent(obs, done, agent_state)
     if isinstance(action, dict):
       action = [
