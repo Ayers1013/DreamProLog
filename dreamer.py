@@ -92,7 +92,7 @@ class Dreamer(tools.Module):
           * self._step.numpy().item()
     return action, state
 
-  @tf.function
+  @tf.function(experimental_relax_shapes=True)
   def _policy(self, obs, state, training):
     if state is None:
       batch_size = len(obs['image'])
@@ -135,7 +135,7 @@ class Dreamer(tools.Module):
       return tf.clip_by_value(tfd.Normal(action, amount).sample(), -1, 1)
     raise NotImplementedError(self._config.action_noise)
 
-  @tf.function
+  @tf.function(experimental_relax_shapes=True)
   def _train(self, data):
     print('Tracing train function.')
     metrics = {}
@@ -235,9 +235,9 @@ def main(logdir, config):
     agent._should_pretrain._once = False
   
   #debugging
-  from methods import Reconstructor
-  ReC=Reconstructor(agent._wm, 0)
-  ReC.train(agent._dataset,100)
+  #from methods import Reconstructor
+  #ReC=Reconstructor(agent._wm, 0)
+  #ReC.train(agent._dataset,100)
   #ReC.tracker.summary()
 
 
@@ -261,7 +261,7 @@ def main(logdir, config):
 
 class LolArg:
   def __init__(self):
-    self.configs=['defaults','prolog','prolog_easy','debug']
+    self.configs=['defaults','prolog','prolog_easy']#,'debug']
     self.logdir='logdir'
 
 if __name__ == '__main__':

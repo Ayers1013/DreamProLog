@@ -1,1 +1,0 @@
-from gnn.graph_placeholder_keras import *

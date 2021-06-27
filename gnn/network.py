@@ -40,7 +40,7 @@ class GraphNetwork(tools.Module):
         self.dense2=tf.keras.layers.Dense(self.config.hidden_val)
         self.dense3=tf.keras.layers.Dense(out_dim, activation=tf.sigmoid, use_bias=True)
 
-    #@tf.function
+    @tf.function
     def __call__(self, graph_ph):
         #From string
         #data=GraphData()

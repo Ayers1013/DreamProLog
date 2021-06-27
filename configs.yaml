@@ -239,9 +239,9 @@ prolog:
   prefill: 2500
   log_every: 3e1
   
-  model_lr: 3e-2
-  value_lr: 9e-3
-  actor_lr: 9e-3
+  model_lr: 3e-3
+  value_lr: 1e-3
+  actor_lr: 1e-3
   opt_eps: 8e-4
   opt: 'sgd'
   expl_until: 1e7
@@ -283,6 +283,7 @@ prolog_easy:
   discount_scale: 1.0
   reward_scale: 1.0
   weight_decay: 0.0
+  prefill: 100
 
 dummy:
   task: 'dummy_void'

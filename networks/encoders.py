@@ -14,7 +14,10 @@ class DummyEncoder(tools.Module):
     self.dense2=tfkl.Dense(200)
 
   def __call__(self, obs):
-    x = tf.reshape(obs, (-1,) + tuple(obs.shape[-2:]))
+    #x = tf.reshape(obs, (-1,) + tuple(obs.shape[-2:]))
+    #NOTE batch=1
+    #x=tf.squeeze(obs, axis=0)
+    x=obs
     x=self.dense1(x)
     x= self.dense2(x)
     return x
@@ -65,7 +68,7 @@ class Encoder(tools.Module):
       def c_resize(x):
         _x={}
         for k,v in x.items():
-          _x[k]=tf.reshape(v, v.shape[1:])
+          _x[k]=tf.squeeze(v, axis=0) #tf.reshape(v, v.shape[1:])
         return _x
       self.encoders['gnn']=GraphNetwork(out_dim=200)
       self._gnn_resize=c_resize
@@ -78,7 +81,7 @@ class Encoder(tools.Module):
         x=self._gnn_resize(x)
       embed[pipe]=self.encoders[pipe](x)
       if pipe=='gnn':
-        embed[pipe]=tf.reshape(embed[pipe], (1,)+embed[pipe].shape)
+        embed[pipe]=tf.expand_dims(embed[pipe], axis=0)
 
     action_embed=None
     if(self._action_embed):
