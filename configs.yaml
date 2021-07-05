@@ -225,7 +225,7 @@ debug:
   #batch_size: 10
   #batch_length: 20
 
-  imag_horizon: 4
+  imag_horizon: 2
 
 prolog:
   task: 'prolog_void'
@@ -233,7 +233,7 @@ prolog:
   actor_dist: 'normal' #'trunc_normal' #'onehot'
   eval_every: 1e4
   train_every: 100
-  train_steps: 10
+  train_steps: 100
   steps: 1e6
   action_repeat: 1
   prefill: 2500

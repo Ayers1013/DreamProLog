@@ -11,7 +11,7 @@ class WorldModel(tools.Module):
     self._step = step
     self._config = config
     #NOTE to gnn
-    self.encoder = networks.Encoder(input_pipes=['image', 'gnn'],action_embed=True)#networks.DummyEncoder()
+    self.encoder = networks.Encoder(input_pipes=['image'],action_embed=False)#networks.DummyEncoder()
     self.dynamics = networks.RSSM(
         config.dyn_stoch, config.dyn_deter, config.dyn_hidden,
         config.dyn_input_layers, config.dyn_output_layers, config.dyn_shared,
@@ -52,6 +52,7 @@ class WorldModel(tools.Module):
         grad_head = (name in self._config.grad_heads)
         inp = feat if grad_head else tf.stop_gradient(feat)
         pred = head(inp, tf.float32)
+        pred_mode=pred.mode()
         like = pred.log_prob(tf.cast(data[name], tf.float32))
         likes[name] = tf.reduce_mean(like) * self._scales.get(name, 1.0)
       model_loss = kl_loss - sum(likes.values())

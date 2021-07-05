@@ -88,7 +88,7 @@ class Encoder(tools.Module):
       action_embed=self.action_encoder(obs['action_space'])
     
     
-    return embed['gnn'], action_embed
+    return embed['image'], action_embed
     
 class ActionHead(tools.Module):
 
@@ -131,4 +131,5 @@ class ActionHead(tools.Module):
     return dist
 
   def feed(self, embed):
-    self._embed=embed
+    if(embed!= None):
+      self._embed=embed
