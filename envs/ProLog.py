@@ -207,7 +207,7 @@ class ProLog:
         sign={
             'image': tf.TensorSpec(shape=(None, None), dtype=tf.float32),
             'features': tf.TensorSpec(shape=(None, None), dtype=tf.float32),
-            'action_space': tf.TensorSpec(shape=(None, None, 256), dtype=tf.float32),
+            'action_space': tf.TensorSpec(shape=(None, None, 4), dtype=tf.float32),
             'axiom_mask': tf.TensorSpec(shape=(None, None), dtype=tf.int32)
             }
 
