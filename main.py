@@ -120,7 +120,9 @@ def main(logdir, config):
   #debugging
   from methods import Reconstructor
   ReC=Reconstructor(agent._wm, 0)
-  ReC.train(agent._dataset,1000)
+  for _ in range(5):
+    ReC.train(agent._dataset,200)
+    agent.save(logdir / 'variables.pkl')
   #ReC.tracker.summary()
 
 
