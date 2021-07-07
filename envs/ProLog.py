@@ -136,7 +136,7 @@ class ProLog:
             'action_space':action_space,
             'axiom_mask':self.gnnInput[4]}
 
-        debug=1
+        debug=0
         if self.gnn:
             if debug==0:
                 image['gnn']=exctractImage(self.prolog, self.gnnInput)
