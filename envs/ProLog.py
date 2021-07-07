@@ -131,6 +131,9 @@ class ProLog:
         action_space=np.zeros((action_size,256))
         action_space[np.arange(action_size),np.arange(action_size)]=1.
 
+        #NOTE dumb!!
+        action_space=np.zeros((4,4))
+
         image={'image':np.tanh(np.array(self.simple_features,np.float32)*0.1),
             'features':np.tanh(np.array(self.simple_features,np.float32)*0.1),
             'action_space':action_space,
