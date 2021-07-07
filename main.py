@@ -42,7 +42,7 @@ def main(logdir, config):
     message = 'No GPU found. To actually train on CPU remove this assert.'
     #print(message)
     #TODO
-    assert tf.config.experimental.list_physical_devices('GPU'), message
+    #assert tf.config.experimental.list_physical_devices('GPU'), message
     for gpu in tf.config.experimental.list_physical_devices('GPU'):
       tf.config.experimental.set_memory_growth(gpu, True)
   assert config.precision in (16, 32), config.precision
