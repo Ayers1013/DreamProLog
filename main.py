@@ -74,23 +74,41 @@ def main(logdir, config):
 
   prefill = max(0, config.prefill - count_steps(config.traindir))
   print(f'Prefill dataset ({prefill} steps).')
+
+  #True Random
   def sample():
-        act_size=train_envs[0].action_space_size
-        arr=np.zeros(act_size)
-        arr[np.random.randint(act_size)]=1.0
-        # arr[np.random.randint(4)]=1.0
-        #BUG#002
-        return arr
-  random_agent = lambda o, d, s: ([sample() for _ in d], s)
+    act_size=train_envs[0].action_space_size
+    arr=np.zeros(act_size)
+    arr[np.random.randint(act_size)]=1.0
+    # arr[np.random.randint(4)]=1.0
+    #BUG#002
+    return arr
+
+  sample_lambda=0.07
+  def sample_smart(o):
+    if(np.random.rand()<sample_lambda): return sample()
+    axiom_mask=o['axiom_mask'][0]
+    act_size=len(axiom_mask)
+    s=int(np.sum(axiom_mask))
+    r=np.random.randint(s)+1 if s>0 else 0
+
+    ind=0
+    for e in axiom_mask:
+      if(e==1): r-=1
+      if(r==0): break
+      ind+=1
+
+    arr=np.zeros(act_size)
+    arr[ind]=1.0
+    return arr
+  
+  random_agent = lambda o, d, s: ([sample_smart(o) for _ in d], s)
   tools.simulate(random_agent, train_envs, prefill)
   tools.simulate(random_agent, eval_envs, episodes=1)
   logger.step = config.action_repeat * count_steps(config.traindir)
 
   print('Simulate agent.')
   output_sign=train_envs[0].output_sign
-
-  e=next(iter(tools.sample_episode4(train_eps)))
-  print(e)
 
   train_dataset = make_dataset(train_eps, config, output_sign)
   eval_dataset = iter(make_dataset(eval_eps, config, output_sign))
@@ -100,9 +118,9 @@ def main(logdir, config):
     agent._should_pretrain._once = False
   
   #debugging
-  #from methods import Reconstructor
-  #ReC=Reconstructor(agent._wm, 0)
-  #ReC.train(agent._dataset,100)
+  from methods import Reconstructor
+  ReC=Reconstructor(agent._wm, 0)
+  ReC.train(agent._dataset,1000)
   #ReC.tracker.summary()
 
 

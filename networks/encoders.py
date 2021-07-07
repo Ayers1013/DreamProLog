@@ -61,7 +61,7 @@ class Encoder(tools.Module):
       self.encoders['features']=DummyEncoder()
     
     if(self._action_embed):
-      self.action_encoder=ActionEncoder(18)
+      self.action_encoder=ActionEncoder(256)
 
     if('gnn' in self._input_pipes):
       from gnn import GraphNetwork
@@ -88,7 +88,7 @@ class Encoder(tools.Module):
       action_embed=self.action_encoder(obs['action_space'])
     
     
-    return embed['image'], action_embed
+    return embed['gnn'], action_embed
     
 class ActionHead(tools.Module):
 
@@ -96,7 +96,7 @@ class ActionHead(tools.Module):
       self, layers, units, act=tf.nn.elu, dist='trunc_normal',
       init_std=0.0, min_std=0.1, action_disc=5, temp=0.1, outscale=0, action_embed=None):
     # assert min_std <= 2
-    self._size = 9
+    self._size = 256
     self._layers = layers
     self._units = units
     self._dist = dist
@@ -106,10 +106,7 @@ class ActionHead(tools.Module):
     self._action_disc = action_disc
     self._temp = temp() if callable(temp) else temp
     self._outscale = outscale
-    if(not action_embed):
-      self._embed=tf.Variable(tf.eye(2*self._size))
-    else:
-      self._embed=None
+    self._embed=None
 
   def __call__(self, features, dtype=None):
     x = features
@@ -120,8 +117,9 @@ class ActionHead(tools.Module):
             self._outscale)
       x = self.get(f'h{index}', tfkl.Dense, self._units, self._act, **kw)(x)
     
-    x = self.get(f'hout', tfkl.Dense, 2 * self._size)(x)
+    x = self.get(f'hout', tfkl.Dense, self._size)(x)
     x=tf.matmul(x, self._embed)
+    x = self.get(f'hstd_mean', tfkl.Dense, 2*self._size)(x)
     if dtype:
       x = tf.cast(x, dtype)
     mean, std = tf.split(x, 2, -1)
@@ -131,5 +129,4 @@ class ActionHead(tools.Module):
     return dist
 
   def feed(self, embed):
-    if(embed!= None):
-      self._embed=embed
+    self._embed=embed

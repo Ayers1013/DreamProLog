@@ -69,8 +69,12 @@ class Reconstructor(Method):
     return self._wm.heads['image'](input).mode()
 
   def __call__(self, input):
-    embed=self.encode(input=input)
-    post, prior = self._wm.dynamics.observe(embed, input['action'])
+    embed, action_embed=self._wm.encoder(input)
+    
+    arg_act=tf.math.argmax(input['action'], axis=-1)
+    action=tf.gather(action_embed, arg_act)
+
+    post, prior = self._wm.dynamics.observe(embed, action)
     feat = self._wm.dynamics.get_feat(post)
     image=self.decode(input=feat)
     return image
@@ -79,8 +83,12 @@ class Reconstructor(Method):
   def _train(self, data):
     data=self._wm.preprocess(data)
     with tf.GradientTape() as model_tape:
-      embed,_=self._wm.encoder(data)
-      post, prior = self._wm.dynamics.observe(embed, data['action'])
+      embed, action_embed=self._wm.encoder(data)
+
+      arg_act=tf.math.argmax(data['action'], axis=-1)
+      action=tf.gather(action_embed, arg_act)
+
+      post, prior = self._wm.dynamics.observe(embed, action)
       feat = self._wm.dynamics.get_feat(post)
       pred=self._wm.heads['image'](feat)
       like=pred.log_prob(tf.cast(data['image'],tf.float32))

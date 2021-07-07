@@ -2,6 +2,7 @@ from numpy.core.einsumfunc import einsum
 import pyswip
 import threading
 import sys
+import pathlib
 
 #graph_data test
 from gnn import GraphData, extractActions, exctractImage
@@ -16,10 +17,24 @@ import tensorflow as tf
 
 class ProblemLibrary:
     def __init__(self, config=None):
-        #self.problem="leancop/robinson_1p1__2.p"
-        self.problem="leancop/pelletier21.p"
+        #self.problem=lambda: "leancop/robinson_1p1__2.p"
+        #self.problem=lambda: "leancop/pelletier21.p"
+        directory="leancop/theorems/m2n140"
+        self._load(directory)
+        print(f'Found {self.total} problem files.')
+        self.problem=lambda: "/".join(str(self.problems[np.random.randint(self.total)]).split("\\"))
+
+
+
+    def _load(self, directory):
+        directory = pathlib.Path(directory).expanduser()
+        self.problems=[]
+        for filename in reversed(sorted(directory.glob('*.p'))):
+            self.problems.append(filename)
+        self.total=len(self.problems)
+
     def get(self):
-        return self.problem
+        return self.problem()
 
 class ProLog:
     LOCK=threading.Lock()
@@ -113,7 +128,7 @@ class ProLog:
 
     def image(self):
         action_size=len(self.gnnInput[4])
-        action_space=np.zeros((action_size,32))
+        action_space=np.zeros((action_size,256))
         action_space[np.arange(action_size),np.arange(action_size)]=1.
 
         image={'image':np.tanh(np.array(self.simple_features,np.float32)*0.1),
@@ -121,7 +136,7 @@ class ProLog:
             'action_space':action_space,
             'axiom_mask':self.gnnInput[4]}
 
-        debug=0
+        debug=1
         if self.gnn:
             if debug==0:
                 image['gnn']=exctractImage(self.prolog, self.gnnInput)
@@ -189,7 +204,7 @@ class ProLog:
         sign={
             'image': tf.TensorSpec(shape=(None, None), dtype=tf.float32),
             'features': tf.TensorSpec(shape=(None, None), dtype=tf.float32),
-            'action_space': tf.TensorSpec(shape=(None, None, 32), dtype=tf.float32),
+            'action_space': tf.TensorSpec(shape=(None, None, 256), dtype=tf.float32),
             'axiom_mask': tf.TensorSpec(shape=(None, None), dtype=tf.int32)
             }
 

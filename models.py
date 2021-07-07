@@ -11,7 +11,7 @@ class WorldModel(tools.Module):
     self._step = step
     self._config = config
     #NOTE to gnn
-    self.encoder = networks.Encoder(input_pipes=['image'],action_embed=False)#networks.DummyEncoder()
+    self.encoder = networks.Encoder(input_pipes=['image', 'gnn'],action_embed=True)#networks.DummyEncoder()
     self.dynamics = networks.RSSM(
         config.dyn_stoch, config.dyn_deter, config.dyn_hidden,
         config.dyn_input_layers, config.dyn_output_layers, config.dyn_shared,
@@ -40,7 +40,14 @@ class WorldModel(tools.Module):
     data = self.preprocess(data)
     with tf.GradientTape() as model_tape:
       embed, action_embed = self.encoder(data)
-      post, prior = self.dynamics.observe(embed, data['action'])
+      
+      if True:
+        action=data['action']
+      
+      arg_act=tf.math.argmax(data['action'], axis=-1)
+      action2=tf.gather(action_embed, arg_act)
+
+      post, prior = self.dynamics.observe(embed, action2)
       kl_balance = tools.schedule(self._config.kl_balance, self._step)
       kl_free = tools.schedule(self._config.kl_free, self._step)
       kl_scale = tools.schedule(self._config.kl_scale, self._step)
