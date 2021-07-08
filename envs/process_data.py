@@ -35,6 +35,13 @@ def flatten_ep(episode):
 
     return _episode
 
+def stack_nest(episode):
+    if 'gnn' in episode:
+        stacked={}
+        for key in episode['gnn'][0].keys():
+            stacked[key]=np.array([ep[key] for ep in episode['gnn']])
+        episode['gnn']=stacked
+    return episode
 
 
 def save_episodes(directory, episodes):

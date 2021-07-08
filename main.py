@@ -35,7 +35,7 @@ def main(logdir, config):
   config.time_limit //= config.action_repeat
   config.act = getattr(tf.nn, config.act)
   
-  if config.debug:
+  if config.debug and False:
     tf.config.experimental_run_functions_eagerly(True)
     #tf.debugging.experimental.enable_dump_debug_info(str(logdir), tensor_debug_mode="FULL_HEALTH", circular_buffer_size=-1)
   if config.gpu_growth:
@@ -84,7 +84,7 @@ def main(logdir, config):
     #BUG#002
     return arr
 
-  sample_lambda=0.07
+  sample_lambda=0.
   def sample_smart(o):
     if(np.random.rand()<sample_lambda): return sample()
     axiom_mask=o['axiom_mask'][0]

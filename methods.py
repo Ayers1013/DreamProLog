@@ -79,8 +79,9 @@ class Reconstructor(Method):
     image=self.decode(input=feat)
     return image
 
-  @tf.function
+  @tf.function(experimental_relax_shapes=True)
   def _train(self, data):
+    print('Tracing VAE method.')
     data=self._wm.preprocess(data)
     with tf.GradientTape() as model_tape:
       embed, action_embed=self._wm.encoder(data)

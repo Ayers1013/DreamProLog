@@ -128,8 +128,8 @@ class ProLog:
 
     def image(self):
         action_size=len(self.gnnInput[4])
-        action_space=np.zeros((action_size,256))
-        action_space[np.arange(action_size),np.arange(action_size)]=1.
+        #action_space=np.zeros((action_size,256))
+        #action_space[np.arange(action_size),np.arange(action_size)]=1.
 
         #NOTE dumb!!
         action_space=np.zeros((4,4))
@@ -198,11 +198,14 @@ class ProLog:
             'num_symbols',
             'num_clauses'
         ]
+
+        spec=lambda x: tf.TensorSpec(shape=(None,)+x, dtype=tf.int32)
+        #spec=lambda x: tf.RaggedTensorSpec(shape=(None, None,)+x, dtype=tf.int32)
         gnnSpec={}
         for name in outputs:
-            if name=='symbol_inputs/nodes': gnnSpec[name]=tf.TensorSpec(shape=(None,3), dtype=tf.int32)
-            elif name.find("/")!=-1 and name.split("/")[1]=='nodes': gnnSpec[name]=tf.TensorSpec(shape=(None,2), dtype=tf.int32)
-            else: gnnSpec[name]=tf.TensorSpec(shape=(None,), dtype=tf.int32)
+            if name=='symbol_inputs/nodes': gnnSpec[name]=spec((3,))
+            elif name.find("/")!=-1 and name.split("/")[1]=='nodes': gnnSpec[name]=spec((2,))
+            else: gnnSpec[name]=spec(())
 
         sign={
             'image': tf.TensorSpec(shape=(None, None), dtype=tf.float32),
