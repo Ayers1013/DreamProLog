@@ -36,7 +36,9 @@ class WorldModel(tools.Module):
     self._scales = dict(
         reward=config.reward_scale, discount=config.discount_scale)
 
+  #@tf.function(experimental_relax_shapes=True)
   def train(self, data):
+    print('Tracing WorldModel train function.')
     data = self.preprocess(data)
     with tf.GradientTape() as model_tape:
       embed, action_embed = self.encoder(data)
@@ -76,8 +78,9 @@ class WorldModel(tools.Module):
     metrics['post_ent'] = self.dynamics.get_dist(post).entropy()
     return embed, post, feat, kl_value, metrics, action_embed
 
-  @tf.function
+  #@tf.function
   def preprocess(self, obs):
+    #print('Tracing preprocess')
     dtype = prec.global_policy().compute_dtype
     obs = obs.copy()
     #NOTE We have a simple array

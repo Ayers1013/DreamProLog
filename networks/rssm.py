@@ -50,6 +50,7 @@ class RSSM(tools.Module):
 
   @tf.function
   def observe(self, embed, action, state=None):
+    print('Tracing RSSM observe function.')
     swap = lambda x: tf.transpose(x, [1, 0] + list(range(2, len(x.shape))))
     if state is None:
       state = self.initial(tf.shape(action)[0])

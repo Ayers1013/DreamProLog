@@ -40,8 +40,9 @@ class GraphNetwork(tools.Module):
         self.dense2=tf.keras.layers.Dense(self.config.hidden_val)
         self.dense3=tf.keras.layers.Dense(out_dim, activation=tf.sigmoid, use_bias=True)
 
-    @tf.function
+    @tf.function(experimental_relax_shapes=True)
     def __call__(self, graph_ph):
+        print('Tracing gnn network.')
         #From string
         #data=GraphData()
         #data.load_from_str(graph_ph[0])

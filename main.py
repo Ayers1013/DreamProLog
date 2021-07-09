@@ -117,6 +117,8 @@ def main(logdir, config):
     agent.load(logdir / 'variables.pkl')
     agent._should_pretrain._once = False
   
+  for _ in range(100):
+    agent._wm.train(next(agent._dataset))
   #debugging
   from methods import Reconstructor
   ReC=Reconstructor(agent._wm, 0)
