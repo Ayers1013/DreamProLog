@@ -30,8 +30,10 @@ class CollectDataset:
     self._episode.append(transition)
     if done:
       episode = {k: [t[k] for t in self._episode] for k in self._episode[0]}
-      _episode = {k: self._convert(v) for k, v in episode.items() if k!='gnn'}
-      if 'gnn' in episode.keys(): _episode['gnn']=episode['gnn']
+      _episode = {k: self._convert(v) for k, v in episode.items() if k not in ['gnn', 'action_space']}
+      if 'gnn' in episode.keys():
+        _episode['gnn']=episode['gnn']
+        _episode['action_space']=episode['action_space'][0]
       episode=_episode
       info['episode'] = episode
       for callback in self._callbacks:

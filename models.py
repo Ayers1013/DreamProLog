@@ -91,7 +91,7 @@ class WorldModel(tools.Module):
     if 'discount' in obs:
       obs['discount'] *= self._config.discount
     for key, value in obs.items():
-      if key=='gnn':
+      if key in ['gnn', 'action_space']:
         pass
       else:
         if tf.dtypes.as_dtype(value.dtype) in (

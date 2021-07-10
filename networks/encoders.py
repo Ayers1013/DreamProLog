@@ -60,17 +60,19 @@ class Encoder(tools.Module):
       #NOTE config
       self.encoders['features']=DummyEncoder()
     
-    if(self._action_embed):
-      self.action_encoder=ActionEncoder(256)
+    #if(self._action_embed):
+    #  self.action_encoder=ActionEncoder(256)
 
     if('gnn' in self._input_pipes):
-      from gnn import GraphNetwork
+      from gnn import GraphNetwork, MultiGraphNetwork
       def c_resize(x):
         _x={}
         for k,v in x.items():
           _x[k]=tf.squeeze(v, axis=0) #tf.reshape(v, v.shape[1:])
         return _x
-      self.encoders['gnn']=GraphNetwork(out_dim=200)
+      self.gnn=MultiGraphNetwork(out_dim=200)
+      self.encoders['gnn']=self.gnn.stateEmbed
+      self.action_encoder=self.gnn.actionEmbed
       self._gnn_resize=c_resize
 
   def __call__(self, obs):
@@ -85,7 +87,14 @@ class Encoder(tools.Module):
 
     action_embed=None
     if(self._action_embed):
-      action_embed=self.action_encoder(obs['action_space'])
+      x=obs['action_space']
+      
+      #TODO delete this part
+      #x['axiom_mask']=obs['axiom_mask']
+
+      x=self._gnn_resize(x)
+      action_embed=self.action_encoder(x)
+      #action_embed=tf.expand_dims(action_embed, axis=0)
     
     
     return embed['gnn'], action_embed
@@ -96,7 +105,7 @@ class ActionHead(tools.Module):
       self, layers, units, act=tf.nn.elu, dist='trunc_normal',
       init_std=0.0, min_std=0.1, action_disc=5, temp=0.1, outscale=0, action_embed=None):
     # assert min_std <= 2
-    self._size = 256
+    self._size = 64
     self._layers = layers
     self._units = units
     self._dist = dist
@@ -118,7 +127,7 @@ class ActionHead(tools.Module):
       x = self.get(f'h{index}', tfkl.Dense, self._units, self._act, **kw)(x)
     
     x = self.get(f'hout', tfkl.Dense, self._size)(x)
-    x=tf.matmul(x, self._embed)
+    x=tf.matmul(x, tf.transpose(self._embed))
     x = self.get(f'hstd_mean', tfkl.Dense, 2*self._size)(x)
     if dtype:
       x = tf.cast(x, dtype)

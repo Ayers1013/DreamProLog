@@ -25,6 +25,19 @@ def transform_episode(episode):
         d.update(data.convert_to_dict())
 
         episode['gnn']=d
+
+    else: return episode
+
+    if 'action_space' in episode.keys():
+        gnn_input=episode['action_space']
+
+        e=gnn_input
+        d={
+            'num_nodes':np.array([len(e['ini_nodes'])]),
+            'num_symbols':np.array([len(e['ini_symbols'])]),
+            'num_clauses':np.array([len(e['ini_clauses'])])
+        }
+        episode['action_space'].update(d)
     return episode
 
 def flatten_ep(episode):
