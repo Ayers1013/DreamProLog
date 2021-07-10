@@ -139,8 +139,8 @@ class ProLog:
             'action_space':action_space,
             'axiom_mask':self.gnnInput[4]}
 
-        print('Action:', str(input2actionGraph(self.prolog, self.gnnInput)))
-        print('Image', str(input2graph(self.prolog, self.gnnInput)))
+        print('Action:', '\''+str(input2actionGraph(self.prolog, self.gnnInput))+'\'')
+        print('Image', '\''+str(input2graph(self.prolog, self.gnnInput))+'\'')
         ccc=input()
 
         debug=1
