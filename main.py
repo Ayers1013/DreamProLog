@@ -35,7 +35,7 @@ def main(logdir, config):
   config.time_limit //= config.action_repeat
   config.act = getattr(tf.nn, config.act)
   
-  if config.debug and  True:
+  if config.debug and False:
     tf.config.experimental_run_functions_eagerly(True)
     #tf.debugging.experimental.enable_dump_debug_info(str(logdir), tensor_debug_mode="FULL_HEALTH", circular_buffer_size=-1)
   if config.gpu_growth:
