@@ -169,7 +169,7 @@ class ImagBehavior(tools.Module):
           self._config.slow_value_target)
     with tf.GradientTape() as value_tape:
       value = self.value(imag_feat, tf.float32)[:-1]
-      value_loss = -value.log_prob(tf.stop_gradient(target))
+      value_loss = -value.log_prob(tf.stop_gradient(target)) 
       if self._config.value_decay:
         value_loss += self._config.value_decay * value.mode()
       value_loss = tf.reduce_mean(weights[:-1] * value_loss)
