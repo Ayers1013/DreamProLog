@@ -98,6 +98,7 @@ class MultiGraphNetwork(tools.Module):
 
         return x
 
+    @tf.function(experimental_relax_shapes=True)
     def stateEmbed(self, graph_ph):
         nodes, symbols, clauses=self.__call__(graph_ph)
         x=self.dense1(clauses)
@@ -106,6 +107,7 @@ class MultiGraphNetwork(tools.Module):
         x=self.dense3(x)
         return x
 
+    @tf.function(experimental_relax_shapes=True)
     def actionEmbed(self, graph_ph):
         nodes, symbols, clauses=self.__call__(graph_ph)
         cur_goals = self.input_layer.clause_nums.gather(clauses, 0)
