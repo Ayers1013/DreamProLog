@@ -130,7 +130,7 @@ def load_episodes(directory, limit=None):
   return episodes
 
 def make_dataset(episodes, config, output_sign):
-  example = episodes[next(iter(episodes.keys()))]
+  #example = episodes[next(iter(episodes.keys()))]
   #types = {k: v.dtype for k, v in example.items()}
   #shapes = {k: (None,) + v.shape[1:] for k, v in example.items()}
   """
