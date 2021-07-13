@@ -104,7 +104,7 @@ def main(logdir, config):
   
   random_agent = lambda o, d, s: ([sample_smart(o) for _ in d], s)
   tools.simulate(random_agent, train_envs, prefill)
-  tools.simulate(random_agent, eval_envs, episodes=1)
+  #tools.simulate(random_agent, eval_envs, episodes=1)
   logger.step = config.action_repeat * count_steps(config.traindir)
 
   print('Simulate agent.')
@@ -149,7 +149,7 @@ def main(logdir, config):
 class LolArg:
   def __init__(self):
     self.configs=['defaults','prolog','prolog_easy','debug']
-    self.logdir='debugEpisodes'#'logdir'
+    self.logdir='logdir'#'debugEpisodes'#
 
 if __name__ == '__main__':
   if(False):

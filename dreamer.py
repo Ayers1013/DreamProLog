@@ -47,7 +47,8 @@ class Dreamer(tools.Module):
     )[config.expl_behavior]()
     # Train step to initialize variables including optimizer statistics.    
     x=next(self._dataset)
-    self._train(x)
+    #NOTE it is better to initials everything in advance
+    #self._train(x)
 
   def __call__(self, obs, reset, state=None, training=True):
     step = self._step.numpy().item()

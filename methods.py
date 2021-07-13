@@ -79,7 +79,7 @@ class Reconstructor(Method):
     image=self.decode(input=feat)
     return image
 
-  #@tf.function(experimental_relax_shapes=True)
+  @tf.function(experimental_relax_shapes=True)
   def _train(self, data):
     print('Tracing VAE method.')
     data=self._wm.preprocess(data)
