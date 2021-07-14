@@ -220,11 +220,11 @@ debug:
 
   debug: True
   pretrain: 5
-  prefill: 2e3
+  prefill: 6e3
   #train_steps: 1
   #batch_size: 10
   #batch_length: 20
-  dataset_size: 4000
+  dataset_size: 40000
 
   imag_horizon: 2
 

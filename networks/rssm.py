@@ -55,7 +55,8 @@ class RSSM(tools.Module):
     if state is None:
       state = self.initial(tf.shape(action)[0])
     embed, action = swap(embed), swap(action)
-    post, prior = tools.static_scan(
+    #NOTE dummy static_scan
+    post, prior = tools.static_scan_rssm(
         lambda prev, inputs: self.obs_step(prev[0], *inputs),
         (action, embed), (state, state))
     post = {k: swap(v) for k, v in post.items()}

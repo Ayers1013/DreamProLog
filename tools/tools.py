@@ -231,6 +231,27 @@ def static_scan(fn, inputs, start, reverse=False):
   outputs = [tf.stack(x, 0) for x in outputs]
   return tf.nest.pack_sequence_as(start, outputs)
 
+def static_scan_rssm(fn, inputs, start, reverse=False):
+  last = start
+  outputs = [[] for _ in tf.nest.flatten(start)]
+  max_ind=25
+  indices = range(max_ind)#range(len(tf.nest.flatten(inputs)[0]))
+  last_ind=len(tf.nest.flatten(inputs)[0])
+  if reverse:
+    indices = reversed(indices)
+  for index in indices:
+    if index<last_ind:
+      inp = tf.nest.map_structure(lambda x: x[index], inputs)
+      last = fn(last, inp)
+      [o.append(l) for o, l in zip(outputs, tf.nest.flatten(last))]
+    else:
+      [o.append(tf.zeros(o[0].shape)) for o in outputs]
+  if reverse:
+    outputs = [list(reversed(x)) for x in outputs]
+  outputs = [tf.stack(x, 0) for x in outputs]
+  outputs = [tf.gather(o, range(last_ind)) for o in outputs]
+  return tf.nest.pack_sequence_as(start, outputs)
+
 
 def uniform_mixture(dist, dtype=None):
   if dist.batch_shape[-1] == 1:

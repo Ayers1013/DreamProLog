@@ -36,7 +36,7 @@ class WorldModel(tools.Module):
     self._scales = dict(
         reward=config.reward_scale, discount=config.discount_scale)
 
-  #@tf.function(experimental_relax_shapes=True)
+  @tf.function(experimental_relax_shapes=True)
   def train(self, data):
     print('Tracing WorldModel train function.')
     data = self.preprocess(data)

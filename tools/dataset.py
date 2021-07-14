@@ -149,6 +149,7 @@ def make_dataset(episodes, config, output_sign):
   dataset = tf.data.Dataset.from_generator(generator, output_signature=output_sign)
   #NOTE batch>1 not implemented yet (It requires ragged tensors.)
   dataset = dataset.batch(1, drop_remainder=True)
+  #dataset = dataset.apply(tf.data.experimental.dense_to_ragged_batch(batch_size=1))
   dataset = dataset.prefetch(10)
   return dataset
 
