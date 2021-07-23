@@ -142,7 +142,7 @@ class ProLog:
         #print('Image', '\''+str(input2graph(self.prolog, self.gnnInput))+'\'')
         #ccc=input()
 
-        debug=1
+        debug=0
         if self.gnn:
             if debug==0:
                 image['gnn']=exctractImage(self.prolog, self.gnnInput)
