@@ -10,5 +10,4 @@ MUJOCO_LOG.TXT
 .vscode/
 common/
 dreamerV2/
-dataset/
 debugEpisodes/

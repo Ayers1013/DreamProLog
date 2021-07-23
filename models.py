@@ -11,7 +11,7 @@ class WorldModel(tools.Module):
     self._step = step
     self._config = config
     #NOTE to gnn
-    self.encoder = networks.Encoder(input_pipes=['image', 'gnn'],action_embed=True)#networks.DummyEncoder()
+    self.encoder = networks.Encoder(input_pipes=['image','gnn'],action_embed=True)#networks.DummyEncoder()
     self.dynamics = networks.RSSM(
         config.dyn_stoch, config.dyn_deter, config.dyn_hidden,
         config.dyn_input_layers, config.dyn_output_layers, config.dyn_shared,
@@ -98,23 +98,6 @@ class WorldModel(tools.Module):
             tf.float16, tf.float32, tf.float64):
           obs[key] = tf.cast(value, dtype)
     return obs
-
-
-"""
-  @tf.function
-  def video_pred(self, data):
-    data = self.preprocess(data)
-    truth = data['image'][:6] + 0.5
-    embed = self.encoder(data)
-    states, _ = self.dynamics.observe(embed[:6, :5], data['action'][:6, :5])
-    recon = self.heads['image'](self.dynamics.get_feat(states)).mode()[:6]
-    init = {k: v[:, -1] for k, v in states.items()}
-    prior = self.dynamics.imagine(data['action'][:6, 5:], init)
-    openl = self.heads['image'](self.dynamics.get_feat(prior)).mode()
-    model = tf.concat([recon[:, :5] + 0.5, openl + 0.5], 1)
-    error = (model - truth + 1) / 2
-    return tf.concat([truth, model, error], 2)"""
-
 
 class ImagBehavior(tools.Module):
 

@@ -7,6 +7,7 @@ import functools
 
 import tensorflow as tf
 from tensorflow.keras.mixed_precision import experimental as prec
+from tensorflow.python.util import tf_decorator
 
 warnings.filterwarnings('ignore', '.*box bound precision lowered.*')
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
@@ -29,10 +30,10 @@ def main(logdir, config):
   logdir = pathlib.Path(logdir).expanduser()
   config.traindir = config.traindir or logdir / 'train_eps'
   config.evaldir = config.evaldir or logdir / 'eval_eps'
-  config.steps //= config.action_repeat
+  """config.steps //= config.action_repeat
   config.eval_every //= config.action_repeat
   config.log_every //= config.action_repeat
-  config.time_limit //= config.action_repeat
+  config.time_limit //= config.action_repeat"""
   config.act = getattr(tf.nn, config.act)
   
   if config.debug and True:
@@ -48,6 +49,8 @@ def main(logdir, config):
   assert config.precision in (16, 32), config.precision
   if config.precision == 16:
     prec.set_policy(prec.Policy('mixed_float16'))
+
+  
   print('Logdir', logdir)
   logdir.mkdir(parents=True, exist_ok=True)
   config.traindir.mkdir(parents=True, exist_ok=True)
@@ -110,8 +113,28 @@ def main(logdir, config):
   print('Simulate agent.')
   output_sign=train_envs[0].output_sign
 
-  train_dataset = make_dataset(train_eps, config, output_sign)
-  eval_dataset = iter(make_dataset(eval_eps, config, output_sign))
+  from dataset import DatasetManager
+  from controller import Controller
+  ctrl=Controller(output_sign)
+  dm=DatasetManager(logger, ctrl.get_signature, config.traindir, config.evaldir)
+
+  #train_dataset = make_dataset(train_eps, config, output_sign)
+  #eval_dataset = iter(make_dataset(eval_eps, config, output_sign))
+  x=next(iter(dm.sample_episode('train', 8, 2)))
+  osign=ctrl.get_signature(8,2)
+  for k in osign.keys():
+    if isinstance(osign[k], dict):
+      for gk in osign[k].keys():
+        print(x[k][gk].shape, osign[k][gk].shape, x[k][gk].dtype, osign[k][gk].dtype)
+    else: print(x[k].shape, osign[k].shape, x[k].dtype, osign[k].dtype)
+
+  train_dataset=dm.dataset(batch_length=2, batch_size=8)
+  eval_dataset=iter(dm.dataset(batch_length=2, batch_size=8))
+
+  x=next(iter(train_dataset))
+
+
+
   agent = Dreamer(config, logger, train_dataset)
   if (logdir / 'variables.pkl').exists():
     agent.load(logdir / 'variables.pkl')

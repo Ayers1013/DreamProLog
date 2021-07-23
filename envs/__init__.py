@@ -1,5 +1,6 @@
 from .wrappers import *
-from .process_data import process_episode
+#from .process_data import process_episode
+from dataset import process_episode
 import functools
 
 def make_env(config, logger, mode, train_eps, eval_eps):

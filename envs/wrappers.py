@@ -35,6 +35,8 @@ class CollectDataset:
         _episode['gnn']=episode['gnn']
         _episode['action_space']=episode['action_space'][0]
       episode=_episode
+      #NOTE the dataset needs this information
+      episode['problem_name']=self.current_problem
       info['episode'] = episode
       for callback in self._callbacks:
         callback(episode)

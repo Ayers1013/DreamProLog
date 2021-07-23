@@ -220,7 +220,7 @@ debug:
 
   debug: True
   pretrain: 5
-  prefill: 2e3
+  prefill: 2e2
   #train_steps: 1
   #batch_size: 10
   #batch_length: 20

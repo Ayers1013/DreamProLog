@@ -7,6 +7,12 @@ import json
 import numpy as np
 from gnn import GraphData
 
+from gnn.graph_data import GraphData
+import pathlib
+
+import tensorflow as tf
+import numpy as np
+
 def transform_episode(episode):
     if 'gnn' in episode.keys():
         gnn_input=episode['gnn']
@@ -40,6 +46,17 @@ def transform_episode(episode):
         episode['action_space'].update(d)
     return episode
 
+def transform_episode_2(episode):
+  def indexing(d):
+    d={i: e for i, e in enumerate(d)}
+  if 'gnn' in episode.keys(): indexing(episode['gnn'])
+  else: return episode
+
+  if False and 'action_space' in episode.keys():
+    episode['action_space']=episode['action_space'][0]
+
+  return episode
+
 def flatten_ep(episode):
     _episode={k: v for k,v in episode.items() if not isinstance(v, dict)}
     for key, item in episode.items():
@@ -48,13 +65,17 @@ def flatten_ep(episode):
 
     return _episode
 
-def stack_nest(episode):
-    if 'gnn' in episode:
-        stacked={}
-        for key in episode['gnn'][0].keys():
-            stacked[key]=np.array([ep[key] for ep in episode['gnn']])
-        episode['gnn']=stacked
-    return episode
+def deflatten(episode):
+  _episode={k:v for k,v in episode.items() if k.find('/')==-1}
+  for k,v in episode.items():
+    per=k.find('/')
+    if per!=-1:
+      key=k[:per]
+      if key not in _episode.keys():
+        _episode[key]={}
+      _episode[key][k[per+1:]]=v
+    
+  return _episode
 
 
 def save_episodes(directory, episodes):
@@ -63,12 +84,13 @@ def save_episodes(directory, episodes):
   timestamp = datetime.datetime.now().strftime('%Y%m%dT%H%M%S')
   filenames = []
   for episode in episodes:
-    #NOTE transform
-    episode=transform_episode(episode)
 
     identifier = str(uuid.uuid4().hex)
     length = len(episode['reward'])
-    filename = directory / f'{timestamp}-{identifier}-{length}.npz'
+    problem_name=episode['problem_name']
+    del episode['problem_name']
+    #filename = directory / f'{timestamp}-{identifier}-{length}.npz'
+    filename = directory / f'{problem_name}-{timestamp}-{identifier}-{length}.npz'
     with io.BytesIO() as f1:
       episode=flatten_ep(episode)
       np.savez_compressed(f1, **episode)
@@ -78,18 +100,30 @@ def save_episodes(directory, episodes):
     filenames.append(filename)
   return filenames
 
+def store(storage, episode, ep_name, tag=False):
+  if not tag: storage[ep_name]=episode
+  else:
+    problem_name, _, _, length=ep_name[:-4].split("-")
+    length=int(length)
+    if problem_name not in storage: storage[problem_name]={}
+    x=storage[problem_name]
+    if length not in x: x[length]={}
+    x=x[length]
+    x[ep_name]=episode
+
+TAG_MODE=True
 def process_episode(config, logger, mode, train_eps, eval_eps, episode):
     directory = dict(train=config.traindir, eval=config.evaldir)[mode]
     cache = dict(train=train_eps, eval=eval_eps)[mode]
 
-    #episode=transform_episode(episode)
+    episode=transform_episode_2(episode)
 
     filename = save_episodes(directory, [episode])[0]
     length = len(episode['reward']) - 1
     score = float(episode['reward'].astype(np.float64).sum())
     if mode == 'eval':
         cache.clear()
-    if mode == 'train' and config.dataset_size:
+    if False and mode == 'train' and config.dataset_size:
         total = 0
         for key, ep in reversed(sorted(cache.items(), key=lambda x: x[0])):
             if total <= config.dataset_size - length:
@@ -98,8 +132,30 @@ def process_episode(config, logger, mode, train_eps, eval_eps, episode):
                 del cache[key]
         logger.scalar('dataset_size', total + length)
     cache[str(filename)] = episode
+    store(cache, episode, str(filename), TAG_MODE)
     print(f'{mode.title()} episode has {length} steps and return {score:.3f}.')
     logger.scalar(f'{mode}_return', score)
     logger.scalar(f'{mode}_length', length)
     logger.scalar(f'{mode}_episodes', len(cache))
     logger.write()
+
+#NOTE allow_pickle=True
+def load_episodes(directory, limit=None):
+  directory = pathlib.Path(directory).expanduser()
+  episodes = {} 
+  total = 0
+  for filename in reversed(sorted(directory.glob('*.npz'))):
+    try:
+      with filename.open('rb') as f:
+        episode = np.load(f,allow_pickle=True)
+        episode = {k: episode[k] for k in episode.keys()}
+        episode = deflatten(episode)
+    except Exception as e:
+      print(f'Could not load episode: {e}')
+      continue 
+    store(episodes, episode, str(filename), tag=TAG_MODE)
+    
+    total += len(episode['reward']) - 1
+    if limit and total >= limit:
+      break
+  return episodes

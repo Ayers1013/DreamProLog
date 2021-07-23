@@ -112,7 +112,10 @@ class ProLog:
     def reset(self):
         self.steps=0
         
+        
         problem=self.problems.get()
+        #take out '.p'
+        self.current_problem="".join(problem[:-2].split('/')[2:])
         query = 'init_python("{}",{},GnnInput, SimpleFeatures, Result)'.format(problem, self.settings)
         #print("Query:\n   ", query, "\n")
         result = list(self.prolog.query(query))[0]
@@ -132,14 +135,14 @@ class ProLog:
         #action_space[np.arange(action_size),np.arange(action_size)]=1.
 
         image={'image':np.tanh(np.array(self.simple_features,np.float32)*0.1),
-            'features':np.tanh(np.array(self.simple_features,np.float32)*0.1),
+            #'features':np.tanh(np.array(self.simple_features,np.float32)*0.1),
             'axiom_mask':self.gnnInput[4]}
 
         #print('Action:', '\''+str(input2actionGraph(self.prolog, self.gnnInput))+'\'')
         #print('Image', '\''+str(input2graph(self.prolog, self.gnnInput))+'\'')
         #ccc=input()
 
-        debug=0
+        debug=1
         if self.gnn:
             if debug==0:
                 image['gnn']=exctractImage(self.prolog, self.gnnInput)
@@ -148,13 +151,12 @@ class ProLog:
             elif debug==1:
                 image['gnn']=data[np.random.randint(2)].convert_to_dict()
             
-        action_debug=0
         if self.gnn:
-            if action_debug==0:
+            if debug==0:
                 action_space=extractActions(self.prolog, self.gnnInput)
-            elif action_debug==1:
+            elif debug==1:
                 action_space=actionData[0].convert_to_dict()
-            elif action_debug==3: 
+            elif debug==3: 
                 action_space=np.zeros((4,4))
 
         if self.steps: image['action_space']=None
@@ -180,8 +182,7 @@ class ProLog:
                 reward = self.step_reward
         return np.float64(reward)
     
-    @property
-    def output_sign(self):
+    def gnn_output_sign(self, spec, include_nums=False):
         outputs=[
             'node_inputs_1/lens',
             'node_inputs_1/symbols',
@@ -209,25 +210,35 @@ class ProLog:
             'num_symbols',
             'num_clauses'
         ]
+        if not include_nums: outputs=outputs[:-3]
 
-        spec=lambda x: tf.TensorSpec(shape=(None,)+x, dtype=tf.int32)
-        #spec=lambda x: tf.RaggedTensorSpec(shape=(None, None,)+x, dtype=tf.int32)
         gnnSpec={}
         for name in outputs:
             if name=='symbol_inputs/nodes': gnnSpec[name]=spec((3,))
             elif name.find("/")!=-1 and name.split("/")[1]=='nodes': gnnSpec[name]=spec((2,))
             else: gnnSpec[name]=spec(())
 
+        return gnnSpec
+
+    def output_sign(self, batch_size=0, batch_length=None):
+        _shape=(batch_size, batch_length) if batch_size!=0 else (batch_length,)
+
+        spec=lambda x ,dt: tf.TensorSpec(shape=_shape+x, dtype=dt)
         sign={
-            'image': tf.TensorSpec(shape=(None, 14), dtype=tf.float32),
-            'features': tf.TensorSpec(shape=(None, 14), dtype=tf.float32),
-            'action_space': tf.TensorSpec(shape=(None, None, 4), dtype=tf.float32),
-            'axiom_mask': tf.TensorSpec(shape=(None, None), dtype=tf.int32)
+            'image': spec((14,), tf.float32),
+            #'features': spec((14,), tf.float32),
+            'axiom_mask': spec((None,), tf.int32)
             }
 
+        include_num=False
+        """if self.gnn:
+            #spec=lambda x: tf.RaggedTensorSpec(shape=(None, None,)+x, dtype=tf.int32)
+            sign['gnn']=self.gnn_output_sign(lambda x: tf.TensorSpec(shape=_shape+x, dtype=tf.int32), include_num)
+            sign['action_space']=self.gnn_output_sign(lambda x: tf.TensorSpec(shape=_shape+x, dtype=tf.int32), include_num)"""
+
         if self.gnn:
-            sign['gnn']=gnnSpec
-            sign['action_space']=gnnSpec
+            sign['gnn']=self.gnn_output_sign(lambda x: tf.RaggedTensorSpec(shape=_shape+(None,)+x, dtype=tf.int32), include_num)
+            sign['action_space']=self.gnn_output_sign(lambda x: tf.TensorSpec(shape=()+(None,)+x, dtype=tf.int32), include_num)
 
         return sign
 

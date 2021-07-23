@@ -1,6 +1,7 @@
 import numpy as np
 import tensorflow as tf
 from tensorflow.keras import layers as tfkl
+from tensorflow.python.ops.ragged.ragged_tensor import RaggedTensor
 from tensorflow_probability import distributions as tfd
 from tensorflow.keras.mixed_precision import experimental as prec
 
@@ -53,17 +54,10 @@ class Encoder(tools.Module):
     self._action_embed=action_embed
     self.encoders={}
 
-    #self.encoders['action_space']=ActionEncoder()
-    self.encoders['image']=DummyEncoder()
+    if 'image' in input_pipes:
+      self.encoders['image']=DummyEncoder()    
 
-    if('features' in self._input_pipes):
-      #NOTE config
-      self.encoders['features']=DummyEncoder()
-    
-    #if(self._action_embed):
-    #  self.action_encoder=ActionEncoder(256)
-
-    if('gnn' in self._input_pipes):
+    if 'gnn' in input_pipes:
       from gnn import GraphNetwork, MultiGraphNetwork
       def c_resize(x):
         _x={}
@@ -77,27 +71,41 @@ class Encoder(tools.Module):
 
   def __call__(self, obs):
     embed={}
-    for pipe in self._input_pipes:
+
+    """if 'gnn' in self._input_pipes:
+      pipe='gnn'
       x=obs[pipe]
-      if pipe=='gnn':
-        x=self._gnn_resize(x)
+      x=self._gnn_resize(x)
       embed[pipe]=self.encoders[pipe](x)
-      if pipe=='gnn':
-        embed[pipe]=tf.expand_dims(embed[pipe], axis=0)
+      embed[pipe]=tf.expand_dims(embed[pipe], axis=0)"""
+
+    if 'gnn' in self._input_pipes:
+      x=obs['gnn']
+      batch_size, batch_length=x['ini_nodes'].shape[:2]
+      embed=[]
+      for i in range(batch_size):
+        embed_l=[]
+        for j in range(batch_length):
+          y={k: v[i][j] for k,v in x.items()}
+          y={k: v if not isinstance(v, tf.RaggedTensor) else (v.to_tensor() if v.shape[0]!=0 else  tf.zeros(shape=v.shape, dtype=tf.int32)) for k,v in y.items()}
+          y.update({'num_'+k: [len(y['ini_'+k])] for k in ['nodes', 'symbols', 'clauses']})
+          emb=self.encoders['gnn'](y)
+          embed_l.append(emb)
+        embed.append(embed_l)
 
     action_embed=None
     if(self._action_embed):
       x=obs['action_space']
-      
+      x.update({'num_'+k: [len(x['ini_'+k])] for k in ['nodes', 'symbols', 'clauses']})
       #TODO delete this part
       #x['axiom_mask']=obs['axiom_mask']
 
-      x=self._gnn_resize(x)
+      #x=self._gnn_resize(x)
       action_embed=self.action_encoder(x)
       #action_embed=tf.expand_dims(action_embed, axis=0)
     
     
-    return embed['gnn'], action_embed
+    return embed, action_embed
     
 class ActionHead(tools.Module):
 

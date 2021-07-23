@@ -69,32 +69,6 @@ class GraphInput(tf.Module):
         self.symbol_nums = SegmentsPH( nonzero = True)
         self.clause_nums = SegmentsPH( nonzero = True)
 
-    """
-    def __call__(self, batch):
-        #Non_desctructive
-        batch = [g.clone() for g in batch]
-
-        self.node_nums([g.num_nodes for g in batch])
-        self.symbol_nums([g.num_symbols for g in batch])
-        self.clause_nums([g.num_clauses for g in batch])
-
-        data = GraphData.ini_list()
-        for g in batch: data.append(g)
-        data.flatten()
-
-        self.ini_nodes=data.ini_nodes
-        self.ini_symbols=data.ini_symbols
-        self.ini_clauses=data.ini_clauses
-        self.axiom_mask=data.axiom_mask
-
-        for hedges, layer in zip(data.node_inputs, self.node_inputs):
-            layer(hedges)
-
-        self.symbol_inputs(data.symbol_inputs)
-        self.node_c_inputs(data.node_c_inputs)
-        self.clause_inputs(data.clause_inputs)
-    """ 
-
     def __call__(self, x):
 
         self.node_nums(x['num_nodes'])
@@ -114,5 +88,3 @@ class GraphInput(tf.Module):
         self.symbol_inputs(extract("symbol_inputs"))
         self.node_c_inputs(extract("node_c_inputs"))
         self.clause_inputs(extract("clause_inputs"))
-
-        
