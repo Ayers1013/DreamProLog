@@ -30,13 +30,13 @@ class Controller:
 
     self.prefill()
     
-    try:
+    '''try:
       while isinstance(x, dict):
         key=next(iter(x.keys()))
         print(key, type(key))
         x=x[key]
     except:
-      print('The train_eps is empty.')
+      print('The train_eps is empty.')'''
 
     self.agent=Dreamer(config, self._logger, self.datasetManager.dataset(batch_length=2, batch_size=8))
 
