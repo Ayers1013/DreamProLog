@@ -220,7 +220,7 @@ debug:
 
   debug: True
   pretrain: 5
-  prefill: 5e3
+  prefill: 1e4
   #train_steps: 1
   #batch_size: 10
   #batch_length: 20
@@ -252,6 +252,8 @@ prolog:
   disag_target: 'embed'
   disag_layers: 1
   disag_units: 200
+  
+  dyn_discrete: 16
 
 prolog_easy:
   dyn_cell: 'gru'

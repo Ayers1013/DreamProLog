@@ -21,11 +21,6 @@ class Controller:
     self.datasetManager=DatasetManager(self._logger, self.get_signature, config.traindir, config.evaldir)
 
     x=self.datasetManager._train_eps
-    while isinstance(x, dict):
-      key=next(iter(x.keys()))
-      print(key, type(key))
-      x=x[key]
-
     
     make = lambda mode: make_env(config, self.datasetManager.get_callbacks(mode, config))
     self.train_envs = [make('train') for _ in range(config.envs)]
@@ -34,6 +29,14 @@ class Controller:
     self._signature=self.train_envs[0].output_sign
 
     self.prefill()
+    
+    try:
+      while isinstance(x, dict):
+        key=next(iter(x.keys()))
+        print(key, type(key))
+        x=x[key]
+    except:
+      print('The train_eps is empty.')
 
     self.agent=Dreamer(config, self._logger, self.datasetManager.dataset(batch_length=2, batch_size=8))
 
@@ -143,3 +146,5 @@ class Controller:
           self._logger.scalar(name, float(mean.result()))
           mean.reset_states()
         self._logger.write(fps=False)
+      if _%500==0:
+        self._agent.save(self._logdir / 'variables.pkl')

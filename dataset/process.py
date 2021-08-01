@@ -132,7 +132,6 @@ def process_episode(config, logger, mode, train_eps, eval_eps, episode):
             else:
                 del cache[key]
         logger.scalar('dataset_size', total + length)"""
-    cache[str(filename)] = episode
     store(cache, episode, str(filename), TAG_MODE)
     print(f'{mode.title()} episode has {length} steps and return {score:.3f}.')
     logger.scalar(f'{mode}_return', score)
