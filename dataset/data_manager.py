@@ -86,7 +86,15 @@ class DatasetManager:
         return {k: [l(i)[k] for i in range(batch)] if not isinstance(l(0)[k], dict) else nested_concat(lambda i: l(i)[k]) for k in l(0).keys()}
       eps=nested_concat(lambda i: eps[i])
       
-      _eps={k: np.stack(v) for k,v in eps.items() if k not in ['gnn', 'action_space']}
+      try:
+        _eps={k: np.stack(v) for k,v in eps.items() if k not in ['gnn', 'action_space']}
+      except:
+        for k,v in eps.items():
+          if k not in ['gnn', 'action_space']:
+            try:
+              print([e.shape for e in v])
+            except:
+              print(type(v))
       if 'gnn' in sample.keys():
         _eps['gnn']={k: tf.ragged.constant(eps['gnn'][k]) for k in eps['gnn'].keys()}
       if 'action_space' in sample.keys():
