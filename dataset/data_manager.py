@@ -76,8 +76,8 @@ class DatasetManager:
       #Sample problem
       selected_eps=dict(train=self._train_eps, eval=self._eval_eps)[mode]
       selected_eps= random.choice(list(selected_eps.values()))
-      #I know that this is very ugly :(
-      sample=next(iter(next(iter(selected_eps.values())).values()))
+      #I know that this is very ugly :( NOTE REPAIR THIS!!
+      sample={'gnn': None, 'action_space': None}#next(iter(next(iter(selected_eps.values())).values()))
 
       #NOTE Probably I should use tf.nest 
       eps=[self.get_episode(random, selected_eps, length) for _ in range(batch)]
