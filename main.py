@@ -220,7 +220,7 @@ def main(logdir, config):
 class LolArg:
   def __init__(self):
     self.configs=['defaults','prolog','prolog_easy','debug']
-    self.logdir='logdir'#'debugEpisodes'#
+    self.logdir='debugEpisodes'#'logdir'#
 
 if __name__ == '__main__':
   try:
@@ -251,4 +251,5 @@ if __name__ == '__main__':
   config=parser.parse_args(remaining)
   from controller import Controller
   ctrl=Controller(config, args.logdir)
-  ctrl.simulate()
+  #ctrl.simulate()
+  ctrl.train_only_wordModel(1000)

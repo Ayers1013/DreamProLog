@@ -42,9 +42,6 @@ class WorldModel(tools.Module):
     with tf.GradientTape() as model_tape:
       embed, action_embed = self.encoder(data)
       
-      if True:
-        action=data['action']
-      
       arg_act=tf.math.argmax(data['action'], axis=-1)
       action2=tf.gather(action_embed, arg_act)
 

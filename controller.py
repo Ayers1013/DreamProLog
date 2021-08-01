@@ -124,3 +124,15 @@ class Controller:
         env.close()
       except Exception:
         pass
+
+  def train_only_wordModel(self, epochs=1):
+    ds=self.datasetManager.dataset(batch_length=2, batch_size=8)
+    ds=iter(ds)
+    for _ in range(epochs):
+      x=next(ds)
+      self.agent._train_only_wordModel(x)
+      if _%10==0:
+        for name, mean in self.agent._metrics.items():
+          self._logger.scalar(name, float(mean.result()))
+          mean.reset_states()
+        self._logger.write(fps=False)

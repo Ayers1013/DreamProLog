@@ -14,7 +14,22 @@ import tools
 
 from envs import ProLog
 pl=ProLog.ProLog()
-sign=pl.output_sign(8,2)
+_signature=pl.output_sign
+def get_signature(batch_size, batch_length):
+    _shape=(batch_size, batch_length) if batch_size!=0 else (batch_length,)
+    spec=lambda x, dt: tf.TensorSpec(shape=_shape+x, dtype=dt)
+
+    sign=_signature(batch_size, batch_length)
+    sign.update({
+      'action': spec((None,), tf.float32),
+      'reward': spec((), tf.float32),
+      'discount': spec((), tf.float32)
+    })
+
+    return sign
+
+sign=get_signature(8,2)
+
 
 class Dreamer(tools.Module):
 
@@ -52,7 +67,7 @@ class Dreamer(tools.Module):
     # Train step to initialize variables including optimizer statistics.    
     x=next(self._dataset)
     #NOTE it is better to initials everything in advance
-    self._train(x)
+    #self._train(x)
 
   def __call__(self, obs, reset, state=None, training=True):
     step = self._step.numpy().item()
@@ -144,6 +159,17 @@ class Dreamer(tools.Module):
       metrics.update({'expl_' + key: value for key, value in mets.items()})
     for name, value in metrics.items():
       self._metrics[name].update_state(value)
+
+  @tf.function(input_signature=[sign])
+  def _train_only_wordModel(self, data):
+    print('Tracing train only WordModel function.')
+    metrics = {}
+    embed, post, feat, kl, mets, action_embed = self._wm.train(data)
+    metrics.update(mets)
+
+    for name, value in metrics.items():
+      self._metrics[name].update_state(value)
+
 
 
 def count_steps(folder):
