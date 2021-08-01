@@ -28,7 +28,10 @@ class Controller:
 
     self.prefill()
 
-    self.agent=Dreamer(config, self._logger, self.datasetManager.dataset(batch_length=2, batch_size=8))
+    print(list(self.datasetManager._train_eps.items())[0:5])
+
+
+    #self.agent=Dreamer(config, self._logger, self.datasetManager.dataset(batch_length=2, batch_size=8))
 
   def get_signature(self, batch_size, batch_length):
     _shape=(batch_size, batch_length) if batch_size!=0 else (batch_length,)
