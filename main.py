@@ -252,4 +252,4 @@ if __name__ == '__main__':
   from controller import Controller
   ctrl=Controller(config, args.logdir)
   #ctrl.simulate()
-  #ctrl.train_only_wordModel(1000)
+  ctrl.train_only_wordModel(1000)
