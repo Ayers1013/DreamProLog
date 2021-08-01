@@ -88,7 +88,8 @@ class DatasetManager:
       
       try:
         _eps={k: np.stack(v) for k,v in eps.items() if k not in ['gnn', 'action_space']}
-      except:
+      except ValueError as err:
+        print(err)
         for k,v in eps.items():
           if k not in ['gnn', 'action_space']:
             print(k, type(v[0]))
