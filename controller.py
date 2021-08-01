@@ -126,7 +126,7 @@ class Controller:
       tools.simulate(eval_policy, self.eval_envs, episodes=1)
       print('Start training.')
       state = tools.simulate(self.agent, self.train_envs, self._config.eval_every, state=state)
-      self._agent.save(self._logdir / 'variables.pkl')
+      self.agent.save(self._logdir / 'variables.pkl')
 
   def __del__(self):
     for env in self.train_envs + self.eval_envs:
@@ -147,4 +147,4 @@ class Controller:
           mean.reset_states()
         self._logger.write(fps=False)
       if _%500==0:
-        self._agent.save(self._logdir / 'variables.pkl')
+        self.agent.save(self._logdir / 'variables.pkl')
