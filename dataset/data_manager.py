@@ -72,12 +72,13 @@ class DatasetManager:
 
   def sample_episode(self, mode, batch=None, length=None, balance=False, seed=0):
     random = np.random.RandomState(seed)
+    assert isinstance(length, int)
     while True:
       #Sample problem
       selected_eps=dict(train=self._train_eps, eval=self._eval_eps)[mode]
       selected_eps= random.choice(list(selected_eps.values()))
       #I know that this is very ugly :( NOTE REPAIR THIS!!
-      sample={'gnn': None, 'action_space': None}#next(iter(next(iter(selected_eps.values())).values()))
+      sample=next(iter(next(iter(selected_eps.values())).values()))
 
       #NOTE Probably I should use tf.nest 
       eps=[self.get_episode(random, selected_eps, length) for _ in range(batch)]
@@ -92,13 +93,10 @@ class DatasetManager:
         _eps['action_space']=sample['action_space']
       yield _eps
 
-  def dataset(self, **setting):
-    dc=DatasetConfig(**setting)
-    #To avoid dataset recreation
-    if dc in self._datasets: return self._datasets[dc]
+  def dataset(self, batch_size, batch_length):
     
     generator = lambda: self.sample_episode(
-      'train', dc.batch_size, dc.batch_length)
+      'train', batch_size, batch_length)
     output_sign=self._output_sign(dc.batch_size, dc.batch_length)
     dataset = tf.data.Dataset.from_generator(generator, output_signature=output_sign)
     dataset = dataset.prefetch(10)
