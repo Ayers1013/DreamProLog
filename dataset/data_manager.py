@@ -97,7 +97,7 @@ class DatasetManager:
     
     generator = lambda: self.sample_episode(
       'train', batch_size, batch_length)
-    output_sign=self._output_sign(dc.batch_size, dc.batch_length)
+    output_sign=self._output_sign(batch_size, batch_length)
     dataset = tf.data.Dataset.from_generator(generator, output_signature=output_sign)
     dataset = dataset.prefetch(10)
     return dataset
