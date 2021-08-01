@@ -76,7 +76,8 @@ class DatasetManager:
     while True:
       #Sample problem
       selected_eps=dict(train=self._train_eps, eval=self._eval_eps)[mode]
-      selected_eps= random.choice(list(selected_eps.values()))
+      problem_name= random.choice(list(selected_eps.keys()))
+      selected_eps=selected_eps[problem_name]
       #I know that this is very ugly :( NOTE REPAIR THIS!!
       sample=next(iter(next(iter(selected_eps.values())).values()))
 
@@ -89,7 +90,7 @@ class DatasetManager:
       try:
         _eps={k: np.stack(v) for k,v in eps.items() if k not in ['gnn', 'action_space']}
       except ValueError as err:
-        print('This episode is corrupted')
+        print(f'This episode from the {problem_name} problem is corrupted.')
         for k,v in eps.items():
           if k not in ['gnn', 'action_space']:
             print(k, type(v[0]))
