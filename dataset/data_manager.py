@@ -6,7 +6,7 @@ import json
 
 from numpy.lib.function_base import select
 
-from gnn import GraphData
+#from gnn import GraphData
 
 from dataset.process import process_episode, load_episodes
 import functools
@@ -46,16 +46,10 @@ class DatasetManager:
     self._eval_eps=load_episodes(self._eval_dir)
 
     self._output_sign=output_sign
-    
-
-    self.get_output_sign
   
-  def callbacks(self, mode):
+  def get_callbacks(self, mode, config):
     return [functools.partial(
-      process_episode, self._config, self._logger, mode, self._train_eps, self._eval_eps)]
-    
-  def get_output_sign(self, batch, length):
-    sign=self._output_sign()
+      process_episode, config, self._logger, mode, self._train_eps, self._eval_eps)]
 
   @staticmethod
   def nested_concat():

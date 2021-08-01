@@ -371,6 +371,15 @@ class GraphData():
             (prefix+'ini_clauses', self.ini_clauses)
         ]:
             d[name]=inst.copy()
+        
+        include_nums=True
+        if include_nums:
+            for name, inst in [
+                (prefix+'num_nodes', self.num_nodes),
+                (prefix+'num_symbols', self.num_symbols),
+                (prefix+'num_clauses', self.num_clauses)
+            ]:
+                d[name]=[inst]
         return d
 
         

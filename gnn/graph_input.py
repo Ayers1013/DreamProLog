@@ -1,4 +1,5 @@
 import tensorflow as tf
+from tensorflow.python.ops.ragged.ragged_tensor import RaggedTensor
 from gnn.graph_data import GraphData
 from gnn.segments import SegmentsPH
 
@@ -88,3 +89,65 @@ class GraphInput(tf.Module):
         self.symbol_inputs(extract("symbol_inputs"))
         self.node_c_inputs(extract("node_c_inputs"))
         self.clause_inputs(extract("clause_inputs"))
+
+def shifted_cumsum(x, length):
+    x=tf.squeeze(x, axis=-1)
+    result=[]
+    shift=0
+    for i in range(length):
+        result.append(shift)
+        shift+=x[i]
+    return tf.stack(result, axis=0)
+
+#shift only non -1 entries
+def shift_non_neg(x, s):
+    shift_mask=tf.cast(x+1, dtype=tf.bool)
+    x=x+s
+    x=tf.where(shift_mask, x, -1)
+    return x
+
+def flatten_gnn_input(inp, length):
+    inp=tf.nest.map_structure(lambda x: tf.squeeze(x, axis=1), inp)
+    cumsum={k: tf.expand_dims(shifted_cumsum(inp['num_'+k], length), axis=-1) for k in ['nodes', 'symbols', 'clauses']}
+
+    #symbol shifts
+    for i in range(3):
+        name=f'node_inputs_{i+1}/symbols'
+        inp[name]=inp[name]+cumsum['symbols']
+    
+    #clause shifts
+    name=f'node_c_inputs/data'
+    inp[name]=inp[name]+cumsum['clauses']
+
+    #node shifts
+    name=f'clause_inputs/data'
+    inp[name]=inp[name]+cumsum['nodes']
+
+    #[length, 1, 1] shape is required for the latter ops
+    cumsum['nodes']=tf.expand_dims(cumsum['nodes'], axis=-1)
+    for i in range(3):
+        name=f'node_inputs_{i+1}/nodes'
+        inp[name]=shift_non_neg(inp[name], cumsum['nodes'])
+    
+    name=f'symbol_inputs/nodes'
+    inp[name]=shift_non_neg(inp[name], cumsum['nodes'])
+
+    #concat the other
+    flatten = lambda x: tf.concat([x[i] for i in range(length)], axis=0)
+    to_tensor = lambda x: x if not isinstance(x, tf.RaggedTensor) else x.to_tensor()
+    inp=tf.nest.map_structure(lambda x: to_tensor(flatten(x)), inp)
+
+    return inp
+
+
+def feed_gnn_input(x, batch_size, batch_length, fun):
+    result=[]
+    for i in range(batch_length):
+        y=tf.nest.map_structure(lambda inp: inp[:, i:i+1], x)
+        y=flatten_gnn_input(y, batch_size)
+        z=fun(y)
+        z.set_shape((batch_size, z.shape[1]))
+        result.append(z)
+    print('Almost Traced')
+    result=tf.stack(result, axis=1)
+    return result

@@ -1,6 +1,7 @@
 import tensorflow as tf
 import numpy as np
 from tensorflow.python.keras.engine import input_layer
+from tensorflow.python.ops.gen_batch_ops import batch
 
 # from gnn.tf_helpers import *
 
@@ -9,6 +10,54 @@ from gnn.segments import Segments
 from gnn.graph_conv import graph_start, graph_conv
 from gnn.graph_data import GraphData
 import tools
+
+#input_sign
+
+def gnn_output_sign(spec, include_nums=False):
+    outputs=[
+        'node_inputs_1/lens',
+        'node_inputs_1/symbols',
+        'node_inputs_1/nodes',
+        'node_inputs_1/sgn',
+        'node_inputs_2/lens',
+        'node_inputs_2/symbols',
+        'node_inputs_2/nodes', 
+        'node_inputs_2/sgn', 
+        'node_inputs_3/lens', 
+        'node_inputs_3/symbols', 
+        'node_inputs_3/nodes', 
+        'node_inputs_3/sgn', 
+        'symbol_inputs/lens', 
+        'symbol_inputs/nodes', 
+        'symbol_inputs/sgn', 
+        'node_c_inputs/lens', 
+        'node_c_inputs/data', 
+        'clause_inputs/lens', 
+        'clause_inputs/data', 
+        'ini_nodes', 
+        'ini_symbols', 
+        'ini_clauses',
+        'num_nodes',
+        'num_symbols',
+        'num_clauses'
+    ]
+    #if not include_nums: outputs=outputs[:-3]
+
+    gnnSpec={}
+    for name in outputs[:-3]:
+        if name=='symbol_inputs/nodes': gnnSpec[name]=spec((None, 3,))
+        elif name.find("/")!=-1 and name.split("/")[1]=='nodes': gnnSpec[name]=spec((None, 2,))
+        else: gnnSpec[name]=spec((None,))
+
+    if include_nums:
+        for name in outputs[-3:]:
+            gnnSpec[name]=spec((None,))
+
+    return gnnSpec
+
+sign=gnn_output_sign(lambda x: tf.TensorSpec(shape=()+x, dtype=tf.int32), True)
+'''for k in ['num_nodes', 'num_symbols', 'num_clauses']:
+    sign[k]=tf.TensorSpec((8,), dtype=tf.int32)'''
 
 class NetworkConfig:
     def __init__(self):
@@ -40,13 +89,8 @@ class GraphNetwork(tools.Module):
         self.dense2=tf.keras.layers.Dense(self.config.hidden_val)
         self.dense3=tf.keras.layers.Dense(out_dim, activation=tf.sigmoid, use_bias=True)
 
-    @tf.function(experimental_relax_shapes=True)
     def __call__(self, graph_ph):
         print('Tracing gnn network.')
-        #From string
-        #data=GraphData()
-        #data.load_from_str(graph_ph[0])
-        #graph_ph=[data]
 
         self.input_layer(graph_ph)
         x=self.start_layer()
@@ -89,7 +133,7 @@ class MultiGraphNetwork(tools.Module):
 
     def __call__(self, graph_ph):
         print('Tracing gnn network.')
-
+        
         self.input_layer(graph_ph)
         x=self.start_layer()
 
@@ -98,8 +142,17 @@ class MultiGraphNetwork(tools.Module):
 
         return x
 
-    @tf.function(experimental_relax_shapes=True)
+    @tf.function(input_signature=[sign])
     def stateEmbed(self, graph_ph):
+        print('Tracing gnn state embed function.')
+        
+        bsign=sign
+        batch_size=graph_ph['node_inputs_1/lens'].shape[0]
+        for k in ['num_nodes', 'num_symbols', 'num_clauses']:
+            sign[k]=tf.TensorSpec((batch_size,), dtype=tf.int32)
+        tf.nest.map_structure(lambda x, s: x.set_shape(s.shape), graph_ph, bsign)
+
+
         nodes, symbols, clauses=self.__call__(graph_ph)
         x=self.dense1(clauses)
         x = self.input_layer.clause_nums.collapse(x, [tf.math.segment_max, tf.math.segment_mean])
@@ -107,8 +160,9 @@ class MultiGraphNetwork(tools.Module):
         x=self.dense3(x)
         return x
 
-    @tf.function(experimental_relax_shapes=True)
+    @tf.function(input_signature=[sign])
     def actionEmbed(self, graph_ph):
+        print('Tracing gnn action embed function.')
         nodes, symbols, clauses=self.__call__(graph_ph)
         cur_goals = self.input_layer.clause_nums.gather(clauses, 0)
         ci = self.input_layer.clause_inputs
@@ -118,12 +172,6 @@ class MultiGraphNetwork(tools.Module):
             )
         )
 
-        
-        """mask = tf.ones(shape=(200,))
-        ax_segments_masked, clauses_i_masked = self.ax_segments.mask_data(
-            ci.segments.segment_indices,
-            mask, nonzero = True,
-        )"""
         ax_segments_masked, clauses_i_masked = self.ax_segments, ci.segments.segment_indices
 
         lit_i_masked = ci.data
@@ -134,12 +182,6 @@ class MultiGraphNetwork(tools.Module):
             axis = 1,
         )
         hidden = self.dense4(action_inputs)
-        
-        #logits = tf.squeeze(self.dense5(hidden))
-        #
-        #log_probs = ax_segments_masked.log_softmax(logits)
-        #probs = tf.exp(log_probs)
-        #sampled_actions = ax_segments_masked.sample(probs)
 
         return hidden
 

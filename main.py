@@ -26,6 +26,35 @@ tf.get_logger().setLevel('ERROR')
 
 from dreamer import Dreamer, count_steps
 
+def load(logdir, config):
+  logdir = pathlib.Path(logdir).expanduser()
+  config.traindir = config.traindir or logdir / 'train_eps'
+  config.evaldir = config.evaldir or logdir / 'eval_eps'
+  config.act = getattr(tf.nn, config.act)
+
+  if config.debug and False:
+    tf.config.experimental_run_functions_eagerly(True)
+    #tf.debugging.experimental.enable_dump_debug_info(str(logdir), tensor_debug_mode="FULL_HEALTH", circular_buffer_size=-1)
+  if config.gpu_growth:
+    message = 'No GPU found. To actually train on CPU remove this assert.'
+    #print(message)
+    #TODO
+    #assert tf.config.experimental.list_physical_devices('GPU'), message
+    for gpu in tf.config.experimental.list_physical_devices('GPU'):
+      tf.config.experimental.set_memory_growth(gpu, True)
+  assert config.precision in (16, 32), config.precision
+  if config.precision == 16:
+    prec.set_policy(prec.Policy('mixed_float16'))
+
+  print('Logdir', logdir)
+  logdir.mkdir(parents=True, exist_ok=True)
+  config.traindir.mkdir(parents=True, exist_ok=True)
+  config.evaldir.mkdir(parents=True, exist_ok=True)
+  step = count_steps(config.traindir)
+  logger = tools.Logger(logdir, step)
+
+  return config, logger
+
 def main(logdir, config):
   logdir = pathlib.Path(logdir).expanduser()
   config.traindir = config.traindir or logdir / 'train_eps'
@@ -36,7 +65,7 @@ def main(logdir, config):
   config.time_limit //= config.action_repeat"""
   config.act = getattr(tf.nn, config.act)
   
-  if config.debug and True:
+  if config.debug and False:
     tf.config.experimental_run_functions_eagerly(True)
     #tf.debugging.experimental.enable_dump_debug_info(str(logdir), tensor_debug_mode="FULL_HEALTH", circular_buffer_size=-1)
   if config.gpu_growth:
@@ -122,16 +151,34 @@ def main(logdir, config):
   #eval_dataset = iter(make_dataset(eval_eps, config, output_sign))
   x=next(iter(dm.sample_episode('train', 8, 2)))
   osign=ctrl.get_signature(8,2)
-  for k in osign.keys():
-    if isinstance(osign[k], dict):
-      for gk in osign[k].keys():
-        print(x[k][gk].shape, osign[k][gk].shape, x[k][gk].dtype, osign[k][gk].dtype)
-    else: print(x[k].shape, osign[k].shape, x[k].dtype, osign[k].dtype)
+  def test(inp):
+    for k in osign.keys():
+      if isinstance(osign[k], dict):
+        for gk in osign[k].keys():
+          print(k, gk, ':\n\t', inp[k][gk].shape, '\t\t', osign[k][gk].shape,'\t', inp[k][gk].dtype,'\t', osign[k][gk].dtype)
+      else: print(k, ':\n\t', inp[k].shape, '\t\t', osign[k].shape,'\t', inp[k].dtype,'\t', osign[k].dtype)
 
   train_dataset=dm.dataset(batch_length=2, batch_size=8)
   eval_dataset=iter(dm.dataset(batch_length=2, batch_size=8))
 
+  """agent = Dreamer(config, logger, train_dataset)
   x=next(iter(train_dataset))
+  test(x)
+
+  from gnn.graph_input import feed_gnn_input
+  
+  gnn=agent._wm.encoder.encoders['gnn']
+
+  @tf.function(input_signature=[osign])
+  def fun(x):
+    print('Tracing fun.')
+    y=feed_gnn_input(x['gnn'],8 ,2, gnn)
+    tf.print(y)
+    return y #tf.reduce_sum(y, axis=-1)
+  
+  for _ in range(10):
+    x=next(agent._dataset)
+    #fun(x)"""
 
 
 
@@ -176,16 +223,20 @@ class LolArg:
     self.logdir='logdir'#'debugEpisodes'#
 
 if __name__ == '__main__':
-  if(False):
+  try:
+    print('Running the DreamProlog algorithm.')
     parser = argparse.ArgumentParser()
     parser.add_argument('--configs', nargs='+', required=True)
     parser.add_argument('--logdir', required=True)
     args, remaining = parser.parse_known_args()
-  else:
-    #TODO remove this!!
-    args, remaining =LolArg(), []
-    #TODO ...
-  print(args,remaining)
+  except:
+    print("There was a problem with the provided arguments. The program will run in the default setting:")
+    class DefaultArg:
+      def __init__(self):
+        self.configs=['defaults','prolog','prolog_easy','debug']
+        self.logdir='logdir'#'debugEpisodes'#
+    args, remaining =DefaultArg(), []
+  print('--configs', " ".join(args.configs), '--logdir', args.logdir)
 
   configs = yaml.safe_load(
       (pathlib.Path(__file__).parent / 'configs.yaml').read_text())
@@ -196,4 +247,8 @@ if __name__ == '__main__':
   for key, value in config_.items():
     arg_type = tools.args_type(value)
     parser.add_argument(f'--{key}', type=arg_type, default=arg_type(value))
-  main(args.logdir, parser.parse_args(remaining))
+  #main(args.logdir, parser.parse_args(remaining))
+  config=parser.parse_args(remaining)
+  from controller import Controller
+  ctrl=Controller(config, args.logdir)
+  ctrl.simulate()

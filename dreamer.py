@@ -12,6 +12,10 @@ import exploration as expl
 import models
 import tools
 
+from envs import ProLog
+pl=ProLog.ProLog()
+sign=pl.output_sign(8,2)
+
 class Dreamer(tools.Module):
 
   def __init__(self, config, logger, dataset):
@@ -48,7 +52,7 @@ class Dreamer(tools.Module):
     # Train step to initialize variables including optimizer statistics.    
     x=next(self._dataset)
     #NOTE it is better to initials everything in advance
-    #self._train(x)
+    self._train(x)
 
   def __call__(self, obs, reset, state=None, training=True):
     step = self._step.numpy().item()
@@ -120,7 +124,7 @@ class Dreamer(tools.Module):
       return tf.clip_by_value(tfd.Normal(action, amount).sample(), -1, 1)
     raise NotImplementedError(self._config.action_noise)
 
-  @tf.function(experimental_relax_shapes=True)
+  #@tf.function(input_signature=[sign])
   def _train(self, data):
     print('Tracing train function.')
     metrics = {}

@@ -7,6 +7,7 @@ from tensorflow.keras.mixed_precision import experimental as prec
 
 import tools
 
+from gnn import MultiGraphNetwork, feed_gnn_input
 
 class DummyEncoder(tools.Module):
 
@@ -40,14 +41,6 @@ class DummyDecoder(tools.Module):
     std=tf.keras.activations.sigmoid(std)
     return tfd.Independent(tfd.Normal(mean,std+0.01), len(self._shape))
 
-class ActionEncoder(tools.Module):
-
-  def __init__(self, units):
-    self._embed=tf.Variable(tf.eye(units))
-
-  def __call__(self, obs):
-    return self._embed
-
 class Encoder(tools.Module):
   def __init__(self, input_pipes, action_embed):
     self._input_pipes=input_pipes
@@ -57,8 +50,7 @@ class Encoder(tools.Module):
     if 'image' in input_pipes:
       self.encoders['image']=DummyEncoder()    
 
-    if 'gnn' in input_pipes:
-      from gnn import GraphNetwork, MultiGraphNetwork
+    """if 'gnn' in input_pipes:
       def c_resize(x):
         _x={}
         for k,v in x.items():
@@ -67,19 +59,25 @@ class Encoder(tools.Module):
       self.gnn=MultiGraphNetwork(out_dim=200)
       self.encoders['gnn']=self.gnn.stateEmbed
       self.action_encoder=self.gnn.actionEmbed
-      self._gnn_resize=c_resize
+      self._gnn_resize=c_resize"""
+
+    if 'gnn' in input_pipes:
+      self.gnn=MultiGraphNetwork(out_dim=200)
+      self.encoders['gnn']=self.gnn.stateEmbed
+      self.encoders['action_space']=self.gnn.actionEmbed
 
   def __call__(self, obs):
-    embed={}
 
-    """if 'gnn' in self._input_pipes:
+    """embed={}
+
+    if 'gnn' in self._input_pipes:
       pipe='gnn'
       x=obs[pipe]
       x=self._gnn_resize(x)
       embed[pipe]=self.encoders[pipe](x)
       embed[pipe]=tf.expand_dims(embed[pipe], axis=0)"""
 
-    if 'gnn' in self._input_pipes:
+    """if 'gnn' in self._input_pipes:
       x=obs['gnn']
       batch_size, batch_length=x['ini_nodes'].shape[:2]
       embed=[]
@@ -102,9 +100,12 @@ class Encoder(tools.Module):
 
       #x=self._gnn_resize(x)
       action_embed=self.action_encoder(x)
-      #action_embed=tf.expand_dims(action_embed, axis=0)
-    
-    
+      #action_embed=tf.expand_dims(action_embed, axis=0)"""
+
+    batch_size, batch_length= obs['image'].shape[:2]
+    embed=feed_gnn_input(obs['gnn'], batch_size, batch_length, self.encoders['gnn'])
+    action_embed=self.encoders['action_space'](obs['action_space'])
+
     return embed, action_embed
     
 class ActionHead(tools.Module):

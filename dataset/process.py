@@ -112,6 +112,7 @@ def store(storage, episode, ep_name, tag=False):
     x[ep_name]=episode
 
 TAG_MODE=True
+#config is not included
 def process_episode(config, logger, mode, train_eps, eval_eps, episode):
     directory = dict(train=config.traindir, eval=config.evaldir)[mode]
     cache = dict(train=train_eps, eval=eval_eps)[mode]
@@ -123,14 +124,14 @@ def process_episode(config, logger, mode, train_eps, eval_eps, episode):
     score = float(episode['reward'].astype(np.float64).sum())
     if mode == 'eval':
         cache.clear()
-    if False and mode == 'train' and config.dataset_size:
+    """if False and mode == 'train' and config.dataset_size:
         total = 0
         for key, ep in reversed(sorted(cache.items(), key=lambda x: x[0])):
             if total <= config.dataset_size - length:
                 total += len(ep['reward']) - 1
             else:
                 del cache[key]
-        logger.scalar('dataset_size', total + length)
+        logger.scalar('dataset_size', total + length)"""
     cache[str(filename)] = episode
     store(cache, episode, str(filename), TAG_MODE)
     print(f'{mode.title()} episode has {length} steps and return {score:.3f}.')
