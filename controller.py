@@ -19,6 +19,13 @@ class Controller:
     self._logger=self.preinit(self._logdir, config)
 
     self.datasetManager=DatasetManager(self._logger, self.get_signature, config.traindir, config.evaldir)
+
+    x=self.datasetManager._train_eps
+    while isinstance(x, dict):
+      key=next(iter(x.keys()))
+      print(key, type(key))
+      x=x[key]
+
     
     make = lambda mode: make_env(config, self.datasetManager.get_callbacks(mode, config))
     self.train_envs = [make('train') for _ in range(config.envs)]
