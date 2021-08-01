@@ -89,11 +89,12 @@ class DatasetManager:
       try:
         _eps={k: np.stack(v) for k,v in eps.items() if k not in ['gnn', 'action_space']}
       except ValueError as err:
-        print(err)
+        print('This episode is corrupted')
         for k,v in eps.items():
           if k not in ['gnn', 'action_space']:
             print(k, type(v[0]))
             print([e.shape for e in v])
+        continue
       if 'gnn' in sample.keys():
         _eps['gnn']={k: tf.ragged.constant(eps['gnn'][k]) for k in eps['gnn'].keys()}
       if 'action_space' in sample.keys():
