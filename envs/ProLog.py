@@ -133,7 +133,7 @@ class ProLog:
 
         image={'image':np.tanh(np.array(self.simple_features,np.float32)*0.1),
             'axiom_mask':self.gnnInput[4]}
-        debug=1
+        debug=0
         if self.gnn:
             if debug==0:
                 image['gnn']=exctractImage(self.prolog, self.gnnInput)
