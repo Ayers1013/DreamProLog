@@ -91,10 +91,8 @@ class DatasetManager:
       except:
         for k,v in eps.items():
           if k not in ['gnn', 'action_space']:
-            try:
-              print([e.shape for e in v])
-            except:
-              print(type(v))
+            print(type(v))
+            print([e.shape for e in v])
       if 'gnn' in sample.keys():
         _eps['gnn']={k: tf.ragged.constant(eps['gnn'][k]) for k in eps['gnn'].keys()}
       if 'action_space' in sample.keys():
