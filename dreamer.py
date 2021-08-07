@@ -92,8 +92,7 @@ class Dreamer(tools.Module):
     action, state = self._policy(obs, state, training)
     if training:
       self._step.assign_add(len(reset))
-      self._logger.step = self._config.action_repeat \
-          * self._step.numpy().item()
+      self._logger.step = self._step.numpy().item()
     return action, state
 
   @tf.function(experimental_relax_shapes=True)

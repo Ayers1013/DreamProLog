@@ -61,6 +61,7 @@ class RSSM(tools.Module):
         (action, embed), (state, state))
     post = {k: swap(v) for k, v in post.items()}
     prior = {k: swap(v) for k, v in prior.items()}
+    print(post, prior)
     return post, prior
 
   @tf.function
