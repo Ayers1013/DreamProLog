@@ -218,7 +218,7 @@ dmc:
 
 debug:
 
-  debug: True
+  debug: False
   pretrain: 5
   prefill: 1e2
   #train_steps: 1
@@ -260,7 +260,7 @@ prolog_easy:
   dyn_hidden: 100
   dyn_deter: 100
   dyn_stoch: 20
-  dyn_discrete: 0
+  #dyn_discrete: 0
   dyn_input_layers: 1
   dyn_output_layers: 1
   dyn_shared: False
