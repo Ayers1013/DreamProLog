@@ -138,13 +138,14 @@ class Controller:
   def train_only_wordModel(self, epochs=1):
     ds=self.datasetManager.dataset(batch_length=2, batch_size=8)
     ds=iter(ds)
-    for _ in range(epochs):
+    for step in range(epochs):
       x=next(ds)
       self.agent._train_only_wordModel(x)
-      if _%10==0:
+      if step%10==0:
         for name, mean in self.agent._metrics.items():
           self._logger.scalar(name, float(mean.result()))
           mean.reset_states()
+        self.step=step/10
         self._logger.write(fps=False)
-      if _%500==0:
+      if step%500==0:
         self.agent.save(self._logdir / 'variables.pkl')
