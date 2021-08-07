@@ -147,9 +147,9 @@ class MultiGraphNetwork(tools.Module):
         print('Tracing gnn state embed function.')
         
         bsign=sign
-        batch_size=graph_ph['node_inputs_1/lens'].shape[0]
-        for k in ['num_nodes', 'num_symbols', 'num_clauses']:
-            sign[k]=tf.TensorSpec((batch_size,), dtype=tf.int32)
+        #batch_size=graph_ph['node_inputs_1/lens'].shape[0]
+        #for k in ['num_nodes', 'num_symbols', 'num_clauses']:
+        #    sign[k]=tf.TensorSpec((batch_size,), dtype=tf.int32)
         tf.nest.map_structure(lambda x, s: x.set_shape(s.shape), graph_ph, bsign)
 
 
