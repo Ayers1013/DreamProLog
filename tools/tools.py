@@ -13,13 +13,50 @@ import tensorflow_probability as tfp
 from tensorflow.keras.mixed_precision import experimental as prec
 from tensorflow_probability import distributions as tfd
 
-
+import wandb
 
 class AttrDict(dict):
 
   __setattr__ = dict.__setitem__
   __getattr__ = dict.__getitem__
 
+class LoggerWandb:
+
+  def __init__(self, logdir, step, config):
+    wandb.init(project='DreamProLog', entity='ayers')
+    self._logdir = logdir
+    self._last_step = None
+    self._last_time = None
+    self._scalars = {}
+    self._images = {}
+    self._videos = {}
+    self.step = step
+
+  def __del__(self):
+    wandb.finish()
+
+  def scalar(self, name, value):
+    self._scalars[name] = float(value)
+
+  def image(self, name, value):
+    self._images[name] = np.array(value)
+
+  def video(self, name, value):
+    self._videos[name] = np.array(value)
+
+  def write(self, fps=False):
+    scalars = list(self._scalars.items())
+    if fps:
+      scalars.append(('fps', self._compute_fps(self.step)))
+    print(f'[{self.step}]', ' / '.join(f'{k} {v:.1f}' for k, v in scalars))
+    with (self._logdir / 'metrics.jsonl').open('a') as f:
+      f.write(json.dumps({'step': self.step, ** dict(scalars)}) + '\n')
+    wandb.log(self._scalars)
+    self._scalars = {}
+    self._images = {}
+    self._videos = {}
+
+  
 
 class Logger:
 
