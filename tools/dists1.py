@@ -1,6 +1,7 @@
 import tensorflow as tf
 import tensorflow_probability as tfp
 from tensorflow_probability import distributions as tfd
+from tensorflow.keras.mixed_precision import experimental as prec
 
 
 # Patch to ignore seed to avoid synchronization across GPUs.
