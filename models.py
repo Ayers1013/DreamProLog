@@ -62,7 +62,7 @@ class WorldModel(tools.Module):
         likes[name] = tf.reduce_mean(like) * self._scales.get(name, 1.0)
         mse_loss[name]=tf.keras.metrics.mean_squared_error(tf.cast(data[name], tf.float32), pred.mode())
       #NOTE added factor
-      head_weigth=0.08
+      head_weigth=0.3
       model_loss = kl_loss - head_weigth*sum(likes.values())
     model_parts = [self.encoder, self.dynamics] + list(self.heads.values())
 
