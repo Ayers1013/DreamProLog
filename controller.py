@@ -145,7 +145,7 @@ class Controller:
         for name, mean in self.agent._metrics.items():
           self._logger.scalar(name, float(mean.result()))
           mean.reset_states()
-        self._logger.step=step//10
+        self._logger.step+=1
         self._logger.write(fps=False)
       if step%500==0:
         self.agent.save(self._logdir / 'variables.pkl')
