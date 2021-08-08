@@ -51,7 +51,7 @@ class LoggerWandb:
     print(f'[{self.step}]', ' / '.join(f'{k} {v:.1f}' for k, v in scalars))
     with (self._logdir / 'metrics.jsonl').open('a') as f:
       f.write(json.dumps({'step': self.step, ** dict(scalars)}) + '\n')
-    wandb.log(self._scalars)#, step=self.step)
+    wandb.log(self._scalars, step=self.step)
     self._scalars = {}
     self._images = {}
     self._videos = {}

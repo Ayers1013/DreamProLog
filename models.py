@@ -53,14 +53,17 @@ class WorldModel(tools.Module):
           post, prior, kl_balance, kl_free, kl_scale)
       feat = self.dynamics.get_feat(post)
       likes = {}
+      mse_loss={}
       for name, head in self.heads.items():
         grad_head = (name in self._config.grad_heads)
         inp = feat if grad_head else tf.stop_gradient(feat)
         pred = head(inp, tf.float32)
-        pred_mode=pred.mode()
         like = pred.log_prob(tf.cast(data[name], tf.float32))
         likes[name] = tf.reduce_mean(like) * self._scales.get(name, 1.0)
-      model_loss = kl_loss - sum(likes.values())
+        mse_loss[name]=tf.keras.metrics.mean_squared_error(tf.cast(data[name], tf.float32), pred.mode())
+      #NOTE added factor
+      head_weigth=0.08
+      model_loss = kl_loss - head_weigth*sum(likes.values())
     model_parts = [self.encoder, self.dynamics] + list(self.heads.values())
 
     #Logginh metrics
@@ -72,6 +75,7 @@ class WorldModel(tools.Module):
     metrics['kl'] = tf.reduce_mean(kl_value)
     metrics['prior_ent'] = self.dynamics.get_dist(prior).entropy()
     metrics['post_ent'] = self.dynamics.get_dist(post).entropy()
+    metrics.update({'mse/'+k : v for k,v in mse_loss.items()})
     return embed, post, feat, kl_value, metrics, action_embed
 
   #@tf.function
