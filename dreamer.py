@@ -138,7 +138,7 @@ class Dreamer(tools.Module):
       return tf.clip_by_value(tfd.Normal(action, amount).sample(), -1, 1)
     raise NotImplementedError(self._config.action_noise)
 
-  #@tf.function(input_signature=[sign])
+  @tf.function(input_signature=[sign])
   def _train(self, data):
     print('Tracing train function.')
     metrics = {}

@@ -39,6 +39,9 @@ class Controller:
       print('The train_eps is empty.')'''
 
     self.agent=Dreamer(config, self._logger, self.datasetManager.dataset(batch_length=2, batch_size=8))
+    if (self._logdir / 'variables.pkl').exists():
+      self.agent.load(logdir / 'variables.pkl')
+      self.agent._should_pretrain._once = False
 
   def get_signature(self, batch_size, batch_length):
     _shape=(batch_size, batch_length) if batch_size!=0 else (batch_length,)
@@ -78,7 +81,7 @@ class Controller:
     config.traindir.mkdir(parents=True, exist_ok=True)
     config.evaldir.mkdir(parents=True, exist_ok=True)
     step = count_steps(config.traindir)
-    logger = tools.LoggerWandb(logdir, step, config)
+    logger = tools.LoggerEmpty(logdir, step, config)
 
     return logger
 
@@ -149,3 +152,19 @@ class Controller:
         self._logger.write(fps=False)
       if step%500==0:
         self.agent.save(self._logdir / 'variables.pkl')
+
+  def train_only(self, epochs=1):
+    ds=self.datasetManager.dataset(batch_length=2, batch_size=8)
+    ds=iter(ds)
+    for step in range(epochs):
+      x=next(ds)
+      self.agent._train(x)
+      if step%10==0:
+        for name, mean in self.agent._metrics.items():
+          self._logger.scalar(name, float(mean.result()))
+          mean.reset_states()
+        self._logger.step+=1
+        self._logger.write(fps=False)
+      if step%500==0:
+        self.agent.save(self._logdir / 'variables.pkl')
+

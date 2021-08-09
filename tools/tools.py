@@ -20,6 +20,23 @@ class AttrDict(dict):
   __setattr__ = dict.__setitem__
   __getattr__ = dict.__getitem__
 
+class LoggerEmpty:
+
+  def __init__(self, logdir, step, config):
+    pass
+
+  def scalar(self, name, value):
+    pass
+
+  def image(self, name, value):
+    pass
+
+  def video(self, name, value):
+    pass
+
+  def write(self, fps=False):
+    pass
+
 class LoggerWandb:
 
   def __init__(self, logdir, step, config):
