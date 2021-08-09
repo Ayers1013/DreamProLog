@@ -156,6 +156,7 @@ class Controller:
   def train_only(self, epochs=1):
     ds=self.datasetManager.dataset(batch_length=2, batch_size=8)
     ds=iter(ds)
+    print('Train only run.')
     for step in range(epochs):
       x=next(ds)
       self.agent._train(x)
