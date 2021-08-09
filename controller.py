@@ -40,7 +40,7 @@ class Controller:
 
     self.agent=Dreamer(config, self._logger, self.datasetManager.dataset(batch_length=2, batch_size=8))
     if (self._logdir / 'variables.pkl').exists():
-      self.agent.load(logdir / 'variables.pkl')
+      self.agent.load(self._logdir / 'variables.pkl')
       self.agent._should_pretrain._once = False
 
   def get_signature(self, batch_size, batch_length):
