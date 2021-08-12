@@ -60,7 +60,7 @@ class RSSM(tools.Module):
 
   @tf.function
   def observe(self, embed, action, state=None):
-    tf.print(action)
+    print(action)
     action=self.action_to_embed(action)
 
     print('Tracing RSSM observe function.')
