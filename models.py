@@ -176,10 +176,15 @@ class ImagBehavior(tools.Module):
       feat = dynamics.get_feat(state)
       inp = tf.stop_gradient(feat) if self._stop_grad_actor else feat
       action = policy(inp).sample()
-      succ = dynamics.img_step(state, action, sample=self._config.imag_sample)
+      #NOTE
+      action_embed=dynamics.action_to_embed(action)
+      succ = dynamics.img_step(state, action_embed, sample=self._config.imag_sample)
       return succ, feat, action
     feat = 0 * dynamics.get_feat(start)
+    
+    #NOTE action can be anything 
     action = policy(feat).mode()
+
     succ, feats, actions = tools.static_scan(
         step, tf.range(horizon), (start, feat, action))
     states = {k: tf.concat([
