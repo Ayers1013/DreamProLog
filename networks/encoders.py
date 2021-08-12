@@ -137,13 +137,16 @@ class ActionHead(tools.Module):
     
     x = self.get(f'hout', tfkl.Dense, self._size)(x)
     x=tf.matmul(x, tf.transpose(self._embed))
-    x = self.get(f'hstd_mean', tfkl.Dense, 2*self._size)(x)
+    x=tf.nn.softmax(x)
+    dist=tfd.Categorical(probs=x)
+
+    '''x = self.get(f'hstd_mean', tfkl.Dense, 2*self._size)(x)
     if dtype:
       x = tf.cast(x, dtype)
     mean, std = tf.split(x, 2, -1)
     std = tf.nn.softplus(std + self._init_std) + self._min_std
     dist = tfd.Normal(mean, std)
-    dist = tfd.Independent(dist, 1)
+    dist = tfd.Independent(dist, 1)'''
     return dist
 
   def feed(self, embed):

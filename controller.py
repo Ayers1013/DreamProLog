@@ -81,7 +81,7 @@ class Controller:
     config.traindir.mkdir(parents=True, exist_ok=True)
     config.evaldir.mkdir(parents=True, exist_ok=True)
     step = count_steps(config.traindir)
-    logger = tools.LoggerWandb(logdir, step, config)
+    logger = tools.LoggerEmpty(logdir, step, config)
 
     return logger
 
@@ -108,9 +108,11 @@ class Controller:
         if(r==0): break
         ind+=1
 
-      arr=np.zeros(act_size)
+      #NOTE ind instead of arr
+      '''arr=np.zeros(act_size)
       arr[ind]=1.0
-      return arr
+      return arr'''
+      return ind
     
     random_agent = lambda o, d, s: ([sample_smart(o) for _ in d], s)
     tools.simulate(random_agent, self.train_envs, prefill)

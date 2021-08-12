@@ -80,8 +80,8 @@ class ProLog:
 
         #TODO output obs,reward,done, info
         #TODO BUG#001
-        if(action.shape!=(1)):
-            action=np.argmax(action)
+        '''if(action.shape!=(1)):
+            action=np.argmax(action)'''
 
         #print(action)
         if(self.gnnInput[4][action]==0):
@@ -145,7 +145,7 @@ class ProLog:
         if self.gnn:
             if debug==0:
                 action_space=extractActions(self.prolog, self.gnnInput)
-            elif debug==1:
+            elif debug==2:
                 action_space=actionData[0].convert_to_dict()
             elif debug==3: 
                 action_space=np.zeros((4,4))

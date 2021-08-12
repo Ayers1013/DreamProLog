@@ -45,7 +45,8 @@ class CollectDataset:
   def reset(self):
     obs = self._env.reset()
     transition = obs.copy()
-    transition['action'] = np.zeros(self._env.action_space_size)
+    #NOTE I am not sure 
+    transition['action'] = 0 #np.zeros(self._env.action_space_size)
     transition['reward'] = 0.0
     transition['discount'] = 1.0
     self._episode = [transition]
