@@ -58,7 +58,7 @@ class RSSM(tools.Module):
           deter=self._cell.get_initial_state(None, batch_size, dtype))
     return state
 
-  @tf.function
+  
   def observe(self, embed, action, state=None):
     print(action)
     action=self.action_to_embed(action)
@@ -77,7 +77,7 @@ class RSSM(tools.Module):
     #print(post, prior)
     return post, prior
 
-  @tf.function
+  
   def imagine(self, action, state=None):
     action=self.action_to_embed(action)
 
