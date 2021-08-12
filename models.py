@@ -42,10 +42,10 @@ class WorldModel(tools.Module):
     with tf.GradientTape() as model_tape:
       embed, action_embed = self.encoder(data)
       
-      arg_act=tf.math.argmax(data['action'], axis=-1)
-      action2=tf.gather(action_embed, arg_act)
+      #arg_act=tf.math.argmax(data['action'], axis=-1)
+      action=tf.gather(action_embed, data['action'])
 
-      post, prior = self.dynamics.observe(embed, action2)
+      post, prior = self.dynamics.observe(embed, action)
       kl_balance = tools.schedule(self._config.kl_balance, self._step)
       kl_free = tools.schedule(self._config.kl_free, self._step)
       kl_scale = tools.schedule(self._config.kl_scale, self._step)
