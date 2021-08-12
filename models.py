@@ -38,16 +38,13 @@ class WorldModel(tools.Module):
 
   def train(self, data):
     print('Tracing WorldModel train function.')
+    action=data['action']
     data = self.preprocess(data)
     with tf.GradientTape() as model_tape:
       embed, action_embed = self.encoder(data)
       
       #arg_act=tf.math.argmax(data['action'], axis=-1)
       #action=tf.gather(action_embed, data['action'])
-      print(data['action'])
-      action=data['action']
-      action.set_shape(shape=(8,2))
-      action=tf.cast(action, dtype=tf.int32)
       self.dynamics.feed_action_embed(action_embed)
 
       post, prior = self.dynamics.observe(embed, action)
