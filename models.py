@@ -44,6 +44,7 @@ class WorldModel(tools.Module):
       
       #arg_act=tf.math.argmax(data['action'], axis=-1)
       #action=tf.gather(action_embed, data['action'])
+      print(data['action'])
       action=data['action']
       self.dynamics.feed_action_embed(action_embed)
 
