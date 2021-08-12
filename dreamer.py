@@ -21,7 +21,7 @@ def get_signature(batch_size, batch_length):
 
     sign=_signature(batch_size, batch_length)
     sign.update({
-      'action': spec((None,), tf.float32),
+      'action': spec((), tf.int32),
       'reward': spec((), tf.float32),
       'discount': spec((), tf.float32)
     })
