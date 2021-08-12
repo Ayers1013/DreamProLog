@@ -46,6 +46,7 @@ class WorldModel(tools.Module):
       #action=tf.gather(action_embed, data['action'])
       print(data['action'])
       action=data['action']
+      action.set_shape(shape=(8,2), dtype=tf.int32)
       self.dynamics.feed_action_embed(action_embed)
 
       post, prior = self.dynamics.observe(embed, action)
