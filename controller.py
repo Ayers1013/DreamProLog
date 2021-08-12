@@ -161,6 +161,7 @@ class Controller:
     print('Train only run.')
     for step in range(epochs):
       x=next(ds)
+      print(x['action'])
       self.agent._train(x)
       if step%10==0:
         for name, mean in self.agent._metrics.items():
