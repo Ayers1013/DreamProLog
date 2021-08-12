@@ -81,7 +81,7 @@ class Controller:
     config.traindir.mkdir(parents=True, exist_ok=True)
     config.evaldir.mkdir(parents=True, exist_ok=True)
     step = count_steps(config.traindir)
-    logger = tools.LoggerEmpty(logdir, step, config)
+    logger = tools.LoggerWandb(logdir, step, config)
 
     return logger
 
@@ -161,7 +161,6 @@ class Controller:
     print('Train only run.')
     for step in range(epochs):
       x=next(ds)
-      print(x['action'])
       self.agent._train(x)
       if step%10==0:
         for name, mean in self.agent._metrics.items():

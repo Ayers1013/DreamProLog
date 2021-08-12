@@ -60,7 +60,6 @@ class RSSM(tools.Module):
 
   
   def observe(self, embed, action, state=None):
-    print(action)
     action=self.action_to_embed(action)
 
     print('Tracing RSSM observe function.')
