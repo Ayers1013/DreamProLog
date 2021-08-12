@@ -33,6 +33,16 @@ class RSSM(tools.Module):
     else:
       raise NotImplementedError(cell)
 
+    #variable
+    self.action_embed=None
+
+  def feed_action_embed(self, x):
+    self.action_embed=x
+
+  def action_to_embed(self, action):
+    return tf.gather(self.action_embed, action)
+
+
   def initial(self, batch_size):
     dtype = prec.global_policy().compute_dtype
     if self._discrete:
@@ -50,6 +60,8 @@ class RSSM(tools.Module):
 
   @tf.function
   def observe(self, embed, action, state=None):
+    action=self.action_to_embed(action)
+
     print('Tracing RSSM observe function.')
     swap = lambda x: tf.transpose(x, [1, 0] + list(range(2, len(x.shape))))
     if state is None:
@@ -66,6 +78,8 @@ class RSSM(tools.Module):
 
   @tf.function
   def imagine(self, action, state=None):
+    action=self.action_to_embed(action)
+
     swap = lambda x: tf.transpose(x, [1, 0] + list(range(2, len(x.shape))))
     if state is None:
       state = self.initial(tf.shape(action)[0])

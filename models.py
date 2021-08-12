@@ -43,7 +43,9 @@ class WorldModel(tools.Module):
       embed, action_embed = self.encoder(data)
       
       #arg_act=tf.math.argmax(data['action'], axis=-1)
-      action=tf.gather(action_embed, data['action'])
+      #action=tf.gather(action_embed, data['action'])
+      action=data['action']
+      self.dynamics.feed_action_embed(action_embed)
 
       post, prior = self.dynamics.observe(embed, action)
       kl_balance = tools.schedule(self._config.kl_balance, self._step)
