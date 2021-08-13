@@ -150,8 +150,10 @@ class MultiGraphNetwork(tools.Module):
         #batch_size=graph_ph['node_inputs_1/lens'].shape[0]
         #for k in ['num_nodes', 'num_symbols', 'num_clauses']:
         #    sign[k]=tf.TensorSpec((batch_size,), dtype=tf.int32)
-        tf.nest.map_structure(lambda x, s: x.set_shape(s.shape), graph_ph, bsign)
-
+        if graph_ph['num_nodes'].shape!=(1,1):
+            tf.nest.map_structure(lambda x, s: x.set_shape(s.shape), graph_ph, bsign)
+        else:
+            graph_ph=tf.nest.map_structure(lambda x: tf.squeeze(x, axis=0), graph_ph)
 
         nodes, symbols, clauses=self.__call__(graph_ph)
         x=self.dense1(clauses)
@@ -163,6 +165,10 @@ class MultiGraphNetwork(tools.Module):
     @tf.function(input_signature=[sign])
     def actionEmbed(self, graph_ph):
         print('Tracing gnn action embed function.')
+        try:
+            graph_ph=graph_ph[0]
+        except:
+            pass
         nodes, symbols, clauses=self.__call__(graph_ph)
         cur_goals = self.input_layer.clause_nums.gather(clauses, 0)
         ci = self.input_layer.clause_inputs

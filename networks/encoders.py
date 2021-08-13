@@ -102,8 +102,11 @@ class Encoder(tools.Module):
       action_embed=self.action_encoder(x)
       #action_embed=tf.expand_dims(action_embed, axis=0)"""
 
-    batch_size, batch_length= obs['image'].shape[:2]
-    embed=feed_gnn_input(obs['gnn'], batch_size, batch_length, self.encoders['gnn'])
+    if obs['gnn']['num_nodes'].shape!=(1,1):
+      batch_size, batch_length= obs['image'].shape[:2]
+      embed=feed_gnn_input(obs['gnn'], batch_size, batch_length, self.encoders['gnn'])
+    else:
+      embed=self.encoders['gnn'](obs['gnn'])
     action_embed=self.encoders['action_space'](obs['action_space'])
 
     return embed, action_embed

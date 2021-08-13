@@ -123,7 +123,7 @@ class Controller:
     if (self._logdir / 'variables.pkl').exists():
       self.agent.load(self._logdir / 'variables.pkl')
       self.agent._should_pretrain._once = False
-
+    state = None
     while self.agent._step.numpy().item() < self._config.steps:
       self._logger.write()
       print('Start evaluation.')

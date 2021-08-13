@@ -251,6 +251,6 @@ if __name__ == '__main__':
   config=parser.parse_args(remaining)
   from controller import Controller
   ctrl=Controller(config, args.logdir)
-  #ctrl.simulate()
+  ctrl.simulate()
   #ctrl.train_only_wordModel(10000)
-  ctrl.train_only(10000)
+  #ctrl.train_only(10000)
