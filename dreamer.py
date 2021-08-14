@@ -102,7 +102,7 @@ class Dreamer(tools.Module):
     if state is None:
       batch_size = len(obs['image'])
       latent = self._wm.dynamics.initial(len(obs['image']))
-      action = tf.zeros(shape=(1), dtype=tf.int32)#tf.zeros(shape=(1, 64), dtype=tf.float32) #tf.zeros((batch_size, obs['action_space'].shape[1]), self._float)
+      action = tf.zeros(shape=(1, 1), dtype=tf.int32)#tf.zeros(shape=(1, 64), dtype=tf.float32) #tf.zeros((batch_size, obs['action_space'].shape[1]), self._float)
     else:
       latent, action = state
     embed, action_embed = self._wm.encoder(self._wm.preprocess(obs))
@@ -110,6 +110,8 @@ class Dreamer(tools.Module):
     self._task_behavior.actor.feed(action_embed)
     self._wm.dynamics.feed_action_embed(action_embed)
     embeded_action=self._wm.dynamics.action_to_embed(action)
+    embeded_action=tf.squeeze(embeded_action, axis=0)
+
 
     latent, _ = self._wm.dynamics.obs_step(
         latent, embeded_action, embed, self._config.collect_dyn_sample)
