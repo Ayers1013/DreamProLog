@@ -165,10 +165,6 @@ class MultiGraphNetwork(tools.Module):
     @tf.function(input_signature=[sign])
     def actionEmbed(self, graph_ph):
         print('Tracing gnn action embed function.')
-        try:
-            graph_ph=graph_ph[0]
-        except:
-            pass
         nodes, symbols, clauses=self.__call__(graph_ph)
         cur_goals = self.input_layer.clause_nums.gather(clauses, 0)
         ci = self.input_layer.clause_inputs

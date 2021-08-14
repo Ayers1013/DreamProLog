@@ -88,14 +88,14 @@ class Dreamer(tools.Module):
           mean.reset_states()
         #openl = self._wm.video_pred(next(self._dataset))
         #self._logger.video('train_openl', openl)
-        #self._logger.write(fps=False)
+        self._logger.write(fps=False)
     action, state = self._policy(obs, state, training)
     if training:
       self._step.assign_add(len(reset))
       self._logger.step = self._step.numpy().item()
     return action, state
 
-  @tf.function(experimental_relax_shapes=True)
+  #@tf.function(experimental_relax_shapes=True)
   def _policy(self, obs, state, training):
     if state is None:
       batch_size = len(obs['image'])

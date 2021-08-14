@@ -50,17 +50,6 @@ class Encoder(tools.Module):
     if 'image' in input_pipes:
       self.encoders['image']=DummyEncoder()    
 
-    """if 'gnn' in input_pipes:
-      def c_resize(x):
-        _x={}
-        for k,v in x.items():
-          _x[k]=tf.squeeze(v, axis=0) #tf.reshape(v, v.shape[1:])
-        return _x
-      self.gnn=MultiGraphNetwork(out_dim=200)
-      self.encoders['gnn']=self.gnn.stateEmbed
-      self.action_encoder=self.gnn.actionEmbed
-      self._gnn_resize=c_resize"""
-
     if 'gnn' in input_pipes:
       self.gnn=MultiGraphNetwork(out_dim=200)
       self.encoders['gnn']=self.gnn.stateEmbed
@@ -68,45 +57,12 @@ class Encoder(tools.Module):
 
   def __call__(self, obs):
 
-    """embed={}
-
-    if 'gnn' in self._input_pipes:
-      pipe='gnn'
-      x=obs[pipe]
-      x=self._gnn_resize(x)
-      embed[pipe]=self.encoders[pipe](x)
-      embed[pipe]=tf.expand_dims(embed[pipe], axis=0)"""
-
-    """if 'gnn' in self._input_pipes:
-      x=obs['gnn']
-      batch_size, batch_length=x['ini_nodes'].shape[:2]
-      embed=[]
-      for i in range(batch_size):
-        embed_l=[]
-        for j in range(batch_length):
-          y={k: v[i][j] for k,v in x.items()}
-          y={k: v if not isinstance(v, tf.RaggedTensor) else (v.to_tensor() if v.shape[0]!=0 else  tf.zeros(shape=v.shape, dtype=tf.int32)) for k,v in y.items()}
-          y.update({'num_'+k: [len(y['ini_'+k])] for k in ['nodes', 'symbols', 'clauses']})
-          emb=self.encoders['gnn'](y)
-          embed_l.append(emb)
-        embed.append(embed_l)
-
-    action_embed=None
-    if(self._action_embed):
-      x=obs['action_space']
-      x.update({'num_'+k: [len(x['ini_'+k])] for k in ['nodes', 'symbols', 'clauses']})
-      #TODO delete this part
-      #x['axiom_mask']=obs['axiom_mask']
-
-      #x=self._gnn_resize(x)
-      action_embed=self.action_encoder(x)
-      #action_embed=tf.expand_dims(action_embed, axis=0)"""
-
     if obs['gnn']['num_nodes'].shape!=(1,1):
       batch_size, batch_length= obs['image'].shape[:2]
       embed=feed_gnn_input(obs['gnn'], batch_size, batch_length, self.encoders['gnn'])
     else:
-      embed=self.encoders['gnn'](obs['gnn'])
+      #NOTE For some reason it is wrapped in a list, so [0]
+      embed=self.encoders['gnn'](obs['gnn'][0])
     action_embed=self.encoders['action_space'](obs['action_space'])
 
     return embed, action_embed
