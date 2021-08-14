@@ -74,7 +74,11 @@ class Encoder(tools.Module):
       #print(inp)
       inp=obs['action_space'][0]
       #inp=tf.nest.map_structure(lambda x: tf.cast(x, dtype=tf.int32), inp)
-      action_embed=self.encoders['action_space'](inp)
+      try:
+        action_embed=self.encoders['action_space'](inp)
+      except: 
+        print(inp)
+        action_embed=tf.zeros((512, 64), dtype=tf.float32)
 
     return embed, action_embed
     
