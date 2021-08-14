@@ -218,7 +218,7 @@ dmc:
 
 debug:
 
-  debug: True
+  debug: False
   pretrain: 5
   prefill: 1e4
   #train_steps: 1
