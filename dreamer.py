@@ -102,15 +102,17 @@ class Dreamer(tools.Module):
     if state is None:
       batch_size = len(obs['image'])
       latent = self._wm.dynamics.initial(len(obs['image']))
-      action = tf.zeros(shape=(1, 64), dtype=tf.float32) #tf.zeros((batch_size, obs['action_space'].shape[1]), self._float)
+      action = tf.zeros(shape=(1), dtype=tf.int32)#tf.zeros(shape=(1, 64), dtype=tf.float32) #tf.zeros((batch_size, obs['action_space'].shape[1]), self._float)
     else:
       latent, action = state
     embed, action_embed = self._wm.encoder(self._wm.preprocess(obs))
     #feed the actor head with the embedding
     self._task_behavior.actor.feed(action_embed)
+    self._wm.dynamics.feed_action_embed(action_embed)
+    embeded_action=self._wm.dynamics.action_to_embed(action)
 
     latent, _ = self._wm.dynamics.obs_step(
-        latent, action, embed, self._config.collect_dyn_sample)
+        latent, embeded_action, embed, self._config.collect_dyn_sample)
     if self._config.eval_state_mean:
       latent['stoch'] = latent['mean']
     feat = self._wm.dynamics.get_feat(latent)#, action_embed
