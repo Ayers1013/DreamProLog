@@ -60,6 +60,8 @@ class Encoder(tools.Module):
     if obs['gnn']['num_nodes'].shape!=(1,1):
       batch_size, batch_length= obs['image'].shape[:2]
       embed=feed_gnn_input(obs['gnn'], batch_size, batch_length, self.encoders['gnn'])
+      
+      action_embed=self.encoders['action_space'](obs['action_space'])
     else:
       #NOTE For some reason it is wrapped in a list, so [0]
       try:
@@ -68,6 +70,10 @@ class Encoder(tools.Module):
         inp=tf.nest.map_structure(lambda x: tf.squeeze(x, axis=0), obs['gnn'])
         inp=tf.nest.map_structure(lambda x: tf.cast(x, dtype=tf.int32), inp)
         embed=self.encoders['gnn'](inp)
+      
+      inp=obs['action_space'][0]
+      inp=tf.nest.map_structure(lambda x: tf.cast(x, dtype=tf.int32), inp)
+      action_embed(self.encoders['action_space'])(inp)
 
     action_embed=self.encoders['action_space'](obs['action_space'])
 
