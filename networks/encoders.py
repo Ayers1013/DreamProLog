@@ -65,7 +65,8 @@ class Encoder(tools.Module):
       try:
         embed=self.encoders['gnn'](obs['gnn'][0])
       except:
-        embed=self.encoders['gnn'](obs['gnn'])
+        inp=tf.nest.map_structure(lambda x: tf.squeeze(x, axis=0), obs['gnn'])
+        embed=self.encoders['gnn'](inp)
 
     action_embed=self.encoders['action_space'](obs['action_space'])
 

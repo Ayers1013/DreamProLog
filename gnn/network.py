@@ -152,8 +152,7 @@ class MultiGraphNetwork(tools.Module):
         #    sign[k]=tf.TensorSpec((batch_size,), dtype=tf.int32)
         if graph_ph['num_nodes'].shape!=(1,1):
             tf.nest.map_structure(lambda x, s: x.set_shape(s.shape), graph_ph, bsign)
-        else:
-            graph_ph=tf.nest.map_structure(lambda x: tf.squeeze(x, axis=0), graph_ph)
+            
 
         nodes, symbols, clauses=self.__call__(graph_ph)
         x=self.dense1(clauses)
