@@ -62,7 +62,11 @@ class Encoder(tools.Module):
       embed=feed_gnn_input(obs['gnn'], batch_size, batch_length, self.encoders['gnn'])
     else:
       #NOTE For some reason it is wrapped in a list, so [0]
-      embed=self.encoders['gnn'](obs['gnn'][0])
+      try:
+        embed=self.encoders['gnn'](obs['gnn'][0])
+      except:
+        embed=self.encoders['gnn'](obs['gnn'])
+
     action_embed=self.encoders['action_space'](obs['action_space'])
 
     return embed, action_embed
