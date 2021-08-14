@@ -75,7 +75,9 @@ class Dreamer(tools.Module):
       state = None
     if state is not None and reset.any():
       mask = tf.cast(1 - reset, self._float)[:, None]
-      state = tf.nest.map_structure(lambda x: x * mask, state)
+      #NOTE feat, action=state and action is integer which cause problems
+      state = tf.nest.map_structure(lambda x: x * tf.cast(mask, dtype=x.dtype), state)
+
     if training and self._should_train(step):
       steps = (
           self._config.pretrain if self._should_pretrain()
