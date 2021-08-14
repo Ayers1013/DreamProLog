@@ -75,8 +75,6 @@ class Encoder(tools.Module):
       inp=tf.nest.map_structure(lambda x: tf.cast(x, dtype=tf.int32), inp)
       action_embed=self.encoders['action_space'](inp)
 
-    action_embed=self.encoders['action_space'](obs['action_space'])
-
     return embed, action_embed
     
 class ActionHead(tools.Module):
