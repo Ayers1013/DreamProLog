@@ -1,5 +1,6 @@
 import pathlib
 import functools
+from pyswip.core import Sread_function
 
 from tensorflow.keras.mixed_precision import experimental as prec
 
@@ -29,7 +30,8 @@ class Controller:
     self._signature=self.train_envs[0].output_sign
 
     #expected length= 1/p, imidiate fail chance= p
-    self.prefill(0.0)
+    sample_rate=lambda: [0.0, 0.02, 0.1][np.random.randint(3)]
+    self.prefill(sample_rate=sample_rate)
     
     '''try:
       while isinstance(x, dict):
@@ -86,7 +88,7 @@ class Controller:
 
     return logger
 
-  def prefill(self, sample_rate=0.0):
+  def prefill(self, sample_rate=lambda :0.0):
     prefill = max(0, self._config.prefill - count_steps(self._config.traindir))
     print(f'Prefill dataset ({prefill} steps).')
     def sample(act_size):
@@ -99,7 +101,7 @@ class Controller:
     def sample_smart(o):
       axiom_mask=o['axiom_mask'][0]
       act_size=len(axiom_mask)
-      if(np.random.rand()<sample_rate): return np.random.randint(act_size)
+      if(np.random.rand()<sample_rate()): return np.random.randint(act_size)
       s=int(np.sum(axiom_mask))
       r=np.random.randint(s)+1 if s>0 else 0
 
