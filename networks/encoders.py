@@ -77,7 +77,7 @@ class Encoder(tools.Module):
       try:
         action_embed=self.encoders['action_space'](inp)
       except: 
-        print(inp, '\n\n something is not working again. :(')
+        print(obs, '\n\n something is not working again. :(')
 
     return embed, action_embed
     
