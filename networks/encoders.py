@@ -39,7 +39,7 @@ class DummyDecoder(tools.Module):
     mean=self.dense2(obs)
     std=self.dense3(obs)
     std=tf.keras.activations.sigmoid(std)
-    return tfd.Independent(tfd.Normal(mean,std+0.01), len(self._shape))
+    return tfd.Independent(tfd.Normal(mean,std+0.03), len(self._shape))
 
 class Encoder(tools.Module):
   def __init__(self, input_pipes, action_embed):
