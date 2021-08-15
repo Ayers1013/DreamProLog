@@ -113,7 +113,7 @@ class ProLog:
         self.steps=0
         
         
-         self.prolog = pyswip.Prolog()
+        self.prolog = pyswip.Prolog()
         self.prolog.consult("leancop/leancop_step.pl")
         
         problem=self.problems.get()
