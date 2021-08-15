@@ -244,7 +244,7 @@ prolog:
   value_lr: 1e-3
   actor_lr: 1e-3
   opt_eps: 8e-4
-  opt: 'sgd'
+  opt: 'adam'
   expl_until: 1e7
   expl_behavior: 'greedy'
   disag_offset: 0
@@ -254,6 +254,12 @@ prolog:
   disag_units: 200
   
   dyn_discrete: 16
+
+  oversample_ends: False
+  slow_value_target: False
+  slow_actor_target: False
+  slow_target_update: 100
+  slow_target_fraction: 1
 
 prolog_easy:
   dyn_cell: 'gru'
