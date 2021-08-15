@@ -112,6 +112,7 @@ class ProLog:
     def reset(self):
         self.steps=0
         
+        self.prolog.consult("leancop/leancop_step.pl")
         
         problem=self.problems.get()
         #take out '.p'
