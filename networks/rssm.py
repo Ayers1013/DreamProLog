@@ -120,7 +120,7 @@ class RSSM(tools.Module):
       post = self.img_step(prev_state, prev_action, embed, sample)
     else:
       #This is an anitbug. (Undo an unlocated bug) 
-      embed=tf.reshape(tf.squeeze(embed),[-1,200])
+      #embed=tf.reshape(tf.squeeze(embed),[-1,200])
       x = tf.concat([prior['deter'], embed], -1)
       for i in range(self._layers_output):
         x = self.get(f'obi{i}', tfkl.Dense, self._hidden, self._act)(x)
