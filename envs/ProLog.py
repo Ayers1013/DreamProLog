@@ -106,8 +106,9 @@ class ProLog:
             self.action_perm = self.gnnInput[5]
             reward=self.reward()
             
-        
-        return (self.image(), reward, self.terminal(), {}) 
+        obs = self.image(True)
+        print('Observation meta:', len(obs['axiom_mask']), obs['action_space']['num_clauses'], obs['action_space']['num_nodes'])
+        return (obs, reward, self.terminal(), {}) 
     
     def reset(self):
         self.steps=0
@@ -117,7 +118,7 @@ class ProLog:
         self.prolog.consult("leancop/leancop_step.pl")
         
         problem=self.problems.get()
-        #take out '.p'
+        #remove out '.p' and /
         self.current_problem="".join(problem[:-2].split('/')[2:])
         print('Loaded problem:', self.current_problem)
         query = 'init_python("{}",{},GnnInput, SimpleFeatures, Result)'.format(problem, self.settings)
