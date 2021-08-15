@@ -111,8 +111,8 @@ class Dreamer(tools.Module):
     self._wm.dynamics.feed_action_embed(action_embed)
     embeded_action=self._wm.dynamics.action_to_embed(action)
     #embeded_action=tf.squeeze(embeded_action, axis=0)
-    #print('NOTE: embeded_action.shape', embeded_action.shape)
-    #embeded_action=tf.reshape(tf.squeeze(embeded_action), [-1, 64])
+    print('NOTE: action.shape; ', action.shape, ';', action_embed.shape)
+    embeded_action=tf.reshape(tf.squeeze(embeded_action), [-1, 64])
 
     latent, _ = self._wm.dynamics.obs_step(
         latent, embeded_action, embed, self._config.collect_dyn_sample)
