@@ -98,7 +98,7 @@ class Controller:
     def sample_smart(o):
       axiom_mask=o['axiom_mask'][0]
       act_size=len(axiom_mask)
-      if(np.random.rand()<sample_rate): return sample(act_size)
+      if(np.random.rand()<sample_rate): return np.random.randint(act_size)
       s=int(np.sum(axiom_mask))
       r=np.random.randint(s)+1 if s>0 else 0
 

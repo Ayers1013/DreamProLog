@@ -150,8 +150,9 @@ class ProLog:
             elif debug==3: 
                 action_space=np.zeros((4,4))
 
-        if self.steps: image['action_space']=None
-        else: image['action_space']=action_space
+        #if self.steps: image['action_space']=None
+        #else: image['action_space']=action_space
+        image['action_space']=action_space
 
         #return {'image':self.gnnInput, 'ram': None, 'features': self.get_features()},
         #return {'image':np.zeros(16)}
