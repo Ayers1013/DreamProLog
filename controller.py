@@ -29,7 +29,7 @@ class Controller:
     self._signature=self.train_envs[0].output_sign
 
     #expected length= 1/p, imidiate fail chance= p
-    self.prefill(0.1)
+    self.prefill(0.0)
     
     '''try:
       while isinstance(x, dict):
