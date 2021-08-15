@@ -43,16 +43,16 @@ class ProLog:
         #problems is a generator function
         self.gnn=gnn
 
-        self.step_limit=10
+        self.step_limit=25
         self.steps=0
         
         self.problems=ProblemLibrary()
 
-        self.step_reward = 0.3+1
-        self.success_reward = 1+1
-        self.failure_reward = -0.1+1
-        self.invalid_reward = -1+1
-        self.step_limit_reward = -0.5+1
+        self.step_reward = 0.2
+        self.success_reward = 1
+        self.failure_reward = -0.2
+        self.invalid_reward = -1
+        self.step_limit_reward = -0.5
         
         with self.LOCK:
             self.prolog = pyswip.Prolog()

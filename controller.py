@@ -28,7 +28,7 @@ class Controller:
 
     self._signature=self.train_envs[0].output_sign
 
-    self.prefill()
+    self.prefill(0.9)
     
     '''try:
       while isinstance(x, dict):
