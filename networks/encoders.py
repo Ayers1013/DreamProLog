@@ -77,8 +77,7 @@ class Encoder(tools.Module):
       try:
         action_embed=self.encoders['action_space'](inp)
       except: 
-        print(inp)
-        action_embed=tf.zeros((512, 64), dtype=tf.float32)
+        print(inp, '\n\n something is not working again. :(')
 
     return embed, action_embed
     
