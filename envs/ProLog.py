@@ -54,8 +54,8 @@ class ProLog:
         self.invalid_reward = -1
         self.step_limit_reward = -0.5
         
-        with self.LOCK:
-            self.prolog = pyswip.Prolog()
+        #with self.LOCK:
+        self.prolog = pyswip.Prolog()
         self.prolog.consult("leancop/leancop_step.pl")
         # self.settings = "[conj, nodef, verbose, print_proof]"
         self.settings = "[conj, nodef]"
@@ -112,6 +112,8 @@ class ProLog:
     def reset(self):
         self.steps=0
         
+        
+         self.prolog = pyswip.Prolog()
         self.prolog.consult("leancop/leancop_step.pl")
         
         problem=self.problems.get()
