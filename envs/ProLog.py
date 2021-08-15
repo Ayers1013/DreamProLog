@@ -116,6 +116,7 @@ class ProLog:
         problem=self.problems.get()
         #take out '.p'
         self.current_problem="".join(problem[:-2].split('/')[2:])
+        print('Loaded problem:', self.current_problem)
         query = 'init_python("{}",{},GnnInput, SimpleFeatures, Result)'.format(problem, self.settings)
         #print("Query:\n   ", query, "\n")
         result = list(self.prolog.query(query))[0]
