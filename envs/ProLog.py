@@ -128,7 +128,9 @@ class ProLog:
         self.ext_action_size = len(self.gnnInput[4])
         self.action_perm = self.gnnInput[5]
 
-        return self.image(True)
+        obs = self.image(True)
+        print('Observation meta:', obs['axiom_mask'].shape, obs['action_space'][0]['num_clauses'], obs['action_space'][0]['num_nodes'])
+        return obs
 
     def image(self, reset=False):
 

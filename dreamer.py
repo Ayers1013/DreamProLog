@@ -113,7 +113,7 @@ class Dreamer(tools.Module):
     embeded_action=self._wm.dynamics.action_to_embed(action)
     #embeded_action=tf.squeeze(embeded_action, axis=0)
     print('NOTE: action.shape; ', action.shape, ';', action_embed.shape)
-    print('Observation meta:', obs['axiom_mask'].shape, obs['action_space'][0]['num_clauses'], obs['action_space'][0]['num_clauses'])
+    print('Observation meta:', obs['axiom_mask'].shape, obs['action_space'][0]['num_clauses'], obs['action_space'][0]['num_nodes'])
     embeded_action=tf.reshape(tf.squeeze(embeded_action), [-1, 64])
 
     latent, _ = self._wm.dynamics.obs_step(
