@@ -78,7 +78,7 @@ class Encoder(tools.Module):
         action_embed=self.encoders['action_space'](inp)
       except: 
         print(inp)
-        action_embed=tf.zeros((1, 512, 64), dtype=tf.float32)
+        action_embed=tf.zeros((512, 64), dtype=tf.float32)
 
     return embed, action_embed
     
