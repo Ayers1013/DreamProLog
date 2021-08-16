@@ -273,7 +273,7 @@ prolog_easy:
   dyn_mean_act: 'none'
   dyn_std_act: 'sigmoid2'
   dyn_min_std: 0.1
-  grad_heads: ['image', 'reward']
+  grad_heads: ['reward'] #['image', 'reward']
   units: 200
   reward_layers: 1
   discount_layers: 1
