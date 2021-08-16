@@ -108,7 +108,7 @@ class ProLog:
             reward=self.reward()
             
         obs = self.image(True)
-        print('Observation meta:', len(obs['axiom_mask']), obs['action_space']['num_clauses'], obs['action_space']['num_nodes'])
+        #print('Observation meta:', len(obs['axiom_mask']), obs['action_space']['num_clauses'], obs['action_space']['num_nodes'])
         return (obs, reward, self.terminal(), {}) 
     
     def reset(self):
