@@ -48,7 +48,7 @@ class WorldModel(tools.Module):
     pred=self.actor(inp)
     masked_probs=tf.cast(target, dtype=tf.float32)*pred.probs
     probs=tf.reduce_sum(masked_probs, axis=-1)
-    log_probs=tf.math.log(pred)
+    log_probs=tf.math.log(probs)
     loss=-tf.reduce_mean(log_probs)
     return loss
 
