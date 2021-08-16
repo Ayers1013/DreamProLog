@@ -96,6 +96,7 @@ class ProLog:
         query = 'step_python({}, GnnInput, SimpleFeatures, Result)'.format(action)
         #print("Query:\n   ", query, "\n")
         result = list(self.prolog.query(query))
+        print(result)
         if len(result) == 0:
             self.result=-1
             reward = self.invalid_reward
@@ -112,10 +113,6 @@ class ProLog:
     
     def reset(self):
         self.steps=0
-        
-        
-        self.prolog = pyswip.Prolog()
-        self.prolog.consult("leancop/leancop_step.pl")
         
         problem=self.problems.get()
         #remove out '.p' and /
