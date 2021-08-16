@@ -198,8 +198,7 @@ def main(logdir, config):
     agent.save(logdir / 'variables.pkl')
   #ReC.tracker.summary()
 
-
-  state = None
+  state=None
   while agent._step.numpy().item() < config.steps:
     logger.write()
     print('Start evaluation.')

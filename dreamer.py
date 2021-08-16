@@ -152,8 +152,8 @@ class Dreamer(tools.Module):
     print('Tracing train function.')
     metrics = {}
     embed, post, feat, kl, mets, action_embed = self._wm.train(data)
-    #feed the actor head with the embedding
-    self._task_behavior.actor.feed(action_embed)
+    #feed the actor head with the embedding. It has been moved to WM
+    #self._task_behavior.actor.feed(action_embed)
 
     metrics.update(mets)
     start = post
