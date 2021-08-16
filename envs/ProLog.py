@@ -130,7 +130,7 @@ class ProLog:
         self.action_perm = self.gnnInput[5]
 
         obs = self.image(True)
-        print('Observation meta:', len(obs['axiom_mask']), obs['action_space']['num_clauses'], obs['action_space']['num_nodes'])
+        #print('Observation meta:', len(obs['axiom_mask']), obs['action_space']['num_clauses'], obs['action_space']['num_nodes'])
         return obs
 
     def image(self, reset=False):
