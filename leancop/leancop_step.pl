@@ -89,6 +89,7 @@ init_pure(File,Settings,NewState):-
      ; true
     ),
     retractall(lit(_,_,_,_,_,_,_)),
+    retractall(all_clauses(_)),
     (member([-(#)],Matrix) -> S=conj ; S=pos),
     assert_clauses(Matrix,S),
     Tableau0 = tableau([-(#)],[],[],[],[],unused,[init((-#)-(-#))]),

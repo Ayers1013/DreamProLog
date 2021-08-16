@@ -37,6 +37,7 @@ prove2(F,Proof) :- prove2(F,[cut,comp(7)],Proof).
 prove2(F,Set,Proof) :-
     (F=[_|_] -> M=F ; make_matrix(F,M,Set)),
     retractall(lit(_,_,_,_,_,_,_)), (member([-(#)],M) -> S=conj ; S=pos),
+    retractall(all_clauses(_)),
     assert_clauses(M,S),
     retractall(option(_)),
     findall(_, ( member(Se,Set), assert(option(Se)) ), _ ),
@@ -112,7 +113,7 @@ assert_clauses(C, Set):-
     insert_hashmark(C, Set, C2),
     assert_clauses1(C2, 0),
     once(term2list(C2, C3)),
-    assert(all_clauses(C3)).
+    asserta(all_clauses(C3)).
 
 assert_clauses1([],_).
 assert_clauses1([C|M],Counter) :-
