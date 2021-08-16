@@ -1,5 +1,6 @@
 import tensorflow as tf
 from tensorflow.keras.mixed_precision import experimental as prec
+from tensorflow.python.ops.gen_math_ops import acos_eager_fallback
 
 import networks
 import tools
@@ -30,17 +31,33 @@ class WorldModel(tools.Module):
           [], config.discount_layers, config.units, config.act, dist='binary')
     for name in config.grad_heads:
       assert name in self.heads, name
+
+    self.actor = networks.ActionHead(
+        config.actor_layers, config.units, config.act,
+        config.actor_dist, config.actor_init_std, config.actor_min_std,
+        config.actor_dist, config.actor_temp, config.actor_outscale)
+
     self._model_opt = tools.Optimizer(
         'model', config.model_lr, config.opt_eps, config.grad_clip,
         config.weight_decay, opt=config.opt)
     self._scales = dict(
         reward=config.reward_scale, discount=config.discount_scale)
 
+  def mask_loss(self, inp, target):
+
+    pred=self.actor(inp)
+    masked_probs=tf.cast(target, dtype=tf.float32)*pred.probs
+    probs=tf.reduce_sum(masked_probs, axis=-1)
+    log_probs=tf.math.log(pred)
+    loss=-tf.reduce_mean(log_probs)
+    return loss
+
   def train(self, data):
     print('Tracing WorldModel train function.')
     data = self.preprocess(data)
     with tf.GradientTape() as model_tape:
       embed, action_embed = self.encoder(data)
+      self.actor.feed(action_embed)
       
       #arg_act=tf.math.argmax(data['action'], axis=-1)
       #action=tf.gather(action_embed, data['action'])
@@ -63,8 +80,10 @@ class WorldModel(tools.Module):
         like = pred.log_prob(tf.cast(data[name], tf.float32))
         likes[name] = tf.reduce_mean(like) * self._scales.get(name, 1.0)
         mse_loss[name]=tf.keras.metrics.mean_squared_error(tf.cast(data[name], tf.float32), pred.mode())
+      
+      likes['action_mask']=self.mask_loss(feat)
       #NOTE added factor
-      head_weigth=0.3
+      head_weigth=1.
       model_loss = kl_loss - head_weigth*sum(likes.values())
     model_parts = [self.encoder, self.dynamics] + list(self.heads.values())
 
@@ -108,10 +127,7 @@ class ImagBehavior(tools.Module):
     self._world_model = world_model
     self._stop_grad_actor = stop_grad_actor
     self._reward = reward
-    self.actor = networks.ActionHead(
-        config.actor_layers, config.units, config.act,
-        config.actor_dist, config.actor_init_std, config.actor_min_std,
-        config.actor_dist, config.actor_temp, config.actor_outscale)
+    self.actor=self._world_model.actor
     self.value = networks.DenseHead(
         [], config.value_layers, config.units, config.act,
         config.value_head)
