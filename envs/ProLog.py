@@ -96,7 +96,7 @@ class ProLog:
         query = 'step_python({}, GnnInput, SimpleFeatures, Result)'.format(action)
         #print("Query:\n   ", query, "\n")
         result = list(self.prolog.query(query))
-        print(result)
+        #print(result)
         if len(result) == 0:
             self.result=-1
             reward = self.invalid_reward
