@@ -80,7 +80,7 @@ defaults:
 
   # Behavior.
   discount: 0.99
-  discount_lambda: 0.95
+  discount_lambda: 0.#0.95
   imag_horizon: 15
   imag_gradient: 'dynamics'
   imag_gradient_mix: '0.1'
@@ -273,7 +273,7 @@ prolog_easy:
   dyn_mean_act: 'none'
   dyn_std_act: 'sigmoid2'
   dyn_min_std: 0.1
-  grad_heads: ['reward'] #['image', 'reward']
+  grad_heads: ['image', 'reward']
   units: 200
   reward_layers: 1
   discount_layers: 1
