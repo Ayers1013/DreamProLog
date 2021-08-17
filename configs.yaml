@@ -80,7 +80,7 @@ defaults:
 
   # Behavior.
   discount: 0.99
-  discount_lambda: 0. #0.95
+  discount_lambda: 0.95
   imag_horizon: 15
   imag_gradient: 'dynamics'
   imag_gradient_mix: '0.1'
@@ -261,6 +261,7 @@ prolog:
   slow_target_update: 100
   slow_target_fraction: 1
 
+
 prolog_easy:
   dyn_cell: 'gru'
   dyn_hidden: 100
@@ -277,8 +278,8 @@ prolog_easy:
   units: 200
   reward_layers: 1
   discount_layers: 1
-  value_layers: 1
-  actor_layers: 2
+  value_layers: 3 #1
+  actor_layers: 4 #2
   act: 'elu'
   cnn_depth: 32
   encoder_kernels: [4, 4, 4, 4]
