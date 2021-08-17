@@ -226,7 +226,7 @@ debug:
   #batch_length: 20
   dataset_size: 40000
 
-  imag_horizon: 2
+  imag_horizon: 3
 
 prolog:
   task: 'prolog_void'
