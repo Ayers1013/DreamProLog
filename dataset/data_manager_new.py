@@ -21,7 +21,7 @@ class DatasetManager:
     columns+=[k+'_count' for k in ['small', 'medium', 'large']]
     self._table_columns=columns
     self._logger=logger
-    self._table=self._logger.run.table(columns=columns)
+    self._table=self._logger.run.Table(columns=columns)
 
 
     self._train_dir=train_dir
