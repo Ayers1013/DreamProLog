@@ -78,7 +78,7 @@ class DatasetManager:
         _eps['action_space']=sample['action_space']
       yield _eps
 
-  def dataset(self, batch_size, batch_length, balance=False):
+  def dataset(self, batch_size, batch_length, balance=True):
     
     generator = lambda: self.sample_episode(
       'train', batch_size, batch_length, balance)
@@ -110,8 +110,8 @@ class DatasetManager:
   def __iter__(self):
     names=[
       ('small', (32,2)), 
-      ('medium', (16, 6)), 
-      ('large', (4, 18)),
+      ('medium', (16, 4)), 
+      ('large', (8, 8)),
     ]
     for name, setting in names:
       self._datasets[name]=iter(self.dataset(*setting, True))
