@@ -17,7 +17,13 @@ import numpy as np
 
 class DatasetManager:
   def __init__(self, logger, output_sign, train_dir, eval_dir):
+    columns=['Problem', 'count', 'done', 'reward_sum', 'weighted_reward']
+    columns+=[k+'_count' for k in ['small', 'medium', 'large']]
+    self._table_columns=columns
     self._logger=logger
+    self._table=self._logger.run.table(columns=columns)
+
+
     self._train_dir=train_dir
     self._eval_dir=eval_dir
 
@@ -81,6 +87,24 @@ class DatasetManager:
     dataset = tf.data.Dataset.from_generator(generator, output_signature=output_sign)
     #dataset = dataset.prefetch(10)
     return dataset
+
+  def logging(self):
+    stats=self._train_eps._stats
+    scalars={}
+    columns=self._table_columns
+    for k,v in stats.items():
+      if k[:6]=='stats_':
+        scalars[k[6:]]=v
+      else:
+        stat_dict=self._train_eps.get_statistic(v)
+        stat_list=[k]
+        for name in columns[1:]:
+          stat_list.append(stat_dict.get(name, 0))
+        self._table.add_data(*stat_list)
+    [self._logger.scalar(k, v) for k,v in scalars]
+    
+
+
 
   def __iter__(self):
     names=[

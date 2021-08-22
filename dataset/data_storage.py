@@ -127,7 +127,8 @@ class DataStorage:
     mu=0.95
     self.upd_stat(keys[:1], 'weighted_reward', reward, lambda l, n: mu*l+(1-mu)*n)
 
-  def get_statistic(self):
+  @staticmethod
+  def get_statistic(nested_stats):
     stats={}
     def export(x, pretag=''):
       for k,v in x.items():
@@ -135,7 +136,7 @@ class DataStorage:
           stats[pretag+k[6:]]=v
         else:
           export(v, pretag+k+'_')
-    export(self._stats)
+    export(nested_stats)
     return stats
 
   def __len__(self):

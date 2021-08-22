@@ -133,6 +133,7 @@ class Controller:
       self.agent._should_pretrain._once = False
     state = None
     while self.agent._step.numpy().item() < self._config.steps:
+      self.datasetManager.logging()
       self._logger.write()
       print('Start evaluation.')
       eval_policy = functools.partial(self.agent, training=False)

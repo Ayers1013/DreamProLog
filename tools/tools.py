@@ -40,7 +40,7 @@ class LoggerEmpty:
 class LoggerWandb:
 
   def __init__(self, logdir, step, config):
-    wandb.init(project='DreamProLog', entity='ayers', config=vars(config))
+    self.run=wandb.init(project='DreamProLog', entity='ayers', config=vars(config))
     self._logdir = logdir
     self._last_step = None
     self._last_time = None
@@ -50,7 +50,7 @@ class LoggerWandb:
     self.step = step
 
   def __del__(self):
-    wandb.finish()
+    self.run.finish()
 
   def scalar(self, name, value):
     self._scalars[name] = float(value)
@@ -68,7 +68,7 @@ class LoggerWandb:
     print(f'[{self.step}]', ' / '.join(f'{k} {v:.1f}' for k, v in scalars))
     with (self._logdir / 'metrics.jsonl').open('a') as f:
       f.write(json.dumps({'step': self.step, ** dict(scalars)}) + '\n')
-    wandb.log(self._scalars, step=self.step)
+    self.run.log(self._scalars, step=self.step)
     self._scalars = {}
     self._images = {}
     self._videos = {}
