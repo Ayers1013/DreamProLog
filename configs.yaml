@@ -253,7 +253,7 @@ prolog:
   disag_layers: 1
   disag_units: 200
   
-  dyn_discrete: 16
+  dyn_discrete: 32
 
   oversample_ends: False
   slow_value_target: False
@@ -268,8 +268,8 @@ prolog_easy:
   dyn_deter: 100
   dyn_stoch: 20
   #dyn_discrete: 0
-  dyn_input_layers: 1
-  dyn_output_layers: 1
+  dyn_input_layers: 4
+  dyn_output_layers: 4
   dyn_shared: False
   dyn_mean_act: 'none'
   dyn_std_act: 'sigmoid2'
