@@ -289,7 +289,7 @@ prolog_easy:
   kl_scale: '1.0'
   kl_balance: '0.8'
   kl_free: '0.5'
-  pred_discount: False
+  pred_discount: True
   discount_scale: 1.0
   reward_scale: 1.0
   weight_decay: 0.0
