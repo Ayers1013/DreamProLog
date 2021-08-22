@@ -47,7 +47,7 @@ class DataStorage:
       ep_names=[]
       for ep in reversed(episodes):
         #ep=(stat, name), stat=(reward, end_reward, length)
-        if ep[0][0]>0: ep_names.append(ep)
+        if ep[0][0]>=1: ep_names.append(ep)
         else: break
       if len(ep_names)>0:
         selected_ep=ep_names[self._random.randint(len(ep_names))]
