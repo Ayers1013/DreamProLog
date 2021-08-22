@@ -16,6 +16,7 @@ class DataStorage:
     self._random = np.random.RandomState(seed)
 
   def sample_problem(self, treshold):
+    print(self._stats)
     if treshold:
       options=[opt for opt, stat in self._stats.items() if stat['stats_count']>=treshold]
     return self._random.choice(options)

@@ -17,12 +17,12 @@ import tensorflow as tf
 
 class ProblemLibrary:
     def __init__(self, config=None):
-        self.problem=lambda: "leancop/robinson_1p1__2.p"
+        #self.problem=lambda: "leancop/robinson_1p1__2.p"
         #self.problem=lambda: "leancop/pelletier21.p"
         directory="leancop/theorems/m2n140"
         self._load(directory)
         print(f'Found {self.total} problem files.')
-        #self.problem=lambda: "/".join(str(self.problems[np.random.randint(self.total)]).split("\\"))
+        self.problem=lambda: "/".join(str(self.problems[np.random.randint(self.total)]).split("\\"))
 
 
 
