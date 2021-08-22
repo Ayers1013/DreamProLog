@@ -66,7 +66,7 @@ class DataStorage:
   def store(self, episode, ep_name):
     self._episodes[ep_name]=episode
     problem_name, _, _, length=ep_name[:-4].split("-")
-    problem_name=problem_name.split('\\')[-1]
+    #problem_name=problem_name.split('\\')[-1]
     lengthTag=self._lengthToTag(int(length))
     self.add_episode(ep_name, [problem_name, lengthTag], (np.sum(episode['reward']), episode['reward'][-1], int(length)))
 

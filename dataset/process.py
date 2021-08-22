@@ -89,9 +89,9 @@ def save_episodes(directory, episodes):
     identifier = str(uuid.uuid4().hex)
     length = len(episode['reward'])
     problem_name=episode['problem_name']
-    del episode['problem_name']
     #filename = directory / f'{timestamp}-{identifier}-{length}.npz'
     filename = directory / f'{problem_name}-{timestamp}-{identifier}-{length}.npz'
+    del episode['problem_name']
     with io.BytesIO() as f1:
       episode=flatten_ep(episode)
       np.savez_compressed(f1, **episode)
