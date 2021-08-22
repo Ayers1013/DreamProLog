@@ -18,7 +18,7 @@ class DataStorage:
   def sample_problem(self, treshold):
     print(self._stats)
     if treshold:
-      options=[opt for opt, stat in self._stats.items() if stat['stats_count']>=treshold]
+      options=[opt for opt, stat in self._stats.items() if isinstance(stat, dict) and stat['stats_count']>=treshold]
     return self._random.choice(options)
 
   def sample_lengthIndex(self, problem, treshold, weigth=lambda x:x**0.7):
