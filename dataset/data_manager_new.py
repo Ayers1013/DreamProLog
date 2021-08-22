@@ -108,9 +108,9 @@ class DatasetManager:
 
   def __iter__(self):
     names=[
-      ('small', (64,2)), 
-      ('medium', (32, 6)), 
-      ('large', (8, 18)),
+      ('small', (32,2)), 
+      ('medium', (16, 6)), 
+      ('large', (4, 18)),
     ]
     for name, setting in names:
       self._datasets[name]=iter(self.dataset(*setting, True))
@@ -119,7 +119,7 @@ class DatasetManager:
   
   def __next__(self):
     problem=self._train_eps.sample_problem(10)
-    length=self._train_eps.sample_lengthIndex(problem, 8)
+    length=self._train_eps.sample_lengthIndex(problem, 4)
     self._scheduled=(problem, length)
     return next(self._datasets[length])
 
