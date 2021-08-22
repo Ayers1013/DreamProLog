@@ -232,13 +232,13 @@ prolog:
   task: 'prolog_void'
   batch_length: 1
   actor_dist: 'normal' #'trunc_normal' #'onehot'
-  eval_every: 1e4
-  train_every: 10
-  train_steps: 20
+  eval_every: 5e2
+  train_every: 25
+  train_steps: 10
   steps: 1e6
   action_repeat: 1
   prefill: 2500
-  log_every: 3e1
+  log_every: 10
   
   model_lr: 3e-4
   value_lr: 1e-3
