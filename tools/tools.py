@@ -61,6 +61,11 @@ class LoggerWandb:
   def video(self, name, value):
     self._videos[name] = np.array(value)
 
+  def table(self, name, columns, data):
+    table=wandb.Table(columns=columns, data=data)
+    self.run.log({name: table}, step=self.step)
+
+
   def write(self, fps=False):
     scalars = list(self._scalars.items())
     if fps:

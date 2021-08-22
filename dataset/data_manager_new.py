@@ -21,7 +21,6 @@ class DatasetManager:
     columns+=[k+'_count' for k in ['small', 'medium', 'large']]
     self._table_columns=columns
     self._logger=logger
-    self._table=self._logger.run.Table(columns=columns)
 
 
     self._train_dir=train_dir
@@ -92,6 +91,7 @@ class DatasetManager:
     stats=self._train_eps._stats
     scalars={}
     columns=self._table_columns
+    data=[]
     for k,v in stats.items():
       if k[:6]=='stats_':
         scalars[k[6:]]=v
@@ -100,8 +100,9 @@ class DatasetManager:
         stat_list=[k]
         for name in columns[1:]:
           stat_list.append(stat_dict.get(name, 0))
-        self._table.add_data(*stat_list)
+        data.append(stat_list)
     [self._logger.scalar(k, v) for k,v in scalars]
+    self._logger.table('Dataset', columns, data)
     
 
 
