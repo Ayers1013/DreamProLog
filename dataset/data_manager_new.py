@@ -101,7 +101,7 @@ class DatasetManager:
         for name in columns[1:]:
           stat_list.append(stat_dict.get(name, 0))
         data.append(stat_list)
-    [self._logger.scalar(k, v) for k,v in scalars]
+    self._logger._scalars.update(scalars)
     self._logger.table('Dataset', columns, data)
     
 
