@@ -40,8 +40,6 @@ class DatasetManager:
 
   def sample_episode(self, mode, batch=None, length=None, balance=False, seed=0):
     random = np.random.RandomState(seed)
-    assert isinstance(length, int)
-    length=self._train_eps._lengthToTag(length)
     while True:
       #Sample problem
       selected_eps=dict(train=self._train_eps, eval=self._eval_eps)[mode]
@@ -79,9 +77,9 @@ class DatasetManager:
       yield _eps
 
   def dataset(self, batch_size, batch_length, balance=True):
-    
+    batch_length_str='small' if batch_length==2 else 'medium' if batch_length==4 else 'large'
     generator = lambda: self.sample_episode(
-      'train', batch_size, batch_length, balance)
+      'train', batch_size, batch_length_str, balance)
     output_sign=self._output_sign(batch_size, batch_length)
     dataset = tf.data.Dataset.from_generator(generator, output_signature=output_sign)
     #dataset = dataset.prefetch(10)
