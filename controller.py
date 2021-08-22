@@ -21,9 +21,9 @@ class Controller:
 
     self.datasetManager=DatasetManager(self._logger, self.get_signature, config.traindir, config.evaldir)
 
-    self.datasetManager._scheduled=('m2n140t8_pre_topc', 'small')
-    generator = next(iter(self.datasetManager.sample_episode(
-      'train', 8, 2, True)))
+    #self.datasetManager._scheduled=('m2n140t8_pre_topc', 'small')
+    #generator = next(iter(self.datasetManager.sample_episode(
+    #  'train', 8, 2, True)))
 
     #x=generator()
     
