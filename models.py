@@ -29,8 +29,8 @@ class WorldModel(tools.Module):
     if config.pred_discount:
       self.heads['discount'] = networks.DenseHead(
           [], config.discount_layers, config.units, config.act, dist='binary')
-    for name in config.grad_heads:
-      assert name in self.heads, name
+    #for name in config.grad_heads:
+    #  assert name in self.heads, name
 
     self.actor = networks.ActionHead(
         config.actor_layers, config.units, config.act,
@@ -82,7 +82,8 @@ class WorldModel(tools.Module):
         likes[name] = tf.reduce_mean(like) * self._scales.get(name, 1.0)
         mse_loss[name]=tf.keras.metrics.mean_squared_error(tf.cast(data[name], tf.float32), pred.mode())
       
-      likes['action_mask']=15*self.mask_loss(feat, data['axiom_mask'])
+      if 'action_mask' in self._config.grad_heads:
+        likes['action_mask']=self.mask_loss(feat, data['axiom_mask'])
       #if likes['image']<-20.:
       #  likes['image']=tf.stop_gradient(likes['image'])
       #NOTE added factor
