@@ -11,13 +11,19 @@ class DataStorage:
     self._stats={}
 
     self._lengthToTag = lambda x: 'small' if x<6 else 'medium' if x<18 else 'large'
-    self._tagToLength = lambda x: 2 if x=='small' else 2 if x=='medium' else 2
+    self._tagToLength = lambda x: 2 if x=='small' else 3 if x=='medium' else 4
     seed=69
     self._random = np.random.RandomState(seed)
 
-  def sample_problem(self, treshold):
+  def sample_problem(self, treshold, balance=False):
     if treshold:
       options=[opt for opt, stat in self._stats.items() if isinstance(stat, dict) and stat['stats_count']>=treshold]
+    else:
+      options=self._stats.keys()
+    if self._random.randint(2):
+      new_options=[opt for opt in options if self._stats[opt]['stats_done']>0]
+      if len(new_options):
+        options=new_options
     return self._random.choice(options)
 
   def sample_lengthIndex(self, problem, treshold, weigth=lambda x:x**0.7):

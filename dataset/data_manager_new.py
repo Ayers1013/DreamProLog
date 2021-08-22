@@ -54,6 +54,9 @@ class DatasetManager:
       else:    
         eps=[sample_ep(False) for _ in range(batch)]
 
+      results=[ep['reward'][-1] for ep in eps]
+      print(results)
+
       sample_name=selected_eps._storage[problem][length][0][1]
       sample=selected_eps._episodes[sample_name]
       #NOTE Probably I should use tf.nest 
@@ -108,8 +111,8 @@ class DatasetManager:
   def __iter__(self):
     names=[
       ('small', (32,2)), 
-      ('medium', (16, 2)), 
-      ('large', (8, 2)),
+      ('medium', (16, 3)), 
+      ('large', (8, 4)),
     ]
     for name, setting in names:
       self._datasets[name]=iter(self.dataset(*setting, True))
@@ -117,7 +120,7 @@ class DatasetManager:
     return self
   
   def __next__(self):
-    problem=self._train_eps.sample_problem(10)
+    problem=self._train_eps.sample_problem(10, True)
     length=self._train_eps.sample_lengthIndex(problem, 4)
     self._scheduled=(problem, length)
     return next(self._datasets[length])
