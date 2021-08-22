@@ -142,16 +142,12 @@ class ProLog:
                 image['gnn']=exctractImage(self.prolog, self.gnnInput)
             elif debug==2:
                 image['gnn']=data[0].convert_to_dict()
-            elif debug==1:
-                image['gnn']=data[np.random.randint(2)].convert_to_dict()
             
         if self.gnn:
             if debug==0:
                 action_space=extractActions(self.prolog, self.gnnInput)
             elif debug==2:
                 action_space=actionData[0].convert_to_dict()
-            elif debug==3: 
-                action_space=np.zeros((4,4))
 
         #if self.steps: image['action_space']=None
         #else: image['action_space']=action_space

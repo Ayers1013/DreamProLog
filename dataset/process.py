@@ -1,4 +1,5 @@
 import pathlib
+from sys import version
 import uuid
 import datetime
 import io
@@ -10,8 +11,8 @@ from gnn import GraphData
 from gnn.graph_data import GraphData
 import pathlib
 
-import tensorflow as tf
 import numpy as np
+from dataset.data_storage import DataStorage
 
 def transform_episode(episode):
     if 'gnn' in episode.keys():
@@ -112,6 +113,7 @@ def store(storage, episode, ep_name, tag=False):
     x[ep_name]=episode
 
 TAG_MODE=True
+version=2
 #config is not included
 def process_episode(config, logger, mode, train_eps, eval_eps, episode):
     directory = dict(train=config.traindir, eval=config.evaldir)[mode]
@@ -122,17 +124,11 @@ def process_episode(config, logger, mode, train_eps, eval_eps, episode):
     filename = save_episodes(directory, [episode])[0]
     length = len(episode['reward']) - 1
     score = float(episode['reward'].astype(np.float64).sum())
-    if mode == 'eval':
-        cache.clear()
-    """if False and mode == 'train' and config.dataset_size:
-        total = 0
-        for key, ep in reversed(sorted(cache.items(), key=lambda x: x[0])):
-            if total <= config.dataset_size - length:
-                total += len(ep['reward']) - 1
-            else:
-                del cache[key]
-        logger.scalar('dataset_size', total + length)"""
-    store(cache, episode, str(filename), TAG_MODE)
+    if version==2:
+      cache.store(episode, str(filename))
+    else:
+      store(cache, episode, str(filename), TAG_MODE)
+
     print(f'{mode.title()} episode has {length} steps and return {score:.3f}.')
     logger.scalar(f'{mode}_return', score)
     logger.scalar(f'{mode}_length', length)
@@ -142,7 +138,10 @@ def process_episode(config, logger, mode, train_eps, eval_eps, episode):
 #NOTE allow_pickle=True
 def load_episodes(directory, limit=None):
   directory = pathlib.Path(directory).expanduser()
-  episodes = {} 
+  if version==2:
+    episodes = DataStorage()
+  else:
+    episodes = {}
   total = 0
   for filename in reversed(sorted(directory.glob('*.npz'))):
     try:
@@ -153,7 +152,10 @@ def load_episodes(directory, limit=None):
     except Exception as e:
       print(f'Could not load episode: {e}')
       continue 
-    store(episodes, episode, str(filename), tag=TAG_MODE)
+    if version==2:
+      episodes.store(episode, str(filename))
+    else:
+      store(episodes, episode, str(filename), TAG_MODE)
     
     total += len(episode['reward']) - 1
     if limit and total >= limit:

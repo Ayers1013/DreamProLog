@@ -12,7 +12,7 @@ import exploration as expl
 import models
 import tools
 
-from envs import ProLog
+'''from envs import ProLog
 pl=ProLog.ProLog()
 _signature=pl.output_sign
 def get_signature(batch_size, batch_length):
@@ -28,12 +28,12 @@ def get_signature(batch_size, batch_length):
 
     return sign
 
-sign=get_signature(8,2)
+sign=get_signature(8,2)'''
 
 
 class Dreamer(tools.Module):
 
-  def __init__(self, config, logger, dataset):
+  def __init__(self, config, logger, dataset, signature):
     self._config = config
     self._logger = logger
     self._float = prec.global_policy().compute_dtype
@@ -64,10 +64,15 @@ class Dreamer(tools.Module):
         random=lambda: expl.Random(config),
         plan2explore=lambda: expl.Plan2Explore(config, self._wm, reward),
     )[config.expl_behavior]()
+
+    #translated _train functions
+    self.get_signature=signature
+    self._train_funs={}
     # Train step to initialize variables including optimizer statistics.    
     x=next(self._dataset)
     #NOTE it is better to initials everything in advance
-    #self._train(x)
+    self._train(x)
+
 
   def __call__(self, obs, reset, state=None, training=True):
     step = self._step.numpy().item()
@@ -147,9 +152,14 @@ class Dreamer(tools.Module):
       return tf.clip_by_value(tfd.Normal(action, amount).sample(), -1, 1)
     raise NotImplementedError(self._config.action_noise)
 
-  @tf.function(input_signature=[sign])
   def _train(self, data):
-    print('Tracing train function.')
+    setting=tuple(data['image'].shape[:2])
+    if setting not in self._train_funs:
+      self._train_funs[setting]=tf.function(self._train_untranslated, input_signature=[self.get_signature(*setting)])
+    self._train_funs[setting](data)
+
+  def _train_untranslated(self, data):
+    print('Tracing train function.', data['image'].shape[:2])
     metrics = {}
     embed, post, feat, kl, mets, action_embed = self._wm.train(data)
     #feed the actor head with the embedding. It has been moved to WM
@@ -168,8 +178,13 @@ class Dreamer(tools.Module):
     for name, value in metrics.items():
       self._metrics[name].update_state(value)
 
-  @tf.function(input_signature=[sign])
-  def _train_only_wordModel(self, data):
+  def _train_only_worldModel(self, data):
+    setting=('wm', *list(data['image'].shape[:2]))
+    if setting not in self._train_funs:
+      self._train_funs[setting]=tf.function(self._train_only_worldModel_untranslated, input_signature=[self.get_signature(*setting[1:])])
+    self._train_funs[setting](data)
+    
+  def _train_only_worldModel_untranslated(self, data):
     print('Tracing train only WordModel function.')
     metrics = {}
     embed, post, feat, kl, mets, action_embed = self._wm.train(data)

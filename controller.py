@@ -21,7 +21,11 @@ class Controller:
 
     self.datasetManager=DatasetManager(self._logger, self.get_signature, config.traindir, config.evaldir)
 
-    x=self.datasetManager._train_eps
+    self.datasetManager._scheduled=('m2n140t8_pre_topc', 'small')
+    generator = next(iter(self.datasetManager.sample_episode(
+      'train', 8, 2, True)))
+
+    #x=generator()
     
     make = lambda mode: make_env(config, self.datasetManager.get_callbacks(mode, config))
     self.train_envs = [make('train') for _ in range(config.envs)]
@@ -41,7 +45,8 @@ class Controller:
     except:
       print('The train_eps is empty.')'''
 
-    self.agent=Dreamer(config, self._logger, self.datasetManager.dataset(batch_length=2, batch_size=8))
+    #self.agent=Dreamer(config, self._logger, self.datasetManager.dataset(batch_length=2, batch_size=8))
+    self.agent=Dreamer(config, self._logger, self.datasetManager, self.get_signature)
     if (self._logdir / 'variables.pkl').exists():
       self.agent.load(self._logdir / 'variables.pkl')
       self.agent._should_pretrain._once = False
@@ -143,12 +148,12 @@ class Controller:
       except Exception:
         pass
 
-  def train_only_wordModel(self, epochs=1):
+  def train_only_worldModel(self, epochs=1):
     ds=self.datasetManager.dataset(batch_length=2, batch_size=8)
     ds=iter(ds)
     for step in range(epochs):
       x=next(ds)
-      self.agent._train_only_wordModel(x)
+      self.agent._train_only_worldModel(x)
       if step%10==0:
         for name, mean in self.agent._metrics.items():
           self._logger.scalar(name, float(mean.result()))
