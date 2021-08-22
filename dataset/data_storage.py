@@ -11,7 +11,7 @@ class DataStorage:
     self._stats={}
 
     self._lengthToTag = lambda x: 'small' if x<6 else 'medium' if x<18 else 'large'
-    self._tagToLength = lambda x: 2 if x=='small' else 4 if x=='medium' else 8
+    self._tagToLength = lambda x: 2 if x=='small' else 2 if x=='medium' else 2
     seed=69
     self._random = np.random.RandomState(seed)
 
