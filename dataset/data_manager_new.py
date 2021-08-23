@@ -80,10 +80,9 @@ class DatasetManager:
       yield _eps
 
   def dataset(self, batch_size, batch_length, balance=True):
-    batch_length_str='small' if batch_length==2 else 'medium' if batch_length==4 else 'large'
     generator = lambda: self.sample_episode(
-      'train', batch_size, batch_length_str, balance)
-    output_sign=self._output_sign(batch_size, batch_length)
+      'train', batch_size, batch_length, balance)
+    output_sign=self._output_sign(batch_size, self._train_eps._tagToLength(batch_length))
     dataset = tf.data.Dataset.from_generator(generator, output_signature=output_sign)
     #dataset = dataset.prefetch(10)
     return dataset
@@ -115,7 +114,7 @@ class DatasetManager:
       ('large', (8, 2)),
     ]
     for name, setting in names:
-      self._datasets[name]=iter(self.dataset(*setting, True))
+      self._datasets[name]=iter(self.dataset(setting[0], name, True))
 
     return self
   

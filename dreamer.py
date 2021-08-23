@@ -114,7 +114,7 @@ class Dreamer(tools.Module):
     embed, action_embed = self._wm.encoder(self._wm.preprocess(obs))
     #feed the actor head with the embedding
     #maskout
-    action_embed=action_embed*tf.expand_dims(tf.cast(obs['axiom_mask'], tf.float32), axis=-1)
+    action_embed=action_embed*tf.transpose(tf.cast(obs['axiom_mask'], tf.float32), [1,0])
     self._task_behavior.actor.feed(action_embed)
     self._wm.dynamics.feed_action_embed(action_embed)
     embeded_action=self._wm.dynamics.action_to_embed(action)
