@@ -114,7 +114,7 @@ class DatasetManager:
       ('large', (8, 8)),
     ]
     for name, setting in names:
-      self._datasets[name]=iter(self.dataset(setting[0], name, True))
+      self._datasets[name]=iter(self.dataset(setting[0], name, False))
 
     return self
   
