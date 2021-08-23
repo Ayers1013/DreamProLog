@@ -262,7 +262,7 @@ prolog:
   discount: 0.66
   discount_lambda: 0.8
   imag_horizon: 3
-  imag_gradient: 'both'
+  imag_gradient: 'reinforce'
   imag_gradient_mix: '0.1'
   imag_sample: True
 
