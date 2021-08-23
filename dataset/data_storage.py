@@ -41,8 +41,8 @@ class DataStorage:
     lengthIndex=self._random.choice(list(options.keys()), p=probs)
     return lengthIndex
   
-  def sample_episode(self, problem, length, positive=True):
-    episodes=self._storage[problem][length]
+  def sample_episode(self, problem, lengthIndex, positive=True):
+    episodes=self._storage[problem][lengthIndex]
     if positive:
       ep_names=[]
       for ep in reversed(episodes):
@@ -57,7 +57,7 @@ class DataStorage:
       selected_ep=episodes[self._random.randint(len(episodes))]
 
     episode, stat=self._episodes[selected_ep[1]], selected_ep[0]
-    length=self._tagToLength(length)
+    length=self._tagToLength(lengthIndex)
     ep_length=stat[2]
 
     if positive and self._random.randint(2):
