@@ -226,8 +226,6 @@ debug:
   #batch_length: 20
   dataset_size: 40000
 
-  imag_horizon: 3
-
 prolog:
   task: 'prolog_void'
   batch_length: 1
@@ -260,6 +258,13 @@ prolog:
   slow_actor_target: False
   slow_target_update: 100
   slow_target_fraction: 1
+  
+  discount: 0.66
+  discount_lambda: 0.8
+  imag_horizon: 3
+  imag_gradient: 'both'
+  imag_gradient_mix: '0.1'
+  imag_sample: True
 
 
 prolog_easy:
