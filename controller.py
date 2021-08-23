@@ -165,8 +165,7 @@ class Controller:
         self.agent.save(self._logdir / 'variables.pkl')
 
   def train_only(self, epochs=1):
-    ds=iter(self.datasetManager)
-    self.datasetManager.logging()
+    ds=self.agent._dataset
     print('Train only run.')
     for step in range(epochs):
       x=next(ds)
