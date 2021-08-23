@@ -141,6 +141,25 @@ def flatten_gnn_input(inp, length):
 
 
 def feed_gnn_input(x, batch_size, batch_length, fun):
+    result=tf.TensorArray(tf.float32, batch_length, element_shape=(batch_size, fun._out_dim))
+    pos=tf.zeros((1,), dtype=tf.int32)
+    def calc_slice(i):
+        y=tf.nest.map_structure(lambda inp: inp[:, i:i+1], x)
+        y=flatten_gnn_input(y, batch_size)
+        z=fun(y)
+        z.set_shape((batch_size, z.shape[1]))
+    result, _=tf.while_loop(
+        lambda inp, i: i < batch_length,
+        lambda inp, i: (inp.write(i, calc_slice(i)), i + 1),
+        [result, pos]
+    )
+
+    print('Almost Traced')
+    result=result.stack()
+    result=tf.transpose(result, [1,0,2])
+    return result
+
+def feed_gnn_input_dep(x, batch_size, batch_length, fun):
     result=[]
     for i in range(batch_length):
         y=tf.nest.map_structure(lambda inp: inp[:, i:i+1], x)

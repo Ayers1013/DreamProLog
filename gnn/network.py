@@ -122,6 +122,7 @@ class MultiGraphNetwork(tools.Module):
         ]
 
         #State body
+        self._out_dim=out_dim
         self.dense1=tf.keras.layers.Dense(self.config.hidden_val)
         self.dense2=tf.keras.layers.Dense(self.config.hidden_val)
         self.dense3=tf.keras.layers.Dense(out_dim, activation=tf.sigmoid, use_bias=True)
