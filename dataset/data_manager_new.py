@@ -44,7 +44,6 @@ class DatasetManager:
       #Sample problem
       selected_eps=dict(train=self._train_eps, eval=self._eval_eps)[mode]
       problem, lengthIndex=self._scheduled
-      print(problem, length)
       sample_ep=lambda x: selected_eps.sample_episode(problem, length, x)
 
       if balance:
@@ -111,8 +110,8 @@ class DatasetManager:
   def __iter__(self):
     names=[
       ('small', (32,2)), 
-      ('medium', (16, 2)), 
-      ('large', (8, 2)),
+      ('medium', (16, 4)), 
+      ('large', (8, 8)),
     ]
     for name, setting in names:
       self._datasets[name]=iter(self.dataset(setting[0], name, False))
