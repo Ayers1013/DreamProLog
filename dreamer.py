@@ -114,7 +114,6 @@ class Dreamer(tools.Module):
     embed, action_embed = self._wm.encoder(self._wm.preprocess(obs))
     #feed the actor head with the embedding
     #maskout
-    action_embed=action_embed*tf.transpose(tf.cast(obs['axiom_mask'], tf.float32), [1,0])
     self._task_behavior.actor.feed(action_embed)
     self._wm.dynamics.feed_action_embed(action_embed)
     embeded_action=self._wm.dynamics.action_to_embed(action)
@@ -128,6 +127,9 @@ class Dreamer(tools.Module):
     if self._config.eval_state_mean:
       latent['stoch'] = latent['mean']
     feat = self._wm.dynamics.get_feat(latent)#, action_embed
+    
+    action_embed=action_embed*tf.transpose(tf.cast(obs['axiom_mask'], tf.float32), [1,0])
+    self._task_behavior.actor.feed(action_embed)
     if not training:
       action = self._task_behavior.actor(feat).mode()
     elif self._should_expl(self._step):
