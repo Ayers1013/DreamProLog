@@ -149,6 +149,7 @@ def feed_gnn_input(x, batch_size, batch_length, fun):
         y=flatten_gnn_input(y, batch_size)
         z=fun(y)
         z.set_shape((batch_size, z.shape[1]))
+        return z
     result, _=tf.while_loop(
         lambda inp, i: i < batch_length,
         lambda inp, i: (inp.write(i, calc_slice(i)), i + 1),
