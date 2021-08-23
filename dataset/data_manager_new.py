@@ -44,6 +44,7 @@ class DatasetManager:
       #Sample problem
       selected_eps=dict(train=self._train_eps, eval=self._eval_eps)[mode]
       problem, lengthIndex=self._scheduled
+      print(problem, length)
       sample_ep=lambda x: selected_eps.sample_episode(problem, length, x)
 
       if balance:
@@ -119,7 +120,7 @@ class DatasetManager:
     return self
   
   def __next__(self):
-    problem=self._train_eps.sample_problem(10, True)
+    problem=self._train_eps.sample_problem(10, False)
     length=self._train_eps.sample_lengthIndex(problem, 4)
     self._scheduled=(problem, length)
     return next(self._datasets[length])
