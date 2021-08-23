@@ -149,7 +149,7 @@ class Controller:
       except Exception:
         pass
 
-  def train_only(self, epochs=1):
+  def train_only_worldModel(self, epochs=1):
     ds=self.agent._dataset
     print('Train only run.')
     for step in range(epochs):
