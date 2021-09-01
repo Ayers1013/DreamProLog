@@ -232,7 +232,7 @@ if __name__ == '__main__':
     print("There was a problem with the provided arguments. The program will run in the default setting:")
     class DefaultArg:
       def __init__(self):
-        self.configs=['defaults','prolog','prolog_easy','debug']
+        self.configs=['prolog']#['defaults','prolog','prolog_easy','debug']
         self.logdir='logdir'#'debugEpisodes'#
     args, remaining =DefaultArg(), []
   print('--configs', " ".join(args.configs), '--logdir', args.logdir)
@@ -248,6 +248,7 @@ if __name__ == '__main__':
     parser.add_argument(f'--{key}', type=arg_type, default=arg_type(value))
   #main(args.logdir, parser.parse_args(remaining))
   config=parser.parse_args(remaining)
+  print(config)
   from controller import Controller
   ctrl=Controller(config, args.logdir)
   #ctrl.simulate()

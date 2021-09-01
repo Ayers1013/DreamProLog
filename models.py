@@ -20,7 +20,6 @@ class WorldModel(tools.Module):
         config.dyn_std_act, config.dyn_min_std, config.dyn_cell)
     self.heads = {}
     channels = (1 if config.atari_grayscale else 3)
-    shape = config.size + (channels,)
 
     #NOTE to gnn
     self.heads['image'] = networks.DummyDecoder()
