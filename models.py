@@ -12,7 +12,7 @@ class WorldModel(tools.Module):
     self._step = step
     self._config = config
     #NOTE to gnn
-    self.encoder = networks.Encoder(input_pipes=['image','gnn'],action_embed=True)#networks.DummyEncoder()
+    self.encoder = networks.Encoder(config=self._config)#networks.DummyEncoder()
     self.dynamics = networks.RSSM(
         config.dyn_stoch, config.dyn_deter, config.dyn_hidden,
         config.dyn_input_layers, config.dyn_output_layers, config.dyn_shared,

@@ -56,6 +56,14 @@ prolog:
   reward_scale: 1.0
   weight_decay: 0.0
 
+  #GNN
+  gnn_start_shape: [4,1,4]
+  gnn_next_shape: [32,64,32]
+  next_shape: [11,12,13]
+  gnn_layers: 10
+  gnn_hidden_val: 200
+  gnn_hidden_act: 64
+
   # Training
   #....batch_size: 50
   #....batch_length: 1

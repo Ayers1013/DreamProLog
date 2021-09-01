@@ -61,14 +61,12 @@ sign=gnn_output_sign(lambda x: tf.TensorSpec(shape=()+x, dtype=tf.int32), True)
 
 class NetworkConfig:
     def __init__(self):
-        self.threads = 4
-        self.start_shape = (4,1,4)
-        self.next_shape = (32,64,32)
+        self.gnn_start_shape = (4,1,4)
+        self.gnn_next_shape = (32,64,32)
         #self.next_shape = (11,12,13)
-        self.layers = 10
-        self.hidden_val = 64
-        self.hidden_act = 64
-        self.entropy_regularization = 0.1
+        self.gnn_layers = 10
+        self.gnn_hidden_val = 64
+        self.gnn_hidden_act = 64
 
 
 class GraphNetwork(tools.Module):
@@ -107,7 +105,7 @@ class GraphNetwork(tools.Module):
         return x
 
 class MultiGraphNetwork(tools.Module):
-    def __init__(self, out_dim=32, config=None):
+    def __init__(self, config=None):
         super().__init__()
         if(config is None):
             self.config=NetworkConfig()
@@ -116,20 +114,21 @@ class MultiGraphNetwork(tools.Module):
 
         #Main body
         self.input_layer=GraphInput()
-        self.start_layer=graph_start(self.config.start_shape, self.input_layer)
+        self.start_layer=graph_start(self.config.gnn_start_shape, self.input_layer)
         self.conv_layers=[
-            graph_conv(self.input_layer, output_dims=self.config.next_shape) for _ in range(self.config.layers)
+            graph_conv(self.input_layer, output_dims=self.config.gnn_next_shape) for _ in range(self.config.gnn_layers)
         ]
 
         #State body
-        self._out_dim=out_dim
-        self.dense1=tf.keras.layers.Dense(self.config.hidden_val)
-        self.dense2=tf.keras.layers.Dense(self.config.hidden_val)
-        self.dense3=tf.keras.layers.Dense(out_dim, activation=tf.sigmoid, use_bias=True)
+        self._out_dim=self.config.gnn_hidden_val
+        self.dense1=tf.keras.layers.Dense(self.config.gnn_hidden_val)
+        self.dense2=tf.keras.layers.Dense(self.config.gnn_hidden_val)
+        #self.dense3=tf.keras.layers.Dense(self.config.gnn_hidden_val, activation=tf.sigmoid, use_bias=True)
+        self.dense3=tf.keras.layers.Dense(self.config.gnn_hidden_val, activation='', use_bias=True)
 
         #Action body
         self.ax_segments=Segments(nonzero=True)
-        self.dense4=tf.keras.layers.Dense(self.config.hidden_act, activation=tf.sigmoid, use_bias=True)
+        self.dense4=tf.keras.layers.Dense(self.config.gnn_hidden_act, activation=tf.sigmoid, use_bias=True)
         #self.dense5=tf.keras.layers.Dense(1, activation=tf.sigmoid, use_bias=True)
 
     def __call__(self, graph_ph):

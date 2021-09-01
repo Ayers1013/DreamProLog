@@ -151,6 +151,7 @@ class Controller:
 
   def train_only_worldModel(self, epochs=1):
     ds=self.agent._dataset
+    self.datasetManager.logging()
     print('Train only run.')
     for step in range(epochs):
       x=next(ds)

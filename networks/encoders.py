@@ -42,16 +42,16 @@ class DummyDecoder(tools.Module):
     return tfd.Independent(tfd.Normal(mean,std+0.03), len(self._shape))
 
 class Encoder(tools.Module):
-  def __init__(self, input_pipes, action_embed):
-    self._input_pipes=input_pipes
-    self._action_embed=action_embed
+  def __init__(self, config):
+    self._input_pipes=['image','gnn']
+    self._action_embed=True#action_embed
     self.encoders={}
 
-    if 'image' in input_pipes:
+    if 'image' in self._input_pipes:
       self.encoders['image']=DummyEncoder()    
 
-    if 'gnn' in input_pipes:
-      self.gnn=MultiGraphNetwork(out_dim=200)
+    if 'gnn' in self._input_pipes:
+      self.gnn=MultiGraphNetwork(config)
       self.encoders['gnn']=self.gnn.stateEmbed
       self.encoders['action_space']=self.gnn.actionEmbed
 
@@ -112,14 +112,6 @@ class ActionHead(tools.Module):
     x=tf.matmul(x, tf.transpose(self._embed))
     x=tf.nn.softmax(x)
     dist=tfd.Categorical(probs=x)
-
-    '''x = self.get(f'hstd_mean', tfkl.Dense, 2*self._size)(x)
-    if dtype:
-      x = tf.cast(x, dtype)
-    mean, std = tf.split(x, 2, -1)
-    std = tf.nn.softplus(std + self._init_std) + self._min_std
-    dist = tfd.Normal(mean, std)
-    dist = tfd.Independent(dist, 1)'''
     return dist
 
   def feed(self, embed):
