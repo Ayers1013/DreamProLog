@@ -69,7 +69,7 @@ prolog:
   grad_clip: 100
   value_grad_clip: 100
   actor_grad_clip: 100
-  dataset_size: 40000
+  dataset_size: 200000
   oversample_ends: False
   slow_value_target: False
   slow_actor_target: False
