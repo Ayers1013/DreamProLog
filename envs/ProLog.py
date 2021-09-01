@@ -48,7 +48,7 @@ class ProLog:
         
         self.problems=ProblemLibrary()
 
-        self.step_reward = 0.01
+        self.step_reward = 0.
         self.success_reward = 1
         self.failure_reward = -0.2
         self.invalid_reward = -1
