@@ -121,10 +121,10 @@ class MultiGraphNetwork(tools.Module):
 
         #State body
         self._out_dim=self.config.gnn_hidden_val
-        self.dense1=tf.keras.layers.Dense(self.config.gnn_hidden_val)
-        self.dense2=tf.keras.layers.Dense(self.config.gnn_hidden_val)
+        self.dense1=tf.keras.layers.Dense(self.config.gnn_hidden_val, activation='relu')
+        self.dense2=tf.keras.layers.Dense(self.config.gnn_hidden_val, activation='relu')
         #self.dense3=tf.keras.layers.Dense(self.config.gnn_hidden_val, activation=tf.sigmoid, use_bias=True)
-        self.dense3=tf.keras.layers.Dense(self.config.gnn_hidden_val, activation='', use_bias=True)
+        self.dense3=tf.keras.layers.Dense(self.config.gnn_hidden_val, activation='relu', use_bias=True)
 
         #Action body
         self.ax_segments=Segments(nonzero=True)
