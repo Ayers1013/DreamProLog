@@ -91,7 +91,7 @@ class WorldModel(tools.Module):
       if 'action_mask' in self._config.grad_heads:
         loss, entropy=self.mask_loss(feat, data['axiom_mask'])
         likes['action_mask']=5*loss
-        likes['action_mask_entropy']=-entropy
+        likes['action_mask_entropy']=entropy
       #if likes['image']<-20.:
       #  likes['image']=tf.stop_gradient(likes['image'])
       #NOTE added factor
