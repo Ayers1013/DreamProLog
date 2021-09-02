@@ -82,7 +82,7 @@ class WorldModel(tools.Module):
         mse_loss[name]=tf.reduce_mean(mse)
         
         if name in self._config.free_heads:
-          like=tf.minimum(like, 25.)
+          like=tf.minimum(like, 5.)
           '''if name=='image':
             mse=tf.reduce_mean(mse, axis=-1)
           like=tf.where(mse<0.1, tf.ones_like(like)*0.1, like)'''

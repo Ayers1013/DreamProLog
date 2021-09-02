@@ -2,7 +2,7 @@ import numpy as np
 from numpy.lib.function_base import select
 
 class DataStorage:
-  def __init__(self):
+  def __init__(self, section_length=[6,18], batch_length=[2,4,8]):
     #container for episodes
     self._episodes={}
     #problem_name-> length -> reward
@@ -10,8 +10,11 @@ class DataStorage:
     #statistics
     self._stats={}
 
-    self._lengthToTag = lambda x: 'small' if x<6 else 'medium' if x<18 else 'large'
-    self._tagToLength = lambda x: 2 if x=='small' else 4 if x=='medium' else 8
+    ssmall, smedium=section_length
+    bsmall, bmedium, blarge=batch_length
+    
+    self._lengthToTag = lambda x: 'small' if x<ssmall else 'medium' if x<smedium else 'large'
+    self._tagToLength = lambda x: bsmall if x=='small' else bmedium if x=='medium' else blarge
     seed=69
     self._random = np.random.RandomState(seed)
 
