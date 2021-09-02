@@ -56,7 +56,7 @@ prolog:
   reward_scale: 1.0
   weight_decay: 0.0
 
-  free_heads: ['image']
+  free_heads: ['image', 'reward', 'discount']
 
   # GNN
   gnn_start_shape: [4,1,4]
@@ -78,7 +78,7 @@ prolog:
   train_every: 25
   train_steps: 10
   pretrain: 5
-  model_lr: 0.0003
+  model_lr: 0.0004
   value_lr: 0.001
   actor_lr: 0.001
   opt_eps: 0.0008

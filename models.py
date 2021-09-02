@@ -82,7 +82,7 @@ class WorldModel(tools.Module):
         mse_loss[name]=tf.reduce_mean(mse)
         
         if name in self._config.free_heads:
-          like=tf.minimum(like, 5.)
+          like=tf.minimum(like, 4.5)
           '''if name=='image':
             mse=tf.reduce_mean(mse, axis=-1)
           like=tf.where(mse<0.1, tf.ones_like(like)*0.1, like)'''
@@ -90,12 +90,12 @@ class WorldModel(tools.Module):
       
       if 'action_mask' in self._config.grad_heads:
         loss, entropy=self.mask_loss(feat, data['axiom_mask'])
-        likes['action_mask']=10*loss
+        likes['action_mask']=5*loss
         likes['action_mask_entropy']=-entropy
       #if likes['image']<-20.:
       #  likes['image']=tf.stop_gradient(likes['image'])
       #NOTE added factor
-      head_weigth=0.7
+      head_weigth=0.5
       model_loss = kl_loss - head_weigth*sum(likes.values())
     model_parts = [self.encoder, self.dynamics] + list(self.heads.values())
 
