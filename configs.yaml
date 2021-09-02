@@ -40,7 +40,7 @@ prolog:
   dyn_mean_act: 'none'
   dyn_std_act: 'sigmoid2'
   dyn_min_std: 0.1
-  grad_heads: ['discount'] #['image', 'reward', 'discount', 'action_mask']
+  grad_heads: ['image', 'reward', 'discount', 'action_mask']
   units: 200
   reward_layers: 2
   discount_layers: 2
