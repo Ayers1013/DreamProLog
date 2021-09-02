@@ -79,6 +79,7 @@ class WorldModel(tools.Module):
         pred = head(inp, tf.float32)
         like = pred.log_prob(tf.cast(data[name], tf.float32))
         mse=(tf.cast(data[name], tf.float32)-tf.cast(pred.mode(), tf.float32))**2
+        mse=tf.reduce_mean(mse, axis=[i+1 for i in range(len(mse.shape)-1)])
         mse_loss[name]=tf.reduce_mean(mse)
         
         if name in self._config.free_heads:
