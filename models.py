@@ -78,7 +78,8 @@ class WorldModel(tools.Module):
         pred = head(inp, tf.float32)
         like = pred.log_prob(tf.cast(data[name], tf.float32))
         if name=='discount': 
-          tf.print(pred.mode())
+          tf.print(pred.mode()[:, -1])
+          tf.print(data[name][:, -1])
         likes[name] = tf.reduce_mean(like) * self._scales.get(name, 1.0)
         mse_loss[name]=tf.keras.metrics.mean_squared_error(tf.cast(data[name], tf.float32), pred.mode())
       
