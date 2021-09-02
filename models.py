@@ -82,9 +82,10 @@ class WorldModel(tools.Module):
         mse_loss[name]=tf.reduce_mean(mse)
         
         if name in self._config.free_heads:
-          if name=='image':
+          like=tf.minimum(like, 25.)
+          '''if name=='image':
             mse=tf.reduce_mean(mse, axis=-1)
-          like=tf.where(mse<0.1, tf.ones_like(like)*0.1, like)
+          like=tf.where(mse<0.1, tf.ones_like(like)*0.1, like)'''
         likes[name] = tf.reduce_mean(like) * self._scales.get(name, 1.0)
       
       if 'action_mask' in self._config.grad_heads:

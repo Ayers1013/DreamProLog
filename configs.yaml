@@ -56,7 +56,7 @@ prolog:
   reward_scale: 1.0
   weight_decay: 0.0
 
-  free_heads: ['reward', 'image']
+  free_heads: ['image']
 
   # GNN
   gnn_start_shape: [4,1,4]
