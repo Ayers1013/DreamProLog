@@ -77,6 +77,8 @@ class WorldModel(tools.Module):
         inp = feat if grad_head else tf.stop_gradient(feat)
         pred = head(inp, tf.float32)
         like = pred.log_prob(tf.cast(data[name], tf.float32))
+        if name=='discount': 
+          tf.print(pred.mode())
         likes[name] = tf.reduce_mean(like) * self._scales.get(name, 1.0)
         mse_loss[name]=tf.keras.metrics.mean_squared_error(tf.cast(data[name], tf.float32), pred.mode())
       

@@ -36,14 +36,6 @@ class Controller:
     #expected length= 1/p, imidiate fail chance= p
     sample_rate=lambda: [0.0, 0.02, 0.1][np.random.randint(3)]
     self.prefill(sample_rate=sample_rate)
-    
-    '''try:
-      while isinstance(x, dict):
-        key=next(iter(x.keys()))
-        print(key, type(key))
-        x=x[key]
-    except:
-      print('The train_eps is empty.')'''
 
     #self.agent=Dreamer(config, self._logger, self.datasetManager.dataset(batch_length=2, batch_size=8))
     self.agent=Dreamer(config, self._logger, self.datasetManager, self.get_signature)

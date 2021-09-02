@@ -42,8 +42,8 @@ prolog:
   dyn_min_std: 0.1
   grad_heads: ['discount'] #['image', 'reward', 'discount', 'action_mask']
   units: 200
-  reward_layers: 1
-  discount_layers: 1
+  reward_layers: 2
+  discount_layers: 2
   value_layers: 3
   actor_layers: 4
   act: 'elu'

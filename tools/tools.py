@@ -23,6 +23,7 @@ class AttrDict(dict):
 class LoggerEmpty:
 
   def __init__(self, logdir, step, config):
+    self._scalars={}
     pass
 
   def scalar(self, name, value):
@@ -35,6 +36,9 @@ class LoggerEmpty:
     pass
 
   def write(self, fps=False):
+    pass
+
+  def table(self, name, columns, data):
     pass
 
 class LoggerWandb:
