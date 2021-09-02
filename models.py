@@ -81,7 +81,7 @@ class WorldModel(tools.Module):
         mse=(tf.cast(data[name], tf.float32)-tf.cast(pred.mode(), tf.float32))**2
         mse_loss[name]=tf.reduce_mean(mse)
         
-        if name in self._config._free_heads:
+        if name in self._config.free_heads:
           like=tf.where(mse<0.1, tf.ones_like(like)*0.1, like)
         likes[name] = tf.reduce_mean(like) * self._scales.get(name, 1.0)
       
