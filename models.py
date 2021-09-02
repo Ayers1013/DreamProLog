@@ -81,7 +81,8 @@ class WorldModel(tools.Module):
           tf.print(pred.mode()[:, -1])
           tf.print(data[name][:, -1])
         likes[name] = tf.reduce_mean(like) * self._scales.get(name, 1.0)
-        mse_loss[name]=tf.keras.metrics.mean_squared_error(tf.cast(data[name], tf.float32), pred.mode())
+        #mse_loss[name]=tf.keras.metrics.mean_squared_error(tf.cast(data[name], tf.float32), pred.mode())
+        mse_loss[name]=tf.reduce_mean((tf.cast(data[name], tf.float32)-tf.cast(pred.mode(), tf.float32))**2)
       
       if 'action_mask' in self._config.grad_heads:
         likes['action_mask']=self.mask_loss(feat, data['axiom_mask'])
