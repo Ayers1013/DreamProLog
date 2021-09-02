@@ -27,7 +27,7 @@ class DummyEncoder(tools.Module):
 
 class DummyDecoder(tools.Module):
 
-  def __init__(self, shape=(1,14)):
+  def __init__(self, shape=(14)):
     self.dense1=tfkl.Dense(150)
     #Porlog:14, dummy: 25
     self.dense2=tfkl.Dense(14)
