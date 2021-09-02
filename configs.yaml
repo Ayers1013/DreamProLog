@@ -65,7 +65,7 @@ prolog:
   gnn_hidden_val: 200
   gnn_hidden_act: 64
   # Action GNN
-  share_gnn: False
+  share_gnn: True
   action_gnn_start_shape: [4,1,4]
   action_gnn_next_shape: [32,64,32]
   action_gnn_layers: 6
