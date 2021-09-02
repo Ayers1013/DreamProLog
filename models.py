@@ -49,7 +49,7 @@ class WorldModel(tools.Module):
     probs=tf.reduce_sum(masked_probs, axis=-1)+0.01
     log_probs=tf.math.log(probs)
     loss=tf.reduce_mean(log_probs)
-    entropy=pred.entropy()
+    entropy=tf.reduce_mean(pred.entropy())
     return loss, entropy
 
   def train(self, data):
@@ -81,7 +81,7 @@ class WorldModel(tools.Module):
         mse=(tf.cast(data[name], tf.float32)-tf.cast(pred.mode(), tf.float32))**2
         mse_loss[name]=tf.reduce_mean(mse)
         
-        if name in self._config.free_heads and False:
+        if name in self._config.free_heads:
           like=tf.minimum(like, 25.)
           '''if name=='image':
             mse=tf.reduce_mean(mse, axis=-1)
