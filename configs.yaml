@@ -56,12 +56,21 @@ prolog:
   reward_scale: 1.0
   weight_decay: 0.0
 
-  #GNN
+  free_heads: ['reward', 'image']
+
+  # GNN
   gnn_start_shape: [4,1,4]
   gnn_next_shape: [32,64,32]
   gnn_layers: 10
   gnn_hidden_val: 200
   gnn_hidden_act: 64
+  # Action GNN
+  share_gnn: False
+  action_gnn_start_shape: [4,1,4]
+  action_gnn_next_shape: [32,64,32]
+  action_gnn_layers: 6
+  action_gnn_hidden_val: 200
+  action_gnn_hidden_act: 64
 
   # Training
   #....batch_size: 50

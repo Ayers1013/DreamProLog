@@ -49,7 +49,8 @@ class WorldModel(tools.Module):
     probs=tf.reduce_sum(masked_probs, axis=-1)+0.01
     log_probs=tf.math.log(probs)
     loss=tf.reduce_mean(log_probs)
-    return loss
+    entropy=pred.entropy()
+    return loss, entropy
 
   def train(self, data):
     print('Tracing WorldModel train function.')
@@ -77,19 +78,21 @@ class WorldModel(tools.Module):
         inp = feat if grad_head else tf.stop_gradient(feat)
         pred = head(inp, tf.float32)
         like = pred.log_prob(tf.cast(data[name], tf.float32))
-        if name=='discount': 
-          tf.print(pred.mode()[:, -1])
-          tf.print(data[name][:, -1])
+        mse=(tf.cast(data[name], tf.float32)-tf.cast(pred.mode(), tf.float32))**2
+        mse_loss[name]=tf.reduce_mean(mse)
+        
+        if name in self._config._free_heads:
+          like=tf.where(mse<0.1, tf.ones_like(like)*0.1, like)
         likes[name] = tf.reduce_mean(like) * self._scales.get(name, 1.0)
-        #mse_loss[name]=tf.keras.metrics.mean_squared_error(tf.cast(data[name], tf.float32), pred.mode())
-        mse_loss[name]=tf.reduce_mean((tf.cast(data[name], tf.float32)-tf.cast(pred.mode(), tf.float32))**2)
       
       if 'action_mask' in self._config.grad_heads:
-        likes['action_mask']=self.mask_loss(feat, data['axiom_mask'])
+        loss, entropy=self.mask_loss(feat, data['axiom_mask'])
+        likes['action_mask']=10*loss
+        likes['action_mask_entropy']=-entropy
       #if likes['image']<-20.:
       #  likes['image']=tf.stop_gradient(likes['image'])
       #NOTE added factor
-      head_weigth=0.2
+      head_weigth=0.7
       model_loss = kl_loss - head_weigth*sum(likes.values())
     model_parts = [self.encoder, self.dynamics] + list(self.heads.values())
 

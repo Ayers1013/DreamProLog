@@ -51,9 +51,25 @@ class Encoder(tools.Module):
       self.encoders['image']=DummyEncoder()    
 
     if 'gnn' in self._input_pipes:
-      self.gnn=MultiGraphNetwork(config)
+      self.gnn=MultiGraphNetwork(
+        start_shape=config.gnn_start_shape,
+        next_shape=config.gnn_next_shape
+        layers=config.gnn_layers,
+        hidden_val=config.gnn_hidden_val,
+        hidden_act=config.gnn_hidden_act
+      )
       self.encoders['gnn']=self.gnn.stateEmbed
-      self.encoders['action_space']=self.gnn.actionEmbed
+      if config.share_gnn:
+        self.encoders['action_space']=self.gnn.actionEmbed
+      else:
+        self.action_gnn==MultiGraphNetwork(
+          start_shape=config.action_gnn_start_shape,
+          next_shape=config.action_gnn_next_shape
+          layers=config.action_gnn_layers,
+          hidden_val=config.action_gnn_hidden_val,
+          hidden_act=config.action_gnn_hidden_act
+        )
+        self.encoders['action_space']=self.gnn.actionEmbed
 
   def __call__(self, obs):
 
