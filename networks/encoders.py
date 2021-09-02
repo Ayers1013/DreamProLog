@@ -62,14 +62,14 @@ class Encoder(tools.Module):
       if config.share_gnn:
         self.encoders['action_space']=self.gnn.actionEmbed
       else:
-        self.action_gnn==MultiGraphNetwork(
+        self.action_gnn=MultiGraphNetwork(
           start_shape=config.action_gnn_start_shape,
           next_shape=config.action_gnn_next_shape,
           layers=config.action_gnn_layers,
           hidden_val=config.action_gnn_hidden_val,
           hidden_act=config.action_gnn_hidden_act
         )
-        self.encoders['action_space']=self.gnn.actionEmbed
+        self.encoders['action_space']=self.action_gnn.actionEmbed
 
   def __call__(self, obs):
 
