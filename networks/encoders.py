@@ -53,7 +53,7 @@ class Encoder(tools.Module):
     if 'gnn' in self._input_pipes:
       self.gnn=MultiGraphNetwork(
         start_shape=config.gnn_start_shape,
-        next_shape=config.gnn_next_shape
+        next_shape=config.gnn_next_shape,
         layers=config.gnn_layers,
         hidden_val=config.gnn_hidden_val,
         hidden_act=config.gnn_hidden_act
@@ -64,7 +64,7 @@ class Encoder(tools.Module):
       else:
         self.action_gnn==MultiGraphNetwork(
           start_shape=config.action_gnn_start_shape,
-          next_shape=config.action_gnn_next_shape
+          next_shape=config.action_gnn_next_shape,
           layers=config.action_gnn_layers,
           hidden_val=config.action_gnn_hidden_val,
           hidden_act=config.action_gnn_hidden_act
