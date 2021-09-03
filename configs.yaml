@@ -34,8 +34,8 @@ prolog:
   dyn_deter: 100
   dyn_stoch: 20
   dyn_discrete: 32
-  dyn_input_layers: 4
-  dyn_output_layers: 4
+  dyn_input_layers: 5
+  dyn_output_layers: 5
   dyn_shared: False
   dyn_mean_act: 'none'
   dyn_std_act: 'sigmoid2'
