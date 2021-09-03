@@ -32,8 +32,8 @@ prolog:
   dyn_cell: 'gru'
   dyn_hidden: 512
   dyn_deter: 512
-  dyn_stoch: 128
-  dyn_discrete: 64
+  dyn_stoch: 192
+  dyn_discrete: 32
   dyn_input_layers: 5
   dyn_output_layers: 5
   dyn_shared: False
