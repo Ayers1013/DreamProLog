@@ -48,7 +48,9 @@ class Encoder(tools.Module):
     self.encoders={}
 
     if 'image' in self._input_pipes:
-      self.encoders['image']=DummyEncoder()    
+      self.encoders['image']=DummyEncoder()  
+
+    self._gnn_outdim=config.gnn_hidden_val  
 
     if 'gnn' in self._input_pipes:
       self.gnn=MultiGraphNetwork(
@@ -75,7 +77,7 @@ class Encoder(tools.Module):
 
     if obs['gnn']['num_nodes'].shape!=(1,1):
       batch_size, batch_length= obs['image'].shape[:2]
-      embed=feed_gnn_input(obs['gnn'], batch_size, batch_length, self.encoders['gnn'])
+      embed=feed_gnn_input(obs['gnn'], batch_size, batch_length, self._gnn_outdim, self.encoders['gnn'])
       
       action_embed=self.encoders['action_space'](obs['action_space'])
     else:
@@ -103,7 +105,7 @@ class ActionHead(tools.Module):
       self, layers, units, act=tf.nn.elu, dist='trunc_normal',
       init_std=0.0, min_std=0.1, action_disc=5, temp=0.1, outscale=0, action_embed=None):
     # assert min_std <= 2
-    self._size = 64
+    self._size = 128
     self._layers = layers
     self._units = units
     self._dist = dist
