@@ -30,18 +30,18 @@ prolog:
 
   # Model
   dyn_cell: 'gru'
-  dyn_hidden: 100
-  dyn_deter: 100
-  dyn_stoch: 20
-  dyn_discrete: 32
-  dyn_input_layers: 5
-  dyn_output_layers: 5
+  dyn_hidden: 1024
+  dyn_deter: 1024
+  dyn_stoch: 256
+  dyn_discrete: 128
+  dyn_input_layers: 6
+  dyn_output_layers: 6
   dyn_shared: False
   dyn_mean_act: 'none'
   dyn_std_act: 'sigmoid2'
   dyn_min_std: 0.1
   grad_heads: ['image', 'reward', 'discount', 'action_mask']
-  units: 200
+  units: 256
   reward_layers: 2
   discount_layers: 2
   value_layers: 3
@@ -61,9 +61,9 @@ prolog:
   # GNN
   gnn_start_shape: [4,1,4]
   gnn_next_shape: [32,64,32]
-  gnn_layers: 10
-  gnn_hidden_val: 200
-  gnn_hidden_act: 64
+  gnn_layers: 16
+  gnn_hidden_val: 1024
+  gnn_hidden_act: 128
   # Action GNN
   share_gnn: True
   action_gnn_start_shape: [4,1,4]
@@ -78,14 +78,14 @@ prolog:
   train_every: 25
   train_steps: 10
   pretrain: 5
-  model_lr: 0.0004
+  model_lr: 0.001
   value_lr: 0.001
   actor_lr: 0.001
   opt_eps: 0.0008
-  grad_clip: 100
+  grad_clip: 200
   value_grad_clip: 100
   actor_grad_clip: 100
-  dataset_size: 20000
+  dataset_size: 100000
   oversample_ends: False
   slow_value_target: False
   slow_actor_target: False

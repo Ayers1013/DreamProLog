@@ -110,8 +110,8 @@ class DatasetManager:
   def __iter__(self):
     names=[
       ('small', (64,2)), 
-      ('medium', (32, 4)), 
-      ('large', (16, 8)),
+      ('medium', (48, 4)), 
+      ('large', (32, 8)),
     ]
     for name, setting in names:
       self._datasets[name]=iter(self.dataset(setting[0], name, False))

@@ -140,9 +140,8 @@ def flatten_gnn_input(inp, length):
     return inp
 
 
-def feed_gnn_input(x, batch_size, batch_length, fun):
-    #NOTE HARDCODED CONSTANT
-    result=tf.TensorArray(tf.float32, batch_length, element_shape=(batch_size, 200))
+def feed_gnn_input(x, batch_size, batch_length, out_dim, fun):
+    result=tf.TensorArray(tf.float32, batch_length, element_shape=(batch_size, out_dim))
     pos=tf.zeros((1,), dtype=tf.int32)
     def calc_slice(i):
         y=tf.nest.map_structure(lambda inp: inp[:, i:i+1], x)
