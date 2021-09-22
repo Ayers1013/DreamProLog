@@ -110,10 +110,11 @@ class ProLog:
         #print('Observation meta:', len(obs['axiom_mask']), obs['action_space']['num_clauses'], obs['action_space']['num_nodes'])
         return (obs, reward, self.terminal(), {}) 
     
-    def reset(self):
+    def reset(self, problem=None):
         self.steps=0
         
-        problem=self.problems.get()
+        if problem==None:
+            problem=self.problems.get()
         #remove out '.p' and /
         self.current_problem="".join(problem[:-2].split('/')[2:])
         print('Loaded problem:', self.current_problem)

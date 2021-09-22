@@ -252,5 +252,10 @@ if __name__ == '__main__':
   from controller import Controller
   ctrl=Controller(config, args.logdir)
   #ctrl.simulate()
-  ctrl.train_only_worldModel(100000)
+  #ctrl.train_only_worldModel(100000)
   #ctrl.train_only(10000)
+  from evalute import Judge
+  judge=Judge(ctrl.agent)
+  for _ in range(10):
+    episode=next(ctrl.datasetManager)
+    judge.simulate_trajectory(0, episode)
