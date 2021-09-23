@@ -68,7 +68,7 @@ class WorldModel(tools.Module):
       kl_balance = tools.schedule(self._config.kl_balance, self._step)
       kl_free = tools.schedule(self._config.kl_free, self._step)
       kl_scale = tools.schedule(self._config.kl_scale, self._step)
-      kl_loss, kl_value = self.dynamics.kl_loss(
+      kl_loss, kl_value, mse_loss_dyn = self.dynamics.kl_loss(
           post, prior, kl_balance, kl_free, kl_scale)
       feat = self.dynamics.get_feat(post)
       likes = {}
@@ -102,6 +102,7 @@ class WorldModel(tools.Module):
     #Logginh metrics
     metrics = self._model_opt(model_tape, model_loss, model_parts)
     metrics.update({f'{name}_loss': -like for name, like in likes.items()})
+    metrics['mse_dyn']=mse_loss_dyn
     metrics['kl_balance'] = kl_balance
     metrics['kl_free'] = kl_free
     metrics['kl_scale'] = kl_scale
