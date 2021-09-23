@@ -1,19 +1,19 @@
 from graph_data import *
 
 data={
-    'nodes_input_1': {
+    'node_inputs_1': {
         'lens' :    [],
         'symbols' : [],
         'nodes' :   [],
         'sgn' :     [],
     },
-    'nodes_input_2': {
+    'node_inputs_2': {
         'lens' :    [],
         'symbols' : [],
         'nodes' :   [],
         'sgn' :     [],
     },
-    'nodes_input_3': {
+    'node_inputs_3': {
         'lens' :    [],
         'symbols' : [],
         'nodes' :   [],
