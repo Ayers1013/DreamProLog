@@ -24,11 +24,6 @@ class DataSkeleton:
             x=getattr(self, attr)
             if isinstance(x, DataSkeleton):
                 dct[attr] = x.to_dict()
-            #We use the fact every element of a tuple is an instance of DataSkeleton
-            elif isinstance(x, list):
-                for i, y in enumerate(x):
-                    dct[attr+f'_{i+1}']=y.to_dict()
-            
             else:
                 dct[attr]=x
         return dct
@@ -50,12 +45,14 @@ class GraphEdges(DataSkeleton):
         super().__init__(data)
 
 class GraphData(DataSkeleton):
-    __slots__ = ['node_inputs', 'symbol_inputs',
+    __slots__ = ['node_inputs_1', 'node_inputs_2', 'node_inputs_3', 'symbol_inputs',
                  'node_c_inputs', 'clause_inputs',
                  'ini_nodes', 'ini_symbols', 'ini_clauses',
                  'num_nodes', 'num_symbols', 'num_clauses']
     def __init__(self, data):
-        self.node_inputs=[GraphHyperEdgesA(data[f'node_inputs_{i}']) for i in range(1,4)]
+        self.node_inputs_1=GraphHyperEdgesA(data[f'node_inputs_1'])
+        self.node_inputs_1=GraphHyperEdgesA(data[f'node_inputs_2'])
+        self.node_inputs_1=GraphHyperEdgesA(data[f'node_inputs_3'])
         self.symbol_inputs=GraphHyperEdgesB(data['symbol_inputs'])
         self.node_c_inputs=GraphEdges(data['node_c_inputs'])
         self.clause_inputs=GraphEdges(data['clause_inputs'])
