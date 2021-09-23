@@ -31,7 +31,7 @@ class DataSkeleton:
             
             else:
                 dct[attr]=x
-        return
+        return dct
         
 
 class GraphHyperEdgesA(DataSkeleton):
