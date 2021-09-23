@@ -28,7 +28,7 @@ data={
         'lens' :    [],
         'data' :    [],
     },
-    'caluse_inputs': {
+    'clause_inputs': {
         'lens' :    [],
         'data' :    [],
     },
