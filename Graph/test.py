@@ -28,6 +28,10 @@ data={
         'lens' :    [],
         'data' :    [],
     },
+    'caluse_inputs': {
+        'lens' :    [],
+        'data' :    [],
+    },
     'ini_nodes' :   [],
     'ini_symbols':  [],
     'ini_clauses':  [],
