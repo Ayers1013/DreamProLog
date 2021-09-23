@@ -55,7 +55,7 @@ class GraphData(DataSkeleton):
                  'ini_nodes', 'ini_symbols', 'ini_clauses',
                  'num_nodes', 'num_symbols', 'num_clauses']
     def __init__(self, data):
-        self.node_inputs=(GraphHyperEdgesA(data[f'nodes_inputs_{i}']) for i in range(1,4))
+        self.node_inputs=[GraphHyperEdgesA(data[f'nodes_inputs_{i}']) for i in range(1,4)]
         self.symbol_inputs=GraphHyperEdgesB(data['symbol_inputs'])
         self.node_c_inputs=GraphEdges(data['node_c_inputs'])
         self.clause_inputs=GraphEdges(data['clause_inputs'])
