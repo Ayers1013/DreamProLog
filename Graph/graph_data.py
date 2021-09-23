@@ -21,7 +21,7 @@ class DataSkeleton:
     def to_dict(self):
         dct = {}
         for attr in self.__slots__:
-            x=getattr(self, x)
+            x=getattr(self, attr)
             if isinstance(x, DataSkeleton):
                 dct[attr] = x.to_dict()
             #We use the fact every element of a tuple is an instance of DataSkeleton
