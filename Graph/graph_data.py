@@ -25,7 +25,7 @@ class DataSkeleton:
             if isinstance(x, DataSkeleton):
                 dct[attr] = x.to_dict()
             #We use the fact every element of a tuple is an instance of DataSkeleton
-            elif isinstance(x, tuple):
+            elif isinstance(x, list):
                 for i, y in enumerate(x):
                     dct[attr+f'_{i+1}']=y.to_dict()
             
