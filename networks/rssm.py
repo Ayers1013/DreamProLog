@@ -194,7 +194,7 @@ class RSSM(tools.Module):
       pri, pos = tf.maximum(pri, free), tf.maximum(pos, free)
       loss = balance * pri + (1 - balance) * pos
     loss *= scale
-    mse_loss= (dist(pri).mode()-dist(pos).mode())**2
+    mse_loss= (dist(prior).mode()-dist(post).mode())**2
     mse_loss= tf.reduce_mean(mse_loss)
     return loss, value, mse_loss
 
