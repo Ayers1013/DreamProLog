@@ -117,7 +117,7 @@ class ActionHead(tools.Module):
     self._outscale = outscale
     self._embed=None
 
-  def __call__(self, features, dtype=None):
+  def __call__(self, features, dtype=None, mask=None):
     x = features
     for index in range(self._layers):
       kw = {}
@@ -128,6 +128,8 @@ class ActionHead(tools.Module):
     
     x = self.get(f'hout', tfkl.Dense, self._size)(x)
     x=tf.matmul(x, tf.transpose(self._embed))
+    if mask:
+      x-=1000*mask
     x=tf.nn.softmax(x)
     dist=tfd.Categorical(probs=x)
     return dist

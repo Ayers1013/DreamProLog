@@ -126,14 +126,15 @@ class Dreamer(tools.Module):
       latent['stoch'] = latent['mean']
     feat = self._wm.dynamics.get_feat(latent)#, action_embed
     
-    action_embed=action_embed*tf.transpose(tf.cast(obs['axiom_mask'], tf.float32), [1,0])
+    #action_embed=action_embed*tf.transpose(tf.cast(obs['axiom_mask'], tf.float32), [1,0])
+    mask=tf.cast(obs['axiom_mask'], tf.float32)
     self._task_behavior.actor.feed(action_embed)
     if not training:
-      action = self._task_behavior.actor(feat).mode()
+      action = self._task_behavior.actor(feat, mask=mask).mode()
     elif self._should_expl(self._step):
-      action = self._expl_behavior.actor(feat).sample()
+      action = self._expl_behavior.actor(feat, mask=mask).sample()
     else:
-      action = self._task_behavior.actor(feat).sample()
+      action = self._task_behavior.actor(feat, mask=mask).sample()
     if self._config.actor_dist == 'onehot_gumble':
       action = tf.cast(
           tf.one_hot(tf.argmax(action, axis=-1), self._config.num_actions),
