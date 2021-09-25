@@ -128,7 +128,7 @@ class ActionHead(tools.Module):
     
     x = self.get(f'hout', tfkl.Dense, self._size)(x)
     x=tf.matmul(x, tf.transpose(self._embed))
-    if mask:
+    if mask != None:
       x-=1000*mask
     x=tf.nn.softmax(x)
     dist=tfd.Categorical(probs=x)
