@@ -70,7 +70,7 @@ class LoggerWandb:
     self.run.log({name: table}, step=self.step)
 
 
-  def write(self):
+  def write(self, fps=False):
     scalars = list(self._scalars.items())
     if fps:
       scalars.append(('fps', self._compute_fps(self.step)))
