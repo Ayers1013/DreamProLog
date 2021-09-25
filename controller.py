@@ -153,7 +153,7 @@ class Controller:
           self._logger.scalar(name, float(mean.result()))
           mean.reset_states()
         self._logger.step+=1
-        self._logger.write(fps=False)
+        self._logger.write()
       if step%500==0:
         self.agent.save(self._logdir / 'variables.pkl')
 
@@ -168,7 +168,7 @@ class Controller:
           self._logger.scalar(name, float(mean.result()))
           mean.reset_states()
         self._logger.step+=1
-        self._logger.write(fps=False)
+        self._logger.write()
       if step%500==0:
         self.agent.save(self._logdir / 'variables.pkl')
 

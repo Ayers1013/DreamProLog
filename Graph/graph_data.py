@@ -24,10 +24,24 @@ class DataSkeleton:
             x=getattr(self, attr)
             if isinstance(x, DataSkeleton):
                 dct[attr] = x.to_dict()
+            
             else:
                 dct[attr]=x
         return dct
-        
+
+    def apply_copy(self, fn):
+        copy=self.__class__()
+        set_fn=lambda attr, data: setattr(copy, attr, data)
+        for attr in self.__slots__:
+            data=getattr(self, attr)
+            if isinstance(data, DataSkeleton):
+                set_fn(attr, fn(data))
+            else: 
+                set_fn(attr, data)
+
+class TupleSkeleton(DataSkeleton, Tuple):
+    def __init__(self, data):
+        super().__init__(data)
 
 class GraphHyperEdgesA(DataSkeleton):
     __slots__ = ['lens', 'symbols', 'nodes', 'sgn']
@@ -60,6 +74,12 @@ class GraphData(DataSkeleton):
             'ini_nodes', 'ini_symbols', 'ini_clauses',
             'num_nodes', 'num_symbols', 'num_clauses']:
             setattr(self, attr, data[attr])
+
+
+class GraphTensor(GraphData):
+    def __init__(self, data):
+        super(data).__init__()
+
 
     
 

@@ -35,7 +35,7 @@ class LoggerEmpty:
   def video(self, name, value):
     pass
 
-  def write(self, fps=False):
+  def write(self):
     pass
 
   def table(self, name, columns, data):
@@ -70,7 +70,7 @@ class LoggerWandb:
     self.run.log({name: table}, step=self.step)
 
 
-  def write(self, fps=False):
+  def write(self):
     scalars = list(self._scalars.items())
     if fps:
       scalars.append(('fps', self._compute_fps(self.step)))

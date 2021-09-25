@@ -93,9 +93,7 @@ class Dreamer(tools.Module):
         for name, mean in self._metrics.items():
           self._logger.scalar(name, float(mean.result()))
           mean.reset_states()
-        #openl = self._wm.video_pred(next(self._dataset))
-        #self._logger.video('train_openl', openl)
-        self._logger.write(fps=False)
+        self._logger.write()
     action, state = self._policy(obs, state, training)
     if training:
       self._step.assign_add(len(reset))
