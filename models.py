@@ -96,7 +96,8 @@ class WorldModel(tools.Module):
       #  likes['image']=tf.stop_gradient(likes['image'])
       #NOTE added factor
       head_weigth=0.5
-      model_loss = kl_loss - head_weigth*sum(likes.values())
+      #model_loss = kl_loss - head_weigth*sum(likes.values())
+      model_loss = likes['discount']
     model_parts = [self.encoder, self.dynamics] + list(self.heads.values())
 
     #Logginh metrics
