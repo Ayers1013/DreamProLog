@@ -97,7 +97,7 @@ class WorldModel(tools.Module):
       #NOTE added factor
       head_weigth=0.5
       #model_loss = kl_loss - head_weigth*sum(likes.values())
-      model_loss = likes['discount']
+      model_loss = -likes['discount']
     model_parts = [self.encoder, self.dynamics] + list(self.heads.values())
 
     #Logginh metrics
