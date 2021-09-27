@@ -82,8 +82,8 @@ class WorldModel(tools.Module):
         mse=(tf.cast(data[name], tf.float32)-tf.cast(pred.mode(), tf.float32))**2
         mse_loss[name]=tf.reduce_mean(mse)
         if name=='discount':
-          sample=pred.sample()
-          target=data['discount']
+          sample=tf.cast(pred.sample(), tf.float32)
+          target=tf.cast(data['discount'], tf.float32)
           discount_acc['discount_acc_0']=tf.reduce_sum((1-sample)*(1-target))/tf.reduce_sum(1-target)
           discount_acc['discount_0']=tf.reduce_sum(1-target)
           discount_acc['discount_acc_1']=tf.reduce_sum(sample*target)/tf.reduce_sum(target)
