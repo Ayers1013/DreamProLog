@@ -71,9 +71,11 @@ class WorldModel(tools.Module):
       kl_loss, kl_value, mse_loss_dyn = self.dynamics.kl_loss(
           post, prior, kl_balance, kl_free, kl_scale)
       feat = self.dynamics.get_feat(post)
+      prior_feat = self.dynamics.get_feat(prior)
       likes = {}
       mse_loss={}
       discount_acc={}
+      
       for name, head in self.heads.items():
         grad_head = (name in self._config.grad_heads)
         inp = feat if grad_head else tf.stop_gradient(feat)
@@ -100,12 +102,40 @@ class WorldModel(tools.Module):
         loss, entropy=self.mask_loss(feat, data['axiom_mask'])
         likes['action_mask']=5*loss
         likes['action_mask_entropy']=entropy
+
+      #We evaluate it for prior_feat as well
+      for name, head in self.heads.items():
+        grad_head = (name in self._config.grad_heads)
+        inp = prior_feat if grad_head else tf.stop_gradient(prior_feat)
+        pred = head(inp, tf.float32)
+        like = pred.log_prob(tf.cast(data[name], tf.float32))
+        mse=(tf.cast(data[name], tf.float32)-tf.cast(pred.mode(), tf.float32))**2
+        mse_loss[name+'prior']=tf.reduce_mean(mse)
+        if name=='discount':
+          sample=tf.cast(pred.sample(), tf.float32)
+          target=tf.cast(data['discount'+'prior'], tf.float32)
+          discount_acc['discount_acc_0'+'prior']=tf.reduce_sum((1-sample)*(1-target))/tf.reduce_sum(1-target)
+          discount_acc['discount_0'+'prior']=tf.reduce_sum(1-target)
+          discount_acc['discount_acc_1'+'prior']=tf.reduce_sum(sample*target)/tf.reduce_sum(target)
+          discount_acc['discount_1'+'prior']=tf.reduce_sum(target)
+        
+        if name in self._config.free_heads:
+          like=tf.minimum(like, 4.5)
+          '''if name=='image':
+            mse=tf.reduce_mean(mse, axis=-1)
+          like=tf.where(mse<0.1, tf.ones_like(like)*0.1, like)'''
+        likes[name+'prior'] = tf.reduce_mean(like) * self._scales.get(name, 1.0)
+      
+      if 'action_mask' in self._config.grad_heads:
+        loss, entropy=self.mask_loss(prior_feat, data['axiom_mask'])
+        likes['action_mask']=5*loss
+        likes['action_mask_entropy']=entropy
       #if likes['image']<-20.:
       #  likes['image']=tf.stop_gradient(likes['image'])
       #NOTE added factor
       head_weigth=0.5
-      #model_loss = kl_loss - head_weigth*sum(likes.values())
-      model_loss = -likes['discount']
+      model_loss = kl_loss - head_weigth*sum(likes.values())
+      #model_loss = -likes['discount']
     model_parts = [self.encoder, self.dynamics] + list(self.heads.values())
 
     #Logginh metrics
