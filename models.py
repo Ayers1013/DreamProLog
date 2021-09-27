@@ -73,6 +73,7 @@ class WorldModel(tools.Module):
       feat = self.dynamics.get_feat(post)
       likes = {}
       mse_loss={}
+      discount_acc={}
       for name, head in self.heads.items():
         grad_head = (name in self._config.grad_heads)
         inp = feat if grad_head else tf.stop_gradient(feat)
@@ -80,6 +81,13 @@ class WorldModel(tools.Module):
         like = pred.log_prob(tf.cast(data[name], tf.float32))
         mse=(tf.cast(data[name], tf.float32)-tf.cast(pred.mode(), tf.float32))**2
         mse_loss[name]=tf.reduce_mean(mse)
+        if name=='discount':
+          sample=pred.sample()
+          target=data['discount']
+          discount_acc['discount_acc_0']=tf.reduce_sum((1-sample)*(1-target))/tf.reduce_sum(1-target)
+          discount_acc['discount_0']=tf.reduce_sum(1-target)
+          discount_acc['discount_acc_1']=tf.reduce_sum(sample*target)/tf.reduce_sum(target)
+          discount_acc['dicount_1']=tf.reduce_sum(target)
         
         if name in self._config.free_heads:
           like=tf.minimum(like, 4.5)
@@ -111,6 +119,7 @@ class WorldModel(tools.Module):
     metrics['prior_ent'] = self.dynamics.get_dist(prior).entropy()
     metrics['post_ent'] = self.dynamics.get_dist(post).entropy()
     metrics.update({'mse/'+k : v for k,v in mse_loss.items()})
+    metrics.update({k: v for k,v in discount_acc.items()})
     return embed, post, feat, kl_value, metrics, action_embed
 
   #@tf.function

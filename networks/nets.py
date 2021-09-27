@@ -23,6 +23,7 @@ class DenseHead(tools.Module):
     for index in range(self._layers):
       x = self.get(f'h{index}', tfkl.Dense, self._units, self._act)(x)
     mean = self.get(f'hmean', tfkl.Dense, np.prod(self._shape))(x)
+    mean = tf.math.sigmoid(mean)
     mean = tf.reshape(mean, tf.concat(
         [tf.shape(features)[:-1], self._shape], 0))
     if self._std == 'learned':
