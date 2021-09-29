@@ -103,7 +103,7 @@ class WorldModel(tools.Module):
         likes['action_mask']=5*loss
         likes['action_mask_entropy']=entropy
 
-      #We evaluate it for prior_feat as well
+      """#We evaluate it for prior_feat as well
       for name, head in self.heads.items():
         grad_head = (name in self._config.grad_heads)
         inp = prior_feat if grad_head else tf.stop_gradient(prior_feat)
@@ -129,13 +129,13 @@ class WorldModel(tools.Module):
       if 'action_mask' in self._config.grad_heads:
         loss, entropy=self.mask_loss(prior_feat, data['axiom_mask'])
         likes['action_mask']=5*loss
-        likes['action_mask_entropy']=entropy
+        likes['action_mask_entropy']=entropy"""
       #if likes['image']<-20.:
       #  likes['image']=tf.stop_gradient(likes['image'])
       #NOTE added factor
       head_weigth=0.5
-      model_loss = kl_loss - head_weigth*sum(likes.values())
-      #model_loss = -likes['discount']
+      #model_loss = kl_loss - head_weigth*sum(likes.values())
+      model_loss = -likes['discount']
     model_parts = [self.encoder, self.dynamics] + list(self.heads.values())
 
     #Logginh metrics

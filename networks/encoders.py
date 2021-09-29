@@ -12,8 +12,9 @@ from gnn import MultiGraphNetwork, feed_gnn_input
 class DummyEncoder(tools.Module):
 
   def __init__(self):
-    self.dense1=tfkl.Dense(150)
-    self.dense2=tfkl.Dense(200)
+    self.dense1=tfkl.Dense(150, activation='relu')
+    self.dense2=tfkl.Dense(200, activation='relu')
+    self.dense_3=tfkl.Dense(384, activation='tanh')
 
   def __call__(self, obs):
     #x = tf.reshape(obs, (-1,) + tuple(obs.shape[-2:]))
@@ -21,7 +22,8 @@ class DummyEncoder(tools.Module):
     #x=tf.squeeze(obs, axis=0)
     x=obs
     x=self.dense1(x)
-    x= self.dense2(x)
+    x=self.dense2(x)
+    x=self.dense3(x)
     return x
 
 
@@ -96,6 +98,8 @@ class Encoder(tools.Module):
         action_embed=self.encoders['action_space'](inp)
       except: 
         print(obs, '\n\n something is not working again. :(')
+
+      embed=
 
     return embed, action_embed
     
