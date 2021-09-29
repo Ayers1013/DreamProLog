@@ -99,7 +99,7 @@ class Encoder(tools.Module):
       except: 
         print(obs, '\n\n something is not working again. :(')
 
-      embed+=self.encoders['image'](obs['image'])
+      embed=self.encoders['image'](obs['image'])
 
     return embed, action_embed
     
