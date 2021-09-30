@@ -221,7 +221,7 @@ class LolArg:
     self.configs=['defaults','prolog','prolog_easy','debug']
     self.logdir='debugEpisodes'#'logdir'#
 
-if __name__ == '__main__':
+def init_config():
   try:
     print('Running the DreamProlog algorithm.')
     parser = argparse.ArgumentParser()
@@ -249,8 +249,12 @@ if __name__ == '__main__':
   #main(args.logdir, parser.parse_args(remaining))
   config=parser.parse_args(remaining)
   print(config)
+  return config, args.logdir
+
+if __name__ == '__main__':
+  config, logdir= init_config()
   from controller import Controller
-  ctrl=Controller(config, args.logdir)
+  ctrl=Controller(config, logdir)
   #ctrl.simulate()
   ctrl.train_only_worldModel(100000)
   #ctrl.train_only(10000)
