@@ -19,7 +19,8 @@ metric:
   goal: minimize
 command: 
   #- ${env} 
-  - ${interpereter} 
+  #- ${interpereter} 
+  - 'python'
   - ${program} 
   - "--logdir logdir --configs prolog"
   - ${args}
