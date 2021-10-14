@@ -65,7 +65,7 @@ if __name__ == '__main__':
   from controller import Controller
   ctrl=Controller(config, logdir)
   #ctrl.simulate()
-  ctrl.train_only_worldModel(100000)
+  ctrl.train_only_worldModel(222)
   #ctrl.train_only(10000)
   """from evalute import Judge
   judge=Judge(ctrl.agent)

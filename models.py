@@ -89,7 +89,7 @@ class WorldModel(tools.Module):
           discount_acc['discount_acc_0']=tf.reduce_sum((1-sample)*(1-target))/tf.reduce_sum(1-target)
           discount_acc['discount_0']=tf.reduce_sum(1-target)
           discount_acc['discount_acc_1']=tf.reduce_sum(sample*target)/tf.reduce_sum(target)
-          discount_acc['dicount_1']=tf.reduce_sum(target)
+          discount_acc['discount_1']=tf.reduce_sum(target)
         
         if name in self._config.free_heads:
           like=tf.minimum(like, 4.5)
