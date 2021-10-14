@@ -1,4 +1,4 @@
-program: main.py
+program: DreamProLog/main.py
 method: random
 parameters:
   #gnn_start_shape: [4,1,4]
