@@ -145,7 +145,7 @@ class Controller:
     ds=self.agent._dataset
     self.datasetManager.logging()
     print('Train only run.')
-    for step in range(epochs):
+    for step in range(1, epochs+1):
       x=next(ds)
       self.agent._train_only_worldModel(x)
       if step%10==0:
