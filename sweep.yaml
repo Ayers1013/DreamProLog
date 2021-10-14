@@ -1,8 +1,8 @@
 program: main.py
 method: random
 parameters:
-  gnn_start_shape: [4,1,4]
-  gnn_next_shape: [16, 32, 16], [32,64,32]]
+  #gnn_start_shape: [4,1,4]
+  #gnn_next_shape: [16, 32, 16], [32,64,32]]
   gnn_layers: [5, 7, 10, 14]
   gnn_hidden_val: [64, 128, 256, 384]
 
