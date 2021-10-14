@@ -141,7 +141,7 @@ class Controller:
       except Exception:
         pass
 
-  def train_only_worldModel(self, epochs=1):
+  def train_only_worldModel(self, epochs=1, save=False):
     ds=self.agent._dataset
     self.datasetManager.logging()
     print('Train only run.')
@@ -154,7 +154,7 @@ class Controller:
           mean.reset_states()
         self._logger.step+=1
         self._logger.write()
-      if step%500==0:
+      if save and step%500==0:
         self.agent.save(self._logdir / 'variables.pkl')
 
   def train_only(self, epochs=1):
