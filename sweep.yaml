@@ -4,15 +4,15 @@ parameters:
   #gnn_start_shape: [4,1,4]
   #gnn_next_shape: [16, 32, 16], [32,64,32]]
   gnn_layers:
-    value: [5, 7, 10, 14]
+    values: [5, 7, 10, 14]
   gnn_hidden_val: 
-    value: [64, 128, 256, 384]
+    values: [64, 128, 256, 384]
 
 
   units: 
-    value: [64,128,192,256]
+    values: [64,128,192,256]
   discount_layers: 
-    value: [1, 2, 4, 6]
+    values: [1, 2, 4, 6]
 
 metric:
   name: discount_loss
