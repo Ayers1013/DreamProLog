@@ -25,3 +25,5 @@ command:
   - ${args}
 
 description: "Sweep to determine the efficiency of the discount model."
+name: 'Discount sweep'
+project: 'DreamProLog'
