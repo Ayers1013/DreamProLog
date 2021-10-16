@@ -12,3 +12,6 @@ common/
 dreamerV2/
 debugEpisodes/
 wandb/
+200k/
+200k_new/
+logdir/
