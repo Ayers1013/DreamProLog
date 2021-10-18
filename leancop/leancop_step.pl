@@ -263,9 +263,9 @@ det_steps(Tableau, NewTableau, Result):-
       ( option(single_action_optim(1)), Actions=[A] -> % only a single action is available, so perform it
 	    nondet_step(A,Tableau, NewTableau, Result)
       ; Actions==[] ->             % proof failed
-        NewTableau = tableau([fail(fail(fail,fail),fail)],[],[],[],[],Subst,Proof), Result = -1
+        NewTableau = tableau([failure],[],[],[],[],Subst,Proof), Result = -1
       ; option(comp(PathLim)), \+ ground(Goal), length(Path,PLen), PLen > PathLim -> % reached path limit
-        NewTableau = tableau([fail(fail(fail,fail),fail)],[],[],[],[],Subst,Proof), Result = -1
+        NewTableau = tableau([failure],[],[],[],[],Subst,Proof), Result = -1
       ; NewTableau = Tableau, Result = 0
       )
     ).
@@ -275,7 +275,7 @@ det_steps_pop_todo(Tableau, NewTableau, Result):-
     Goal = [],  % nothing to prove
 
     ( Todos = [] -> % nothing todo on the stack
-      NewTableau = tableau([succ(succ,succ,succ,succ)],[],[],[],[],Subst,Proof), Result = 1
+      NewTableau = tableau([success],[],[],[],[],Subst,Proof), Result = 1
     ; Todos = [[Goal1,Path1,Lem1]|Todos1] -> % nothing to prove, something on the stack
 
       % Path1 is a prefix of Path. The difference contains potential lemmas (provided they satisfy LemReq) - does not work with swaps
@@ -294,7 +294,7 @@ det_steps_pop_todo(Tableau, NewTableau, Result):-
 det_steps_loopelim(Tableau, NewTableau, Result):-
     Tableau = tableau(Goal, Path, _Lem, _LemReq, _Todos, Subst, Proof),
     member(Lit,Goal), member(P,Path), Lit == P, !,
-    NewTableau = tableau([fail(fail(fail,fail),fail)],[],[],[],[],Subst,Proof),
+    NewTableau = tableau([failure],[],[],[],[],Subst,Proof),
     Result = -1.
 
 det_steps_reduction(Tableau, NewTableau, Result):-

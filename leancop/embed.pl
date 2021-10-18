@@ -278,12 +278,16 @@ numbervars_list([A|As], From):-
 
 
 state2gnnInput(State, GnnInput):-
-    State=state(Tableau, Actions, _Result),
+    State=state(Tableau, Actions, Result),
     tab_comp(goal, Tableau, Goal),
     tab_comp(path, Tableau, Path),
     tab_comp(todos, Tableau, Todos),
     goals_list(Todos, [Goal], AllGoals), append(AllGoals, AllGoals1),
-    goal2gnnInput(Actions, Goal, Path, AllGoals1, GnnInput).
+    ( Result=-1 -> AllGoals2 = []
+    ; Result=1 -> append(_,[H],Path), AllGoals2 = [H]
+    ; AllGoals2 = AllGoals1
+    )
+    goal2gnnInput(Actions, Goal, Path, AllGoals2, GnnInput).
 
 
 goal2gnnInput(Actions, Goal, Path, AllGoals, GnnInput):-
