@@ -15,3 +15,4 @@ wandb/
 200k/
 200k_new/
 logdir/
+.ipynb_checkpoints/
