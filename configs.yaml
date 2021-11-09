@@ -23,7 +23,7 @@ prolog:
   envs: 1
   action_repeat: 1
   time_limit: 1000
-  prefill: 40000
+  prefill: 4000
   eval_noise: 0.0
   clip_rewards: 'identity'
   atari_grayscale: False
@@ -61,8 +61,8 @@ prolog:
   # GNN
   gnn_start_shape: [4,1,4]
   gnn_next_shape: [32,64,32]
-  gnn_layers: 14
-  gnn_hidden_val: 384
+  gnn_layers: 7
+  gnn_hidden_val: 128
   gnn_hidden_act: 128
   # Action GNN
   share_gnn: True

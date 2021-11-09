@@ -7,14 +7,14 @@ from tensorflow.keras.mixed_precision import experimental as prec
 
 import tools
 
-from gnn import MultiGraphNetwork, feed_gnn_input
+from gnn import MultiGraphNetwork, feed_gnn_input, GraphTensor
 
 class DummyEncoder(tools.Module):
 
   def __init__(self):
     self.dense1=tfkl.Dense(150, activation='relu')
     self.dense2=tfkl.Dense(200, activation='relu')
-    self.dense_3=tfkl.Dense(384, activation='tanh')
+    self.dense_3=tfkl.Dense(128, activation='tanh')
 
   def __call__(self, obs):
     #x = tf.reshape(obs, (-1,) + tuple(obs.shape[-2:]))
@@ -79,7 +79,15 @@ class Encoder(tools.Module):
 
     if obs['gnn']['num_nodes'].shape!=(1,1):
       batch_size, batch_length= obs['image'].shape[:2]
-      embed=feed_gnn_input(obs['gnn'], batch_size, batch_length, self._gnn_outdim, self.encoders['gnn'])
+      #embed=feed_gnn_input(obs['gnn'], batch_size, batch_length, self._gnn_outdim, self.encoders['gnn'])
+      graphTensor = GraphTensor(obs['gnn'], (batch_size, batch_length))
+      graphTensor.deflatten()
+      graphTensor.flatten_batch()
+      graphTensor.flatten()
+      embed = self.encoders['gnn'](graphTensor._data)
+      embed.set_shape((batch_size*batch_length, 128))
+      embed = tf.reshape(embed, shape=(batch_size, batch_length, 128))
+
       
       action_embed=self.encoders['action_space'](obs['action_space'])
     else:
@@ -87,6 +95,7 @@ class Encoder(tools.Module):
       try:
         embed=self.encoders['gnn'](obs['gnn'][0])
       except:
+        print('An exception occured: encoders.py line 90')
         inp=tf.nest.map_structure(lambda x: tf.squeeze(x, axis=0), obs['gnn'])
         inp=tf.nest.map_structure(lambda x: tf.cast(x, dtype=tf.int32), inp)
         embed=self.encoders['gnn'](inp)

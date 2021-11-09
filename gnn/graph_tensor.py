@@ -17,7 +17,7 @@ def shift_non_neg(x, s):
     return x
     
 def shift_ragged(ragged, shift, non_negative = False):
-    shape = shift.shape
+    shape = shift.shape[:-1]
     if len(shape)==0: return ragged
     index = [0]*len(shape)
     array  = []
@@ -54,7 +54,13 @@ def flatten_ragged(ragged, shape):
                 break
     return tf.concat(array, axis=0)
 
+def flatten_ep(episode):
+    _episode={k: v for k,v in episode.items() if not isinstance(v, dict)}
+    for key, item in episode.items():
+        if key not in _episode.keys():
+            _episode.update({key+"/"+nkey: v for nkey,v in flatten_ep(item).items()})
 
+    return _episode
 
 class GraphTensor:
     def __init__(self, data, batch_shape, flat = False):
@@ -67,7 +73,7 @@ class GraphTensor:
 
     def flatten_batch(self):
         if len(self._batch_shape)==0: return
-        cumsum = {k: shifted_cumsum(self._data['num_'+k]) for k in ['nodes', 'symbols', 'clauses']}
+        cumsum = {k: shifted_cumsum(self._data['num_'+k].to_tensor(shape = self._batch_shape + (1,))) for k in ['nodes', 'symbols', 'clauses']}
 
         op_description = {
             'node_inputs_1': {'lens': 0, 'symbols': 'symbols_0', 'nodes': 'nodes_1', 'sgn': 0},
@@ -87,15 +93,15 @@ class GraphTensor:
         op = lambda x, desc: flatten_ragged(x, self._batch_shape) if desc == 0 else shift_ragged(x, cumsum[desc[:-2]], int(desc[-1]))
         to_tensor = lambda x: x if not isinstance(x, tf.RaggedTensor) else x.to_tensor()
         self._data=tf.nest.map_structure(lambda x, desc: to_tensor(op(x, desc)), self._data, op_description)
+        """for k, v in self._data.items():
+            if isinstance(v, dict):
+                for kk, vv in v.items():
+                    print(k, kk, vv.shape)
+            else:
+                print(k, v.shape)"""
       
     def flatten(self):
-        episode = self._data
-        _episode={k: v for k,v in episode.items() if not isinstance(v, dict)}
-        for key, item in episode.items():
-            if key not in _episode.keys():
-                _episode.update({key+"/"+nkey: v for nkey,v in flatten_ep(item).items()})
-
-        self._data = _episode
+        self._data = flatten_ep(self._data)
 
     def deflatten(self):
         episode = self._data
@@ -103,10 +109,10 @@ class GraphTensor:
         for k,v in episode.items():
             per=k.find('/')
             if per!=-1:
-            key=k[:per]
-            if key not in _episode.keys():
-                _episode[key]={}
-            _episode[key][k[per+1:]]=v
+                key=k[:per]
+                if key not in _episode.keys():
+                    _episode[key]={}
+                _episode[key][k[per+1:]]=v
             
         self._data = _episode 
 
