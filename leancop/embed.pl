@@ -286,7 +286,7 @@ state2gnnInput(State, GnnInput):-
     ( Result=-1 -> AllGoals2 = []
     ; Result=1 -> append(_,[H],Path), AllGoals2 = [H]
     ; AllGoals2 = AllGoals1
-    )
+    ),
     goal2gnnInput(Actions, Goal, Path, AllGoals2, GnnInput).
 
 
