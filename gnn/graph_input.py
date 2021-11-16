@@ -171,3 +171,17 @@ def feed_gnn_input_dep(x, batch_size, batch_length, fun):
     print('Almost Traced')
     result=tf.stack(result, axis=1)
     return result
+
+def fully_feed_gnn_input(x, batch_size, batch_length, fun):
+    result=tf.nest.map_structure(lambda inp: [], x)
+    for i in range(batch_length):
+        y=tf.nest.map_structur(lambda inp: inp[:, i:i+1], x)
+        y=flatten_gnn_input(y, batch_size)
+        tf.nest.map_structre(lambda r, inp: r.append(inp))
+
+    result=tf.nest.map_structure(lambda inp: tf.ragged.constant(inp))
+    origins={f'num_{k}': result[f'num_{k}'] for k in ['nodes', 'symbols', 'clauses']}
+    for k in ['nodes', 'symbols', 'clauses']:
+        result[f'num_{k}']=[result[f'num_{k}'][-1]]
+
+    result=flatten_gnn_input(result, batch_length)
