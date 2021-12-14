@@ -11,6 +11,95 @@ goals_size(State, S):-
     maplist(term_size, Goals, Sizes),
     sumlist(Sizes, S).
 
+text_actions(Features):-
+    findall([ClauseText,Counter], (
+                lit(_L2,L,C2,_G,_Key,_Vars,Counter),
+                Clause = [L|C2],
+                numbervars(Clause, 1000, _),
+                text_from_path(Clause, "", ClauseText)
+            ), Features
+           ).
+
+text_actions_mask(State, Features, Mask):-
+    text_actions(Features0),
+    State=state(_Tableau, Actions, _Result),
+
+    findall(N, (
+                member([_,Counter], Features0),
+                ( nth0(N,Actions,ext(_,_,_,_,_,Counter)) -> true
+                ; N = -1
+                )
+            ), Mask
+           ),
+
+    findall(F, member([F,_], Features0), Features).
+    
+text_features(StateOrig, Features):-
+    copy_term(StateOrig, State),
+
+    State=state(Tableau, _Actions, _Result),
+    tab_comp(goal, Tableau, Goal),
+    tab_comp(path, Tableau, Path),
+    tab_comp(todos, Tableau, Todos),
+    numbervars([Goal, Path, Todos], 1000, _),
+
+    ( Goal = [success] -> Features = []
+    ; Goal = [failure] ->
+      findall("FAILURE", between(1,99, _), Features)
+    ; Todos2 = [[Goal, Path, _] |Todos],
+      text_from_todo_list(Todos2, Features)
+    ).
+
+text_from_todo_list([], []).
+text_from_todo_list([[Cla, Path, _]|Todos], Features):-
+    text_from_clause(Cla, Path, Features0),
+    append(Features0, Features1, Features),
+    text_from_todo_list(Todos, Features1).
+
+text_from_clause([], _, []).
+text_from_clause([Goal|Cla], Path, [F|Features]):-    
+    text_from_path([Goal|Path],"", F),
+    text_from_clause(Cla, Path, Features).
+
+text_from_path([], Text, Text).
+text_from_path([P|Ps], Acc, Text):-
+    text_from_lit(P, Acc, Acc1),
+    write_after(Acc1, "EOP", Acc2),
+    text_from_path(Ps, Acc2, Text).
+
+text_from_lit(Lit, Acc, Text):-
+    ( Lit = -NegLit ->
+      write_after(Acc, "NEG", Acc1),
+      text_from_lit(NegLit, Acc1, Text)
+    ; atomic(Lit) ->
+      write_after(Acc, Lit, Text)
+    ; Lit = '$VAR'(N) ->
+      atom_concat("var_", N, Var),
+      write_after(Acc, Var, Text)
+    ; Lit = I^Args ->
+      atom_concat("skolem_", I, Skolem),
+      write_after(Acc, Skolem, Acc1),
+      length(Args, L),
+      write_after(Acc1, L, Acc2),
+      text_from_lit_list(Args, Acc2, Text)
+    ; Lit =.. [H|Args],
+      write_after(Acc, H, Acc1),
+      length(Args, L),
+      write_after(Acc1, L, Acc2),
+      text_from_lit_list(Args, Acc2, Text)
+    ).
+
+text_from_lit_list([], Acc, Acc).
+text_from_lit_list([L|Ls], Acc, Text):-
+    text_from_lit(L, Acc, Acc1),
+    text_from_lit_list(Ls, Acc1, Text).
+
+write_after(A, B, C):-
+    atom_concat(A, " ", A1),
+    atom_concat(A1, B, C).
+
+    
+
 
 simple_features(StateOrig, Features):-
     copy_term(StateOrig, State),
@@ -283,7 +372,7 @@ state2gnnInput(State, GnnInput):-
     tab_comp(path, Tableau, Path),
     tab_comp(todos, Tableau, Todos),
     goals_list(Todos, [Goal], AllGoals), append(AllGoals, AllGoals1),
-    ( Result=-1 -> AllGoals2 = []
+    ( Result= -1 -> AllGoals2 = []
     ; Result=1 -> append(_,[H],Path), AllGoals2 = [H]
     ; AllGoals2 = AllGoals1
     ),

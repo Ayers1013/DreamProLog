@@ -30,23 +30,28 @@
 :- [leancop21_swi]. % load program for asserting clauses
 :- ensure_loaded(embed).
 
-init_python(File, Settings, GnnInput, SimpleFeatures, Result):-
+init_python(File, Settings, GnnInput, SimpleFeatures, TextFeatures, TextActions, ActionsMask,  Result):-
     init(File, Settings, State),
     state2gnnInput(State, GnnInput),
     simple_features(State, SimpleFeatures),
+    text_features(State, TextFeatures),
+    text_actions_mask(State, TextActions,ActionsMask),
     State = state(_, _Actions, Result).
 
-step_python(-1, _, _, _):- !, fail.
-step_python(ActionIndex, GnnInput, SimpleFeatures, Result):-
+step_python(-1, _, _, _, _, _, _):- !, fail.
+step_python(ActionIndex, GnnInput, SimpleFeatures, TextFeatures, TextActions, ActionsMask, Result):-
     step(ActionIndex, State),
     state2gnnInput(State, GnnInput),
     simple_features(State, SimpleFeatures),
+    text_features(State, TextFeatures),
+    text_actions_mask(State, TextActions,ActionsMask),
     State = state(_, _Actions, Result).
 
 
 init(File):-
     Settings = [conj,nodef,comp(10),
-                verbose,print_proof
+                verbose,print_proof,
+                eager_reduction(1)
                ],
     init(File, Settings).
 init(File,Settings):-
@@ -54,6 +59,11 @@ init(File,Settings):-
 init(File,Settings,NewState):-
     retractall(state(_,_,_)),
     init_pure(File,Settings,NewState),
+    %% text_features(NewState, TextFeatures),
+    %% text_actions_mask(NewState, TextActions,ActionsMask),
+    %% writeln(text_state-TextFeatures),
+    %% writeln(text_actions-TextActions),
+    %% writeln(actions_mask-ActionsMask),
     asserta(NewState),
     log(NewState, start).
 
@@ -111,6 +121,11 @@ step(ActionIndex,NewState):-
     state(Tableau, Actions, Result), !,
     State = state(Tableau, Actions, Result),
     step_pure(ActionIndex,State,NewState,_Action0),
+    %% text_features(NewState, TextFeatures),
+    %% text_actions_mask(NewState, TextActions,ActionsMask),
+    %% writeln(text_state-TextFeatures),
+    %% writeln(text_actions-TextActions),
+    %% writeln(actions_mask-ActionsMask),
     asserta(NewState).
 
 
