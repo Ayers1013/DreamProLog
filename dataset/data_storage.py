@@ -1,14 +1,16 @@
 import numpy as np
 from numpy.lib.function_base import select
 
+
 class DataStorage:
   def __init__(self, section_length=[6,18], batch_length=[2,4,8]):
     #container for episodes
-    self._episodes={}
+    self._episodes = {}
+    self._meta = {}
     #problem_name-> length -> reward
-    self._storage={}
+    self._storage = {}
     #statistics
-    self._stats={}
+    self._stats = {}
 
     ssmall, smedium=section_length
     bsmall, bmedium, blarge=batch_length

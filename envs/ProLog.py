@@ -119,7 +119,7 @@ class ProLog:
         if problem==None:
             problem=self.problems.get()
         #remove out '.p' and /
-        self.current_problem="".join(problem[:-2].split('/')[2:])
+        self.current_problem="__".join(problem[:-2].split('/')[2:])
         print('Loaded problem:', self.current_problem)
         query = 'init_python("{}",{},GnnInput, SimpleFeatures, TextFeatures, TextActions, ActionsMask, Result)'.format(problem, self.settings)
         #print("Query:\n   ", query, "\n")
@@ -153,15 +153,6 @@ class ProLog:
             image['action_space']=extractActions(self.prolog, self.gnnInput)
         if self.image_text:
             image['text'] = self.text_features
-        return image
-
-    def meta_image(self):
-        image = {}
-
-        if self.image_gnn:
-            image['action_space_gnn']=extractActions(self.prolog, self.gnnInput)
-        if self.image_text:
-            image['action_space_text']=self.text_actions
         return image
 
     def terminal(self)->bool:
@@ -211,3 +202,13 @@ class ProLog:
 
         print("Action mask: ")
         print(self.actions_mask)
+
+def meta_data(problem_name, image_gnn = False, image_text = True):
+    env=ProLog()
+    image = {}
+
+    if image_gnn:
+        image['action_space_gnn']=extractActions(env.prolog, env.gnnInput)
+    if image_text:
+        image['action_space_text']=env.text_actions
+    return image

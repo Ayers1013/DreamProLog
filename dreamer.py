@@ -199,4 +199,4 @@ class Dreamer(tools.Module):
 
 
 def count_steps(folder):
-  return sum(int(str(n).split('-')[-1][:-4]) - 1 for n in folder.glob('*.npz'))
+  return sum(int(str(n).split('-')[-1][:-4]) - 1 if str(n)[-8:]!='meta.npz' else 0 for n in folder.glob('**/*.npz'))

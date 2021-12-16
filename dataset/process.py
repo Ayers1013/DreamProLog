@@ -14,11 +14,16 @@ import pathlib
 import numpy as np
 from dataset.data_storage import DataStorage
 
+'We need to import envs.ProLog.meta_data to collect meta for new environments.'
+from envs.ProLog import meta_data
+
 class TokenParser:
   'Parse tokens to ints. Note that 1 is reserved for padding.'
   __slots__ = ['voc', '_cache', '_count', '_path']
   def __init__(self, path='envs/ProLog_tokens'):
     self._path=path+'.txt'
+    self.voc = {}
+    self._cache = {}
     self.load()
 
   def load(self):
@@ -46,7 +51,7 @@ class TokenParser:
 
   def __del__(self):
     'Upon destructing the class, it saves the new tokens to the file'
-    if(len(cache)==0) return
+    if(len(cache)==0): return
     file = open(self._path, 'a')
     for k in self._cache.keys():
         file.write(k)
@@ -122,13 +127,27 @@ def save_episodes(directory, episodes):
   directory.mkdir(parents=True, exist_ok=True)
   timestamp = datetime.datetime.now().strftime('%Y%m%dT%H%M%S')
   filenames = []
+  meta = None
   for episode in episodes:
 
     identifier = str(uuid.uuid4().hex)
     length = len(episode['reward'])
     problem_name=episode['problem_name']
     #filename = directory / f'{timestamp}-{identifier}-{length}.npz'
-    filename = directory / f'{problem_name}-{timestamp}-{identifier}-{length}.npz'
+    fileplace = directory /f'{problem_name}'
+    if not fileplace.exists():
+      fileplace.mkdir(parents=True, exist_ok=False)
+      problem_file = problem_name.replace('__', '/')+'.p'
+
+      #TODO this code should be moved to envs
+      meta=meta_data(problem_file)
+      
+      with io.BytesIO() as f1:
+        np.savez_compressed(f1, **meta)
+        f1.seek(0)
+        with (fileplace/'_meta.npz').open('wb') as f2:
+          f2.write(f1.read()) 
+    filename = fileplace/ f'{problem_name}-{timestamp}-{identifier}-{length}.npz'
     del episode['problem_name']
     with io.BytesIO() as f1:
       episode=flatten_ep(episode)
@@ -137,7 +156,7 @@ def save_episodes(directory, episodes):
       with filename.open('wb') as f2:
         f2.write(f1.read())
     filenames.append(filename)
-  return filenames
+  return filenames, meta
 
 def store(storage, episode, ep_name, tag=False):
   if not tag: storage[ep_name]=episode
@@ -159,11 +178,13 @@ def process_episode(config, logger, mode, train_eps, eval_eps, episode):
 
     episode=transform_episode_2(episode)
 
-    filename = save_episodes(directory, [episode])[0]
+    filenames, meta = save_episodes(directory, [episode])
+    filename = filenames[0]
     length = len(episode['reward']) - 1
     score = float(episode['reward'].astype(np.float64).sum())
     if version==2:
       cache.store(episode, str(filename))
+      if meta: cache._meta[str(filename)] = meta
     else:
       store(cache, episode, str(filename), TAG_MODE)
 
@@ -181,21 +202,28 @@ def load_episodes(directory, limit=None):
   else:
     episodes = {}
   total = 0
-  for filename in reversed(sorted(directory.glob('*.npz'))):
-    try:
-      with filename.open('rb') as f:
-        episode = np.load(f,allow_pickle=True)
-        episode = {k: episode[k] for k in episode.keys()}
-        episode = deflatten(episode)
-    except Exception as e:
-      print(f'Could not load episode: {e}')
-      continue 
-    if version==2:
-      episodes.store(episode, str(filename))
-    else:
-      store(episodes, episode, str(filename), TAG_MODE)
-    
-    total += len(episode['reward']) - 1
-    if limit and total >= limit:
-      break
+  for problem in directory.glob('*/'):
+    filename = problem / '_meta.npz'
+    with filename.open('rb') as f:
+        meta = np.load(f,allow_pickle=True)
+        meta = {k: meta[k] for k in meta.keys()}
+    episodes._meta[str(problem)]=meta
+    for i, filename in enumerate(sorted(problem.glob('*.npz'))):
+      if i==0: continue
+      try:
+        with filename.open('rb') as f:
+          episode = np.load(f,allow_pickle=True)
+          episode = {k: episode[k] for k in episode.keys()}
+          episode = deflatten(episode)
+      except Exception as e:
+        print(f'Could not load episode: {e}')
+        continue 
+      if version==2:
+        episodes.store(episode, str(filename))
+      else:
+        store(episodes, episode, str(filename), TAG_MODE)
+      
+      total += len(episode['reward']) - 1
+      if limit and total >= limit:
+        break
   return episodes
