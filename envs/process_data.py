@@ -103,3 +103,26 @@ def process_episode(config, logger, mode, train_eps, eval_eps, episode):
     logger.scalar(f'{mode}_length', length)
     logger.scalar(f'{mode}_episodes', len(cache))
     logger.write()
+
+TAG_MODE=True
+version=2
+#config is not included
+def process_episode(config, logger, mode, train_eps, eval_eps, episode):
+    directory = dict(train=config.traindir, eval=config.evaldir)[mode]
+    cache = dict(train=train_eps, eval=eval_eps)[mode]
+
+    episode=transform_episode_2(episode)
+
+    filename = save_episodes(directory, [episode])[0]
+    length = len(episode['reward']) - 1
+    score = float(episode['reward'].astype(np.float64).sum())
+    if version==2:
+      cache.store(episode, str(filename))
+    else:
+      store(cache, episode, str(filename), TAG_MODE)
+
+    print(f'{mode.title()} episode has {length} steps and return {score:.3f}.')
+    logger.scalar(f'{mode}_return', score)
+    logger.scalar(f'{mode}_length', length)
+    logger.scalar(f'{mode}_episodes', len(cache))
+    logger.write()

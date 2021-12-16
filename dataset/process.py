@@ -14,6 +14,44 @@ import pathlib
 import numpy as np
 from dataset.data_storage import DataStorage
 
+class TokenParser:
+  'Parse tokens to ints. Note that 1 is reserved for padding.'
+  __slots__ = ['voc', '_cache', '_count', '_path']
+  def __init__(self, path='envs/ProLog_tokens'):
+    self._path=path+'.txt'
+    self.load()
+
+  def load(self):
+    file = open(self._path, 'r')
+    for i, line in enumerate(file):
+      self.voc[line]=i+2
+    self._count = len(self.voc)+2
+    file.close()
+
+  def add_token(self, token):
+    self.voc[token]=self._count
+    self._cache[token]=self._count
+    self._count+=1
+    return self._count-1
+
+  def parse(self, token_string):
+    tokens = token_string.split(' ')
+    res = []
+    for t in tokens:
+      if t in self.voc:
+        res.append(self.voc[t])
+      else:
+        res.append(self.add_token(t))
+    return res
+
+  def __del__(self):
+    'Upon destructing the class, it saves the new tokens to the file'
+    if(len(cache)==0) return
+    file = open(self._path, 'a')
+    for k in self._cache.keys():
+        file.write(k)
+    file.close()
+
 def transform_episode(episode):
     if 'gnn' in episode.keys():
         gnn_input=episode['gnn']
