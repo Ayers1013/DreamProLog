@@ -16,3 +16,4 @@ wandb/
 200k_new/
 logdir/
 .ipynb_checkpoints/
+!Action_Goal_Embedder.ipynb

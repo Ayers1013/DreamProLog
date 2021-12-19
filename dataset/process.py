@@ -51,10 +51,10 @@ class TokenParser:
 
   def __del__(self):
     'Upon destructing the class, it saves the new tokens to the file'
-    if(len(cache)==0): return
+    if(len(self._cache)==0): return
     file = open(self._path, 'a')
     for k in self._cache.keys():
-        file.write(k)
+        file.write(k+'\n')
     file.close()
 
 def transform_episode(episode):
