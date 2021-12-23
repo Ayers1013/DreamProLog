@@ -29,8 +29,10 @@ class TokenParser:
   def load(self):
     file = open(self._path, 'r')
     for i, line in enumerate(file):
-      self.voc[line]=i+2
-    self._count = len(self.voc)+2
+      'line ends with \n'
+      line=line[:-1]
+      self.voc[line]=i+1
+    self._count = len(self.voc)+1
     file.close()
 
   def add_token(self, token):
