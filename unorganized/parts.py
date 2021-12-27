@@ -205,7 +205,7 @@ class Encoder(tf.keras.layers.Layer):
     def __init__(self, querry, d_model, num_heads, dff, rate):
         super().__init__()
         self.start_layer = EncoderStartLayer(querry, d_model, num_heads, dff, rate)
-        self.layers = [EncoderLayer(d_model, num_heads, dff, rate) for i in range(5)]
+        self.layers = [EncoderLayer(d_model, num_heads, dff, rate) for i in range(4)]
         
         
     def call(self, inp, training):
@@ -219,7 +219,7 @@ class Decoder(tf.keras.layers.Layer):
     def __init__(self, output_length, d_model, num_heads, dff, rate):
         super().__init__()
         self.start_layer = DecoderStartLayer(output_length, d_model, num_heads, dff, rate)
-        self.layers = [DecoderLayer(d_model, num_heads, dff, rate) for i in range(5)]
+        self.layers = [DecoderLayer(d_model, num_heads, dff, rate) for i in range(4)]
         
         
     def call(self, x, training):
@@ -239,10 +239,12 @@ class Net(tf.keras.Model):
         self.dense = tf.keras.layers.Dense(300, activation='relu', use_bias=False)
         
     def call(self, x, training):
+        training = False
         x = self.enc_embed(x)
         x = self.encoder(x, training)
         x = self.decoder(x, training)
         
         x = self.dense(x)
+        x = x*2.
         
         return x
