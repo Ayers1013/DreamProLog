@@ -38,10 +38,14 @@ class Controller:
     self.prefill(sample_rate=sample_rate)
 
     #self.agent=Dreamer(config, self._logger, self.datasetManager.dataset(batch_length=2, batch_size=8))
-    self.agent=Dreamer(config, self._logger, self.datasetManager, self.get_signature)
+    #self.agent=Dreamer(config, self._logger, self.datasetManager, self.get_signature)
     if (self._logdir / 'variables.pkl').exists():
       self.agent.load(self._logdir / 'variables.pkl')
       self.agent._should_pretrain._once = False
+
+  @property
+  def episodes(self):
+    return self.datasetManager._train_eps._episodes
 
   def get_signature(self, batch_size, batch_length):
     _shape=(batch_size, batch_length) if batch_size!=0 else (batch_length,)
@@ -81,7 +85,7 @@ class Controller:
     config.traindir.mkdir(parents=True, exist_ok=True)
     config.evaldir.mkdir(parents=True, exist_ok=True)
     step = count_steps(config.traindir)
-    logger = tools.LoggerWandb(logdir, step, config)
+    logger = tools.LoggerEmpty(logdir, step, config)# tools.LoggerWandb(logdir, step, config)
 
     return logger
 
@@ -96,22 +100,21 @@ class Controller:
       return arr
 
     def sample_smart(o):
-      axiom_mask=o['axiom_mask'][0]
-      act_size=len(axiom_mask)
-      if(np.random.rand()<sample_rate()): return np.random.randint(act_size)
-      s=int(np.sum(axiom_mask))
-      r=np.random.randint(s)+1 if s>0 else 0
+      if False:
+        mask=o['axiom_mask'][0]
+        act_size=len(mask)
+        s=int(np.sum(mask))
+        r=np.random.randint(s)+1 if s>0 else 0
 
-      ind=0
-      for e in axiom_mask:
-        if(e==1): r-=1
-        if(r==0): break
-        ind+=1
-
-      #NOTE ind instead of arr
-      '''arr=np.zeros(act_size)
-      arr[ind]=1.0
-      return arr'''
+        ind=0
+        for e in axiom_mask:
+          if(e==1): r-=1
+          if(r==0): break
+          ind+=1
+      else:
+        mask=o['action_mask'][0]
+        mask_x = np.where(mask>=0, 1, 0)
+        ind = np.random.choice(mask, p=mask_x/np.sum(mask_x))
       return ind
     
     random_agent = lambda o, d, s: ([sample_smart(o) for _ in d], s)
