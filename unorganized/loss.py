@@ -19,7 +19,7 @@ def LogSumExp(x, axis, mask):
 
     return y, grad
 
-def loss_function(real, pred, ispositive):
+def loss_function(real, pred, ispositive=False):
     mask_zero = tf.math.equal(real, 0)
     mask_nonzero = tf.math.logical_not(mask_zero)
     mask_zero = tf.cast(mask_zero, dtype=pred.dtype)

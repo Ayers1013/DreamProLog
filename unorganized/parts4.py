@@ -1,6 +1,6 @@
-from .transformer import EncoderLayer, DecoderLayer, MultiHeadAttention
 import tensorflow as tf
-from .misc import positional_encoding
+import tensorflow_probability as tfp
+from tensorflow_probability.distributions import OneHotCategorical
 
 def scaled_dot_product_attention(q, k, v, mask):
     matmul_qk = tf.matmul(q, k, transpose_b=True)  # (..., seq_len_q, seq_len_k)
@@ -37,8 +37,6 @@ class MultiHeadAttention(tf.keras.layers.Layer):
 
     self.dense = tf.keras.layers.Dense(d_model)
 
-    self.dropout = tf.keras.layers.Dropout(0.05)
-
   def split_heads(self, x, batch_size):
     """Split the last dimension into (num_heads, depth).
     Transpose the result such that the shape is (batch_size, num_heads, seq_len, depth)
@@ -63,8 +61,6 @@ class MultiHeadAttention(tf.keras.layers.Layer):
     # attention_weights.shape == (batch_size, num_heads, seq_len_q, seq_len_k)
     scaled_attention, attention_weights = scaled_dot_product_attention(
         q, k, v, mask)
-
-    scaled_attention = self.dropout(scaled_attention)
 
     scaled_attention = tf.transpose(scaled_attention, perm=[0, 2, 1, 3])  # (batch_size, seq_len_q, num_heads, depth)
 
@@ -103,118 +99,64 @@ class SimpleLayer(tf.keras.layers.Layer):
         '''
         return x
 
-class CrossAttention(tf.keras.layers.Layer):
-    def __init__(self, d_model, num_heads, dff, rate, add = True):
+class EncoderLayer(tf.keras.layers.Layer):
+    def __init__(self, d_model, num_heads, dff, rate)):
         super().__init__()
-        self._add = add
+        self.mha = MultiHeadAttention(d_model, num_heads)
+        self.sl = simpleLayer(d_model, dff, rate)
 
-        self.mha_v = MultiHeadAttention(d_model, num_heads)
-        self.mha_q = MultiHeadAttention(d_model, num_heads)
+    def call(self, x, training):
+        _x = self.mha(x, x, x, None)
+        x = self.sl(x+_x)
 
-        self.sl_v = SimpleLayer(d_model, dff, rate)
-        self.sl_q = SimpleLayer(d_model, dff, rate)
+        return x
 
-    def call(self, v, q, mask, training):
-        'mask:  (batch_size, len_q, len_v)'
-
-        _v, att_v = self.mha_v(q, q, v, mask)
-        if self._add: _v = v + _v
-        _v = self.sl_v(_v, training)
-
-        if mask is not None: mask = tf.transpose(mask, (0, 1, 3, 2))
-        _q, att_q = self.mha_q(v, v, q, mask)
-        if self._add: _q = q + _q
-        _q = self.sl_q(_q, training)
-        return _v, _q, (att_v, att_q)
 
 class Encoder(tf.keras.layers.Layer):
-    def __init__(self, N, querry, output_length, d_model, num_heads, dff, rate):
+    def __init__(self, N, latent_length, latent_tokens, d_model, num_heads, dff, rate):
         super().__init__()
-
-        self.positional_encoding = tf.Variable(initial_value = positional_encoding(output_length, d_model), trainable = False)
-        
-        shape=(1, querry, d_model)
-        self.pre_variable = tf.Variable(tf.random.uniform(
-            shape, minval=0, maxval=1, dtype=tf.dtypes.float32, seed=420, name=None))
-        self.q_positional = tf.Variable(positional_encoding(querry, d_model), trainable = False)
-        self.variable = self.q_positional
-
-        #self.mha = MultiHeadAttention(d_model, num_heads)
-        self.layers = [CrossAttention(d_model, num_heads, dff, rate, add = False) for _ in range(N)]
-
-    def call(self, inp, mask, training):
-        batch_size = tf.shape(inp)[0]
-        v = inp + self.positional_encoding
-        q = tf.tile(self.variable, (batch_size, 1, 1))#self.mha(inp, inp, self.variable)
-        #v, q = inp, self.variable
-
-        attention = {}
-
-        for i, l in enumerate(self.layers):
-            v, q, att = l(v, q, mask, training)
-            attention[i]=att
-
-        return q, attention
-
-
-class Decoder(tf.keras.layers.Layer):
-    def __init__(self, N, output_length, d_model, num_heads, dff, rate):
-        super().__init__()
-
-        shape=(1, output_length, d_model)
-        self.variable = tf.Variable(initial_value = positional_encoding(output_length, d_model), trainable = False)
-
-        #self.mha = MultiHeadAttention(d_model, num_heads)
-        self.layers = [CrossAttention(d_model, num_heads, dff, rate, add = True) for _ in range(N)]
-
-    def call(self, x, mask, training):
-        batch_size = tf.shape(x)[0]
-        v = tf.tile(self.variable, (batch_size, 1, 1))#self.mha(x, x, self.variable)
-        q = x
-        #v, q = self.variable, x
-
-        for l in self.layers:
-            v, q, _ = l(v, q, mask, training)
-
-        return v
-
-class Net(tf.keras.Model):
-    def __init__(self, N=4, querry=8, output_length=128, d_model=128, num_heads=4, dff=256, rate=0.04):
-        super().__init__()
-        self.encoder = Encoder(N, querry, output_length, d_model, num_heads, dff, rate)  
-        self.enc_embed = tf.keras.layers.Embedding(300, d_model)
-        self.decoder = Decoder(N, output_length, d_model, num_heads, dff, rate)
-        
-        self.dense = tf.keras.layers.Dense(300, activation=None, use_bias=False)
+        self.layers = [EncoderLayer(d_model, num_heads, dff, rate) for i in range(N)]
+        self.dense = tf.keras.layers.Dense(latent_tokens)
         
     def call(self, x, training):
-        mask = tf.cast(tf.math.equal(x, 0), tf.float32)[:, tf.newaxis, :, tf.newaxis]
-        x = self.enc_embed(x)
-        
-        #mask = tf.expand_dims(mask, axis=-1)
-        #mask = tf.tile(mask, (1, 1, 8))
-        #mask = tf.expand_dims(mask, axis=1)
-        x, _ = self.encoder(x, mask, training)
-        x = self.decoder(x, mask, training)
-        
-        x = self.dense(x)
-        
-        return x
 
-    def encode(self, x):
-        x = self.enc_embed(x)
-        x = self.encoder(x, False)
+        for layer in self.layers:
+            x = layer(x, training, None)
+        
+        x = x[:, :latent_length, :]
 
         return x
-
-
-    def ccall(self, x):
+    
+class Decoder(tf.keras.layers.Layer):
+    def __init__(self, output_length, d_model, num_heads, dff, rate):
+        super().__init__()
+        self.start_layer = DecoderStartLayer(output_length, d_model, num_heads, dff, rate)
+        self.layers = [DecoderLayer(d_model, num_heads, dff, rate) for i in range(4)]
+        
+        
+    def call(self, x, training):
+        y = self.start_layer(x, training)
+        for layer in self.layers:
+            y = layer(y, x, training, None, None)
+            
+        return y
+        
+class Net(tf.keras.Model):
+    def __init__(self, d_model, num_heads, dff):
+        super().__init__()
+        self.encoder = Encoder(8, d_model, num_heads, dff, 0.04)  
+        self.enc_embed = tf.keras.layers.Embedding(300, d_model)
+        self.decoder = Decoder(128, d_model, num_heads, dff, 0.04)
+        
+        self.dense = tf.keras.layers.Dense(300, activation='relu', use_bias=False)
+        
+    def call(self, x, training):
         training = False
         x = self.enc_embed(x)
         x = self.encoder(x, training)
         x = self.decoder(x, training)
+        
+        x = self.dense(x)
+        x = x*2.
+        
         return x
-
-
-
-
