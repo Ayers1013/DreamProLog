@@ -136,10 +136,10 @@ class SelfAttention(tf.keras.layers.Layer):
 
     def call(self, x, mask, training):
 
-        _x, _ = self.mha(x, x, x, mask)
+        _x, _att = self.mha(x, x, x, mask)
         x = self.sl(x + _x, training)
 
-        return x
+        return x, _att
         
 class Attention(tf.keras.layers.Layer):
     def __init__(self, d_model, num_heads, dff, rate):
@@ -171,7 +171,7 @@ class DeepCrossAttention(CrossAttention):
         #v = self.satt_v(v, mask, training)
 
         v, q, att = super().call(v, q, mask, training)
-        q = self.satt_q(q, None, training)
+        q, _att = self.satt_q(q, None, training)
 
         return v, q, att
 
@@ -191,7 +191,8 @@ class Encoder(tf.keras.layers.Layer):
         self.variable_sl = SimpleLayer(d_model, dff, rate)
 
         #self.mha = MultiHeadAttention(d_model, num_heads)
-        self.layers = [DeepCrossAttention(d_model, num_heads, dff, rate, add = True) for _ in range(N)]
+        self.layers = [SelfAttention(d_model, num_heads, dff, rate) for _ in range(N)]
+        self.q_layer = DeepCrossAttention(d_model, num_heads, dff, rate, add = True)
 
         latent_tokens = 256
         self.dense = tf.keras.layers.Dense(latent_tokens, use_bias = False)
@@ -207,12 +208,16 @@ class Encoder(tf.keras.layers.Layer):
         attention = {}
 
         for i, l in enumerate(self.layers):
-            v, q, att = l(v, q, mask, training)
+            v, att = l(v, mask, training)
             attention[i]=att
 
-        x = self.dense(q)
-        x = tf.math.softmax(x, axis=-1)
+        v, q, _ = self.q_layer(v, q, mask, training)
+        #_mask = 1 - tf.squeeze(mask, axis=1)
+        #q = tf.reduce_sum(v*_mask, axis=-2)/tf.expand_dims(tf.reduce_sum(_mask, axis=1), axis=1)
 
+        #x = self.dense(q)
+        #x = tf.math.softmax(x, axis=-1)
+        x = q
         return x, attention
 
 
@@ -262,7 +267,8 @@ class RegressiveDecoder(tf.keras.layers.Layer):
     def call(self, x, inp, mask, look_ahead_mask, training):
 
         v = inp + self.variable
-        q = x
+        #q = x
+        q = v
         #mask = tf.transpose(mask, (0, 1, 3, 2))
 
         for l in self.layers:
@@ -298,11 +304,12 @@ class Net(tf.keras.Model):
         #mask = tf.tile(mask, (1, 1, 8))
         #mask = tf.expand_dims(mask, axis=1)
         x, _ = self.encoder(inp_embed, mask, training)
-        _epsilon = 0.001
-        x = x+ _epsilon
-        x/= tf.expand_dims(tf.reduce_sum(x, axis=-1), axis=-1)
-        dist = tfp.distributions.OneHotCategorical(probs = x, dtype=tf.float32)
-        x = dist.sample() + x - tf.stop_gradient(x)
+        #_epsilon = 0.02
+        #x = x+ _epsilon
+        #x/= tf.expand_dims(tf.reduce_sum(x, axis=-1), axis=-1)
+        #dist = tfp.distributions.OneHotCategorical(probs = x, dtype=tf.float32)
+        #dist = tfp.distributions.RelaxedOneHotCategorical(1., logits = x)
+        #x = dist.sample() + dist.probs - tf.stop_gradient(dist.probs)
 
         x = self.latent_dense(x)
 
