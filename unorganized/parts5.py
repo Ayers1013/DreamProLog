@@ -277,16 +277,29 @@ class RegressiveDecoder(tf.keras.layers.Layer):
         return v
 
 class Net(tf.keras.Model):
-    def __init__(self, N=4, querry=8, output_length=128, d_model=128, num_heads=4, dff=256, rate=0.04):
+    def __init__(self, N=4, embed_tokens=256, querry=8, output_length=128, d_model=128, num_heads=4, dff=256, rate=0.04):
         super().__init__()
         self.encoder = Encoder(N, querry, output_length, d_model, num_heads, dff, rate)  
-        self.enc_embed = tf.keras.layers.Embedding(300, d_model)
+        self.enc_embed = tf.keras.layers.Embedding(embed_tokens, d_model)
         self.decoder = Decoder(N, output_length, d_model, num_heads, dff, rate)
 
         self.latent_dense = tf.keras.layers.Dense(d_model, activation=None, use_bias=False)
         #self.latent_sl = SimpleLayer(d_model, dff, rate)
         
-        self.dense = tf.keras.layers.Dense(300, activation=None, use_bias=False)
+        self.dense = tf.keras.layers.Dense(embed_tokens, activation=None, use_bias=False)
+
+    def encode(self, inp, training):
+        mask = tf.cast(tf.math.equal(inp, 0), tf.float32)[:, tf.newaxis, :, tf.newaxis]
+        inp_embed = self.enc_embed(inp)
+        x, _ = self.encoder(inp_embed, mask, training)
+        return x, mask
+
+    def decode(self, x, mask, training):
+        x = self.latent_dense(x)
+        x = self.decoder(x, mask, training)
+        x = self.dense(x)
+        return x
+
         
     def call(self, inp, training):
         mask = tf.cast(tf.math.equal(inp, 0), tf.float32)[:, tf.newaxis, :, tf.newaxis]
@@ -303,7 +316,7 @@ class Net(tf.keras.Model):
         #mask = tf.expand_dims(mask, axis=-1)
         #mask = tf.tile(mask, (1, 1, 8))
         #mask = tf.expand_dims(mask, axis=1)
-        x, _ = self.encoder(inp_embed, mask, training)
+        latent, _ = self.encoder(inp_embed, mask, training)
         #_epsilon = 0.02
         #x = x+ _epsilon
         #x/= tf.expand_dims(tf.reduce_sum(x, axis=-1), axis=-1)
@@ -311,11 +324,10 @@ class Net(tf.keras.Model):
         #dist = tfp.distributions.RelaxedOneHotCategorical(1., logits = x)
         #x = dist.sample() + dist.probs - tf.stop_gradient(dist.probs)
 
-        x = self.latent_dense(x)
+        x = self.latent_dense(latent)
 
         #x = self.decoder(x, inp_embed, mask, look_ahead_mask, training)
         x = self.decoder(x, mask, training)
-        
         x = self.dense(x)
         
         return x
