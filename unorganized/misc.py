@@ -19,3 +19,31 @@ def positional_encoding(position, d_model):
   pos_encoding = angle_rads[np.newaxis, ...]
 
   return tf.cast(pos_encoding, dtype=tf.float32)
+
+class Loss(tf.keras.losses.Loss):
+    def __init__(self, omega=0.0):
+        super().__init__()
+        self.omega = omega
+        self.loss_objective = tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True, reduction='none')
+        
+    def call(self, y_true, y_pred):
+        loss = self.loss_objective(y_true, y_pred)
+        mask = 1-tf.cast(tf.math.equal(y_true, 0), tf.float32)
+        
+        loss *= mask
+        return loss
+
+class CustomSchedule(tf.keras.optimizers.schedules.LearningRateSchedule):
+    def __init__(self, d_model, warmup_steps=6000):
+        super(CustomSchedule, self).__init__()
+
+        self.d_model = d_model
+        self.d_model = tf.cast(self.d_model, tf.float32)
+
+        self.warmup_steps = warmup_steps
+
+    def __call__(self, step):
+        arg1 = tf.math.rsqrt(step)
+        arg2 = step * (self.warmup_steps ** -1.5)
+
+        return tf.math.rsqrt(self.d_model) * tf.math.minimum(arg1, arg2)
