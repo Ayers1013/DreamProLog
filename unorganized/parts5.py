@@ -100,7 +100,7 @@ class SimpleLayer(tf.keras.layers.Layer):
         x = self.dense2(x)
 
         x = self.dropout2(x, training)
-        x = self.layernorm2(x+inp) 
+        x = x+self.layernorm2(inp) 
         
         return x
 
@@ -119,13 +119,14 @@ class CrossAttention(tf.keras.layers.Layer):
         'mask:  (batch_size, len_q, len_v)'
 
         _v, att_v = self.mha_v(q, q, v, mask)
-        if self._add: _v = v + _v
         _v = self.sl_v(_v, training)
+        if self._add: _v = v + _v
 
         if mask is not None: mask = tf.transpose(mask, (0, 1, 3, 2))
         _q, att_q = self.mha_q(v, v, q, mask)
-        if self._add: _q = q + _q
         _q = self.sl_q(_q, training)
+        if self._add: _q = q + _q
+
         return _v, _q, (att_v, att_q)
 
 class SelfAttention(tf.keras.layers.Layer):
@@ -137,7 +138,7 @@ class SelfAttention(tf.keras.layers.Layer):
     def call(self, x, mask, training):
 
         _x, _att = self.mha(x, x, x, mask)
-        x = self.sl(x + _x, training)
+        x = x +  self.sl(_x, training)
 
         return x, _att
         
@@ -152,10 +153,10 @@ class Attention(tf.keras.layers.Layer):
     def call(self, x, y, mask, look_ahead_mask, training):
         
         _x, _ = self.mha1(x, x, x, look_ahead_mask)
-        x = self.sl1(x + _x, training)
+        x = x + self.sl1(_x, training)
 
         _x, _ = self.mha2(y, y, x, mask)
-        x = self.sl2(x + _x, training)
+        x = x + self.sl2(_x, training)
 
         return x, y
 
