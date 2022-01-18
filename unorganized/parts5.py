@@ -118,13 +118,13 @@ class CrossAttention(tf.keras.layers.Layer):
     def call(self, v, q, mask, training):
         'mask:  (batch_size, len_q, len_v)'
 
-        _v, att_v = self.mha_v(q, q, v, mask)
-        _v = self.sl_v(_v, training)
+        _v = self.sl_v(v, training)
+        _v, att_v = self.mha_v(q, q, _v, mask)
         if self._add: _v = v + _v
 
         if mask is not None: mask = tf.transpose(mask, (0, 1, 3, 2))
-        _q, att_q = self.mha_q(v, v, q, mask)
-        _q = self.sl_q(_q, training)
+        _q = self.sl_q(q, training)
+        _q, att_q = self.mha_q(v, v, _q, mask)
         if self._add: _q = q + _q
 
         return _v, _q, (att_v, att_q)
@@ -137,8 +137,9 @@ class SelfAttention(tf.keras.layers.Layer):
 
     def call(self, x, mask, training):
 
-        _x, _att = self.mha(x, x, x, mask)
-        x = x +  self.sl(_x, training)
+        _x = self.sl(x, training)
+        _x, _att = self.mha(_x, _x, _x, mask)
+        x = x + _x
 
         return x, _att
         
@@ -152,11 +153,12 @@ class Attention(tf.keras.layers.Layer):
 
     def call(self, x, y, mask, look_ahead_mask, training):
         
-        _x, _ = self.mha1(x, x, x, look_ahead_mask)
-        x = x + self.sl1(_x, training)
+        _x = x + self.sl1(x, training)
+        _x, _ = self.mha1(_x, _x, _x, look_ahead_mask)
 
-        _x, _ = self.mha2(y, y, x, mask)
-        x = x + self.sl2(_x, training)
+        _y = self.sl2(y, training)
+        _x, _ = self.mha2(_y, _y, _x, mask)
+        x = x + _x
 
         return x, y
 
