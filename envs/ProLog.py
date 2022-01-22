@@ -120,7 +120,7 @@ class ProLog:
             problem=self.problems.get()
         #remove out '.p' and /
         self.current_problem="__".join(problem[:-2].split('/')[2:])
-        print('Loaded problem:', self.current_problem)
+        #print('Loaded problem:', self.current_problem)
         query = 'init_python("{}",{},GnnInput, SimpleFeatures, TextFeatures, TextActions, ActionsMask, Result)'.format(problem, self.settings)
         #print("Query:\n   ", query, "\n")
         result = list(self.prolog.query(query))[0]

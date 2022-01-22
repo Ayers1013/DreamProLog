@@ -114,6 +114,7 @@ class Net(tf.keras.Model):
 
         self.latent_dense1 = tf.keras.layers.Dense(d_model, activation = None)
         self.latent_dense2 = tf.keras.layers.Dense(d_model, activation=None, use_bias=False)
+        self.scale_dense = tf.keras.layers.Dense(d_model, activation = 'sigmoid')
         #self.latent_sl = SimpleLayer(d_model, dff, rate)
         
         self.dense = tf.keras.layers.Dense(embed_tokens, activation=None, use_bias=False)
