@@ -1,8 +1,8 @@
-from attention import *
+from .attention import *
 import tensorflow as tf
 import tensorflow_probability as tfp
-from embedder_goal import Net, Decoder, Encoder 
-from misc import Loss, CustomSchedule
+from .embedder_goal import Net, Decoder, Encoder 
+from .misc import Loss, CustomSchedule
 
 '''
 The state autoencoder decodes a set of goals embedded into R^lxd
@@ -65,8 +65,8 @@ class StateNet(tf.keras.Model):
         
         losses = {}
         losses['goal_embedder'] = self._loss(target, decoded_from_goals)
-        losses['goal_to_goal'] = self._loss(target, decoded_from_embed)
-        losses['state_to_state'] = 0.2*self._loss2(goal_embed, goal_embed_reconst)
+        losses['goal_to_goal'] = self._loss(target, decoded_from_embed)*((0.25/tf.stop_gradient(losses['goal_embedder']))**1.5)
+        losses['state_to_state'] = self._loss2(goal_embed, goal_embed_reconst)
         return losses
     
     def call(self, x, training):
@@ -74,15 +74,15 @@ class StateNet(tf.keras.Model):
         losses = self.calc_loss(inp, target, training)
         scalars = {
                 'goal_embedder': 2.5,
-                'goal_to_goal': 0.2,
-                'state_to_state': 0.1,
+                'goal_to_goal': 1.,
+                'state_to_state': 0.3,
             }
         loss = 0.0
         for k, l in losses.items():
             loss += scalars[k]*l
         return loss
     
-    @tf.function(input_signature=(sgn, sgn))
+    #@tf.function(input_signature=(sgn, sgn))
     def train(self, inp, target):
         with tf.GradientTape() as tape:
             losses = self.loss(inp, target, True)
