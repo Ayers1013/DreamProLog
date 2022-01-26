@@ -1,5 +1,7 @@
 import tensorflow as tf
-ORDER_RULE_1 = False
+import tensorflow.keras.layers as tfkl
+from tensorflow.keras.layers import Layer
+from .util import *
 
 def scaled_dot_product_attention(q, k, v, mask):
     matmul_qk = tf.matmul(q, k, transpose_b=True)  # (..., seq_len_q, seq_len_k)
@@ -20,7 +22,8 @@ def scaled_dot_product_attention(q, k, v, mask):
 
     return output, attention_weights
 
-class MultiHeadAttention(tf.keras.layers.Layer):
+PRE_LAYER_NORM = True
+class MultiHeadAttention(Layer):
   def __init__(self, d_model, num_heads):
     super(MultiHeadAttention, self).__init__()
     self.num_heads = num_heads
@@ -30,13 +33,16 @@ class MultiHeadAttention(tf.keras.layers.Layer):
 
     self.depth = d_model // self.num_heads
 
-    self.wq = tf.keras.layers.Dense(d_model)
-    self.wk = tf.keras.layers.Dense(d_model)
-    self.wv = tf.keras.layers.Dense(d_model)
+    self.wq = tfkl.Dense(d_model)
+    self.wk = tfkl.Dense(d_model)
+    self.wv = tfkl.Dense(d_model)
 
-    self.dense = tf.keras.layers.Dense(d_model)
+    self.dense = tfkl.Dense(d_model)
 
-    self.dropout = tf.keras.layers.Dropout(0.05)
+    if PRE_LAYER_NORM:
+        self.layerNorms_v = tfkl.LayerNormalization()
+        self.layerNorms_k = tfkl.LayerNormalization()
+        self.layerNorms_q = tfkl.LayerNormalization()
 
   def split_heads(self, x, batch_size):
     """Split the last dimension into (num_heads, depth).
@@ -46,6 +52,12 @@ class MultiHeadAttention(tf.keras.layers.Layer):
     return tf.transpose(x, perm=[0, 2, 1, 3])
 
   def call(self, v, k, q, mask=None):
+    #Normalize input
+    if PRE_LAYER_NORM:
+        v = self.layerNorms_v(v)
+        k = self.layerNorms_k(k)
+        q = self.layerNorms_q(q)
+
     #To support calculations when batxh_size_q=1
     batch_size_q = tf.shape(q)[0]
     batch_size_kv = tf.shape(k)[0]
@@ -63,8 +75,6 @@ class MultiHeadAttention(tf.keras.layers.Layer):
     scaled_attention, attention_weights = scaled_dot_product_attention(
         q, k, v, mask)
 
-    #scaled_attention = self.dropout(scaled_attention)
-
     scaled_attention = tf.transpose(scaled_attention, perm=[0, 2, 1, 3])  # (batch_size, seq_len_q, num_heads, depth)
 
     concat_attention = tf.reshape(scaled_attention,
@@ -74,113 +84,104 @@ class MultiHeadAttention(tf.keras.layers.Layer):
 
     return output, attention_weights
 
-def point_wise_feed_forward_network(d_model, dff):
-  return tf.keras.Sequential([
-      tf.keras.layers.Dense(dff, activation='relu'),  # (batch_size, seq_len, dff)
-      tf.keras.layers.Dense(d_model)  # (batch_size, seq_len, d_model)
-  ])
-
-class SimpleLayer(tf.keras.layers.Layer):
+class MLP(Layer):
     def __init__(self, d_model, dff, rate=0.04):
         super().__init__()
-        self.dense = tf.keras.layers.Dense(dff, activation='relu')  # (batch_size, seq_len, dff)
-        self.dense2 = tf.keras.layers.Dense(d_model)  # (batch_size, seq_len, d_model)
-        self.dropout = tf.keras.layers.Dropout(rate)
-        self.layernorm = tf.keras.layers.LayerNormalization()
-        self.dropout2 = tf.keras.layers.Dropout(rate)
-        self.layernorm2 = tf.keras.layers.LayerNormalization()
+        self.dense = tfkl.Dense(dff, activation='relu')  # (batch_size, seq_len, dff)
+        self.dense2 = tfkl.Dense(d_model)  # (batch_size, seq_len, d_model)
+        self.dropout = tfkl.Dropout(rate)
+        self.layernorm = tfkl.LayerNormalization()
+        self.dropout2 = tfkl.Dropout(rate)
+        self.dropout3 = tfkl.Dropout(rate)
 
     def call(self, inp, training):
         x = self.dropout(inp, training)
         x = self.layernorm(x)
         
         x = self.dense(x)
+        x = self.dropout(x, training)
         x = self.dense2(x)
 
-        x = self.dropout2(x, training)
-        if ORDER_RULE_1:
-            x = x+self.layernorm2(inp)
-        else:
-            x = self.layernorm2(inp + x)
+        x = self.dropout3(x, training)
         
-        return x
+        return x + inp
 
-class CrossAttention(tf.keras.layers.Layer):
-    def __init__(self, d_model, num_heads, dff, rate, add = True):
+class CrossAttention(Layer):
+    def __init__(self, d_model, num_heads, dff, rate):
         super().__init__()
-        self._add = add
 
         self.mha_v = MultiHeadAttention(d_model, num_heads)
         self.mha_q = MultiHeadAttention(d_model, num_heads)
 
-        self.sl_v = SimpleLayer(d_model, dff, rate)
-        self.sl_q = SimpleLayer(d_model, dff, rate)
+        self.mlp_v = MLP(d_model, dff, rate)
+        self.mlp_q = MLP(d_model, dff, rate)
 
     def call(self, v, q, mask, training):
         'mask:  (batch_size, len_q, len_v)'
 
         _v, att_v = self.mha_v(q, q, v, mask)
-        if ORDER_RULE_1:
-            _v = self.sl_v(_v, training)
-            if self._add: _v = v + _v
-        else:
-            if self._add: _v = v + _v
-            _v = self.sl_v(_v, training)
+        v = _v + v
+        v = self.mlp_v(v, training)
 
         if mask is not None: mask = tf.transpose(mask, (0, 1, 3, 2))
         _q, att_q = self.mha_q(v, v, q, mask)
-        if ORDER_RULE_1:
-            _q = self.sl_q(_q, training)
-            if self._add: _q = q + _q
-        else:
-            if self._add: _q = q + _q
-            _q = self.sl_q(_q, training)
+        q = _q + q
+        q = self.mlp_q(q, training)
 
-        return _v, _q, (att_v, att_q)
+        return v, q, (att_v, att_q)
 
 class SelfAttention(tf.keras.layers.Layer):
     def __init__(self, d_model, num_heads, dff, rate):
         super().__init__()
         self.mha = MultiHeadAttention(d_model, num_heads)
-        self.sl = SimpleLayer(d_model, dff, rate)
+        self.mlp = MLP(d_model, dff, rate)
 
     def call(self, x, mask, training):
 
         _x, _att = self.mha(x, x, x, mask)
-        if ORDER_RULE_1:
-            x = x +  self.sl(_x, training)
-        else:
-            x = self.sl(_x + x, training)
+        x = _x + x
+        x = self.mlp(x, training)
 
         return x, _att
+
+class ConditionedAttention(tf.keras.layers.Layer):
+    def __init__(self, d_model, num_heads, dff, rate):
+        super().__init__()
+        self.mha = MultiHeadAttention(d_model, num_heads)
+        self.mlp = MLP(d_model, dff, rate)
+
+    def call(self, v, q, mask, training):
         
+        if mask is not None: mask = tf.transpose(mask, (0, 1, 3, 2))
+        _q, _att = self.mha(v, v, q, mask)
+        q = _q + q
+        q = self.mlp(q, training)
+
+        return q, _att
+
 class Attention(tf.keras.layers.Layer):
     def __init__(self, d_model, num_heads, dff, rate):
         super().__init__()
         self.mha1 = MultiHeadAttention(d_model, num_heads)
         self.mha2 = MultiHeadAttention(d_model, num_heads)
-        self.sl1 = SimpleLayer(d_model, dff, rate)
-        self.sl2 = SimpleLayer(d_model, dff, rate)
+        self.mlp1 = MLP(d_model, dff, rate)
+        self.mlp2 = MLP(d_model, dff, rate)
 
     def call(self, x, y, mask, look_ahead_mask, training):
         
         _x, _ = self.mha1(x, x, x, look_ahead_mask)
-        if ORDER_RULE_1:
-            x = x + self.sl1(_x, training)
-        else:
-            x = self.sl1(_x + x, training)
+        x = _x + x
+        x = self.mlp1(x, training)
 
         _x, _ = self.mha2(y, y, x, mask)
-        if ORDER_RULE_1:
-            x = x + self.sl2(_x, training)
-        else:
-            x = self.sl2(_x + x, training)
+        x = _x + x
+        x = self.mlp2(x, training)
 
         return x, y
 
 class DeepCrossAttention(CrossAttention):
-    def __init__(self, d_model, num_heads, dff, rate, add = True):
-        super().__init__(d_model, num_heads, dff, rate, add)
+    def __init__(self, d_model, num_heads, dff, rate):
+        super().__init__(d_model, num_heads, dff, rate)
 
         #self.satt_v = SelfAttention(d_model, num_heads, dff, rate)
         self.satt_q = SelfAttention(d_model, num_heads, dff, rate)
