@@ -47,3 +47,14 @@ class CustomSchedule(tf.keras.optimizers.schedules.LearningRateSchedule):
         arg2 = step * (self.warmup_steps ** -1.5)
 
         return tf.math.rsqrt(self.d_model) * tf.math.minimum(arg1, arg2)
+
+def create_look_ahead_mask(size):
+    mask = 1 - tf.linalg.band_part(tf.ones((size, size)), -1, 0)
+    return mask  # (seq_len, seq_len)
+
+def create_padding_mask(seq):
+    seq = tf.cast(tf.math.equal(seq, 0), tf.float32)
+
+    # add extra dimensions to add the padding
+    # to the attention logits.
+    return seq[:, tf.newaxis, tf.newaxis, :]  # (batch_size, 1, 1, seq_len)

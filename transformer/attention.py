@@ -173,6 +173,7 @@ class Attention(tf.keras.layers.Layer):
         x = _x + x
         x = self.mlp1(x, training)
 
+        print(y.shape)
         _x, _ = self.mha2(y, y, x, mask)
         x = _x + x
         x = self.mlp2(x, training)
