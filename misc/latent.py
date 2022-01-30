@@ -9,8 +9,11 @@ class LatentSpace:
     Subclasses may have self._dist, otherwise sample, mode methods have to be overwritten.
     '''
 
-    def __getattr__(self, name):
-        return getattr(self._dist, name)
+    def sample(self):
+        return self._dist.sample()
+
+    def mode(self):
+        return self._dist.mode()
     
     def extract(self, training):
         if training: return self.sample()
@@ -39,19 +42,19 @@ class ScaledNormalSpace(tf.Module, LatentSpace):
         self._scale_dense = tf.keras.layers.Dense(1, activation = 'sigmoid')
 
     def __call__(self, logit):
-        loc = self._latent_dense(logit)
-        scale = self._scale_dense(logit)
+        self._loc = self._latent_dense(logit)
+        self._scale = self._scale_dense(logit)
         self._dist = tfd.Independent(
-            tfd.Normal(self._dist.loc, scale),
-            reinterpeted_batch_ndims = 1)
+            tfd.Normal(self._loc, self._scale),
+            reinterpreted_batch_ndims = 1)
         return self
 
     def sample(self):
-        scale = tf.stop_gradient(self._dist.scale)
+        scale = tf.stop_gradient(self._scale)
         dist = tfd.Independent(
-            tfd.Normal(self._dist.loc, scale),
-            reinterpeted_batch_ndims = 1)
-        dist.sample()
+            tfd.Normal(self._loc, scale),
+            reinterpreted_batch_ndims = 1)
+        return dist.sample()
     
     def comparison_loss(self, latent):
         assert isinstance(latent, ScaledNormalSpace)
@@ -65,11 +68,12 @@ class DiscrateSpace(tf.Module, LatentSpace):
 
     def __call__(self, logits):
         logits = self._dense_1(logits)
-        self._dist = tfd.OneHotCategorical(logits)
+        probs = tf.math.softmax(logits, axis = -1)
+        self._dist = tfd.OneHotCategorical(probs = probs)
         return self
 
     def sample(self):
-        x = self._dist.sample() + self._dist.probs - tf.stop_gradient(self._dist.probs)
+        x = tf.cast(self._dist.sample(), tf.float32) + self._dist.probs - tf.stop_gradient(self._dist.probs)
         x = self._dense_2(x)
         return x
     
@@ -89,8 +93,8 @@ class GumbleSpace(tf.Module, LatentSpace):
         self._temp = temperature
 
     def __call__(self, logits):
-        logits = self._dense_1(logits)
-        self._dist = tfd.RelaxedOneHotCategorical(self._temp, logits)
+        self._logits = self._dense_1(logits)
+        self._dist = tfd.RelaxedOneHotCategorical(self._temp, self._logits)
         return self
 
     def sample(self):
@@ -99,10 +103,12 @@ class GumbleSpace(tf.Module, LatentSpace):
         return x
 
     def mode(self):
-        return self._dense_2(self._dist.mode())
+        x = tfd.RelaxedOneHotCategorical(1e-5, self._logits).sample()
+        x = self._dense_2(x)
+        return x
 
     def comparison_loss(self, latent):
         assert isinstance(latent, GumbleSpace)
-        p, q = self._dist.probs, latent._dist.probs
+        p, q = tf.math.softmax(self._logits, axis = -1), tf.math.softmax(latent._logits, axis = -1)
         return tf.reduce_sum(p*(tf.math.log(p)-tf.math.log(q)), axis=-1)
 
