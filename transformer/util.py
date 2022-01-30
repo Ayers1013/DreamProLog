@@ -20,7 +20,7 @@ def positional_encoding(position, d_model):
 
   return tf.cast(pos_encoding, dtype=tf.float32)
 
-class Loss(tf.keras.losses.Loss):
+class CategoricalLoss(tf.keras.losses.Loss):
     def __init__(self, omega=0.0):
         super().__init__(reduction=tf.keras.losses.Reduction.SUM)
         self.omega = omega
@@ -29,6 +29,22 @@ class Loss(tf.keras.losses.Loss):
     def call(self, y_true, y_pred):
         loss = self.loss_objective(y_true, y_pred)
         mask = 1-tf.cast(tf.math.equal(y_true, 0), tf.float32)
+        
+        loss *= mask
+        return loss
+
+class RegressiveCategoricalLoss(tf.keras.losses.Loss):
+    def __init__(self):
+        super().__init__()
+        self.loss_objective = tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True, reduction=tf.keras.losses.Reduction.SUM)
+
+    def call(self, y_true, y_pred):
+        #loss = self.loss_objective(y_true, y_pred)
+        probs = tf.math.softmax(y_pred)
+        probs = tf.gather(probs, y_true, axis = -1)
+        loss = -tf.math.log(probs)
+        mask = 1-tf.cast(tf.math.equal(y_true, 0), tf.float32)
+        loss += 0.0*tf.math.cumsum(loss, axis = -1)
         
         loss *= mask
         return loss
