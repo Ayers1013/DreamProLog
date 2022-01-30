@@ -1,1 +1,4 @@
-from module import Module
+'''
+Under construction.
+'''
+from .module import *

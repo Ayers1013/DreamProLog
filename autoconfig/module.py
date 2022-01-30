@@ -7,9 +7,13 @@ class ConfigurationSpace:
     def __init__(self, ctor, parent = None, **kwargs):
         signature = inspect.signature(ctor)
         self._parent = parent
+        if parent is not None: self._global_config = self._parent._global_config
         self._params = {}
-        for k, v in signature.params:
-            self._params[k] = self._querry(k, default = v.default)
+        if self._name in self._global_config:
+            self._params.update(self._global_config[self._name])
+        for k, v in signature.parameters.items():
+            if k not in self._params:
+                self._params[k] = self._querry(k, default = v.default)
         self._params.update(kwargs)
 
     def _querry(self, k, default):
@@ -23,36 +27,19 @@ class ConfigurationSpace:
         else:
             raise Exception(f'The {k} parameter was not configured for {self._name}.')
 
-class AutoConfiguration:
-    def __init__(self, method, logdir):
-        pass
-
 class Wrapper(ConfigurationSpace):
     def __init__(self, ctor, parent = None, **kwargs):
+        self._name = 'B'
         super().__init__(ctor, parent, **kwargs)
         self._obj = ctor(**self._params)
 
-    def __getattr__(self, name):
-        return getattr(self, name)
 
 class Module(ConfigurationSpace):
-    def _init_with_autoconfig(self, name, parent):
-        signature = inspect.signature(self.__init__)
-        super(ConfigurationSpace).__init__(signature, parent)
-        self._name = name
-        self.__init__(**self._params)
-
     def create(self, name, ctor, **kwargs):
         if not hasattr(self, '_modules'):
             self._modules = {}
-        if isinstance(ctor, Module):
-            self._modules[name] = ctor._init_with_autoconfig(self._name + '/' + name, self)
-        else:
-            self._modules[name] = Wrapper(ctor, self)
-
-    def __getattr__(self, name):
-        if name in self._modules: return self._modules[name]
-        else: return getattr(self, name)
+        self._modules[name] = Wrapper(ctor, self)
+        return self._modules[name]
 
     def get(self, name):
         return self._modules[name]
@@ -61,10 +48,11 @@ class Module(ConfigurationSpace):
         if not hasattr(self, '_modules'):
             self._modules = {}
         if name in self._modules: return self._modules[name]
-        else:
-            self.create(name, ctor, **kwargs)
-            return self._modules[name]
-           
+        else: return self.create(name, ctor, **kwargs)
 
-
-
+class AutoConfigure(Module):
+    def __init__(self, name, global_config):
+        self._name = name
+        self._params = {}
+        self._parent = None
+        self._global_config = global_config
