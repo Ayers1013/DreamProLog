@@ -1,5 +1,7 @@
 from .attention import *
 from .util import *
+from misc import latent
+
 import tensorflow as tf
 import tensorflow_probability as tfp
 from tensorflow_probability import distributions as tfd
@@ -71,29 +73,23 @@ class RegressiveDecoder(tf.keras.layers.Layer):
         #self.mha = MultiHeadAttention(d_model, num_heads)
         self.layers = [Attention(d_model, num_heads, dff, rate) for _ in range(N)]
 
-    def call(self, x, inp, mask, look_ahead_mask, training):
-
-        v = inp + self.variable
+    def call(self, x, inp_embed, mask, look_ahead_mask, training):
+        v = inp_embed + self.variable
         q = x
-        #q = v
-        #mask = tf.transpose(mask, (0, 1, 3, 2))
-
         for l in self.layers:
             v, q = l(v, q, mask, look_ahead_mask, training)
 
         return v
 
-class Net(tf.keras.Model):
-    def __init__(self, N=4, embed_tokens=256, querry=8, output_length=128, d_model=128, num_heads=4, dff=256, rate=0.04):
+class Model(tf.keras.Model):
+    def __init__(self, N=4, embed_tokens=256, querry=8, output_length=128, latent_type = 'normal', d_model=128, num_heads=4, dff=256, rate=0.04):
         super().__init__()
         self.encoder = Encoder(N, querry, output_length, d_model, num_heads, dff, rate)  
         self.enc_embed = tf.keras.layers.Embedding(embed_tokens, d_model)
         self.decoder = Decoder(N, output_length, d_model, num_heads, dff, rate)
 
-        self.latent_dense1 = tf.keras.layers.Dense(d_model, activation = None)
-        self.latent_dense2 = tf.keras.layers.Dense(d_model, activation=None, use_bias=False)
-        self.scale_dense = tf.keras.layers.Dense(d_model, activation = 'sigmoid')
-        #self.latent_sl = SimpleLayer(d_model, dff, rate)
+        #TODO add the other latent space options
+        self.latent_layer = latent.NormalSpace(scale_init = 0.15)
         
         self.dense = tf.keras.layers.Dense(embed_tokens, activation=None, use_bias=False)
 
@@ -101,73 +97,49 @@ class Net(tf.keras.Model):
         mask = tf.cast(tf.math.equal(inp, 0), tf.float32)[:, tf.newaxis, :, tf.newaxis]
         inp_embed = self.enc_embed(inp)
         x, _ = self.encoder(inp_embed, mask, training)
-        #dist = tfd.Normal(loc = x, scale = 0.05)
-        return x, mask
+        latent = self.latent_layer(x)
+        return latent, mask
 
     def decode(self, x, mask, training):
-        x = self.latent_dense2(x)
         x = self.decoder(x, mask, training)
         x = self.dense(x)
         return x
 
     def call(self, inp, training):
-        mask = tf.cast(tf.math.equal(inp, 0), tf.float32)[:, tf.newaxis, :, tf.newaxis]
-        inp_embed = self.enc_embed(inp)
-        latent, _ = self.encoder(inp_embed, mask, training)
-        dist = tfd.Normal(loc = latent, scale = 0.05)
-        if training:
-            latent = dist.sample()
-        else:
-            latent = dist.mode()
-
-        x = self.latent_dense2(latent)
-        x = self.decoder(x, mask, training)
-        x = self.dense(x)
-        
+        latent, mask = self.encode(inp, training)
+        x = latent.extract(training)
+        x = self.decode(x, mask, training)
         return x
 
-class NetII(tf.keras.Model):
-    def __init__(self, N=4, embed_tokens=256, querry=8, output_length=128, d_model=128, num_heads=4, dff=256, rate=0.04):
+class RegressiveModel(tf.keras.Model):
+    def __init__(self, N=4, embed_tokens=256, querry=8, output_length=128, latent_type = 'normal', d_model=128, num_heads=4, dff=256, rate=0.04):
         super().__init__()
         self.encoder = Encoder(N, querry, output_length, d_model, num_heads, dff, rate)  
         self.enc_embed = tf.keras.layers.Embedding(embed_tokens, d_model)
         self.decoder = RegressiveDecoder(N, output_length, d_model, num_heads, dff, rate)
 
-        self.latent_dense1 = tf.keras.layers.Dense(d_model, activation = None)
-        self.latent_dense2 = tf.keras.layers.Dense(d_model, activation=None, use_bias=False)
-        self.scale_dense = tf.keras.layers.Dense(d_model, activation = 'sigmoid')
-        #self.latent_sl = SimpleLayer(d_model, dff, rate)
+        #TODO add the other latent space options
+        self.latent_layer = latent.NormalSpace(scale_init = 0.15)
         
         self.dense = tf.keras.layers.Dense(embed_tokens, activation=None, use_bias=False)
 
     def encode(self, inp, training):
         mask = tf.cast(tf.math.equal(inp, 0), tf.float32)[:, tf.newaxis, :, tf.newaxis]
-        inp_embed = self.enc_embed(inp)
-        x, _ = self.encoder(inp_embed, mask, training)
-        #dist = tfd.Normal(loc = x, scale = 0.05)
-        return x, mask
-
-    def decode(self, x, mask, training):
-        x = self.latent_dense2(x)
-        x = self.decoder(x, mask, training)
-        x = self.dense(x)
-        return x
-
-    def call(self, inp, training):
-        mask = tf.cast(tf.math.equal(inp, 0), tf.float32)[:, tf.newaxis, :, tf.newaxis]
         look_ahead_mask = create_look_ahead_mask(tf.shape(inp)[1])
         dec_target_padding_mask = create_padding_mask(inp)
         look_ahead_mask = tf.maximum(dec_target_padding_mask, look_ahead_mask)
         inp_embed = self.enc_embed(inp)
-        latent, _ = self.encoder(inp_embed, mask, training)
-        dist = tfd.Normal(loc = latent, scale = 0.05)
-        if training:
-            latent = dist.sample()
-        else:
-            latent = dist.mode()
+        x, _ = self.encoder(inp_embed, mask, training)
+        latent = self.latent_layer(x)
+        return latent, inp_embed, mask, look_ahead_mask
 
-        x = self.latent_dense2(latent)
+    def decode(self, x, inp_embed, mask, look_ahead_mask, training):
         x = self.decoder(x, inp_embed, mask, look_ahead_mask, training)
         x = self.dense(x)
-        
+        return x
+
+    def call(self, inp, training):
+        latent, inp_embed, mask, look_ahead_mask = self.encode(inp, training)
+        x = latent.extract(training)
+        x = self.decode(x, inp_embed, mask, look_ahead_mask, training)
         return x

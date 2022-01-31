@@ -7,6 +7,7 @@ def test_latent_NormalSpace(logger):
     x = latent_layer(logits)
     sample = x.sample()
     mode = x.mode()
+    mode_2 = x.extract(False)
 
     logger(logits, x, sample, mode, sep='\n\n')
 
@@ -19,6 +20,8 @@ def test_latent_NormalSpace(logger):
     assert sample.shape == (4, 6)
     assert mode.shape == (4, 6)
     assert loss.shape == (4,)
+    #mode and mode_2 should be equal
+    assert tf.reduce_sum(mode-mode_2) <0.01
 
     return 'misc.latent.NormalSpace checks out.'
 
