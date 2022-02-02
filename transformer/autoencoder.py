@@ -81,7 +81,77 @@ class RegressiveDecoder(tf.keras.layers.Layer):
 
         return v
 
+class Autoencoder(tf.Module):
+    def __init__(self, N = 4, querry = 8, output_length = 128, latent_type ='normal', d_model = 128, num_heads = 4, dff = 256, rate = 0.04):
+        super().__init__()
+        self.encoder = Encoder(N, querry, output_length, d_model, num_heads, dff, rate) 
+        self.decoder = Decoder(N, output_length, d_model, num_heads, dff, rate)
+
+        self.latent_layer = latent.NormalSpace(scale_init = 0.15)
+
+    def encode(self, x, mask, training):
+        x, _ = self.encoder(x, mask, training)
+        latent = self.latent_layer(x)
+        return latent
+
+    def decode(self, x, mask, training):
+        x = self.decoder(x, mask, training)
+        return x
+
+class RegressiveAutoencoder(tf.Module):
+    def __init__(self, N=4, querry=8, output_length=128, latent_type = 'normal', d_model=128, num_heads=4, dff=256, rate=0.04):
+        super().__init__()
+        self.encoder = Encoder(N, querry, output_length, d_model, num_heads, dff, rate)
+        self.decoder = RegressiveDecoder(N, output_length, d_model, num_heads, dff, rate)
+
+        self.latent_layer = latent.NormalSpace(scale_init = 0.15)
+        
+    def encode(self, x, mask, training):
+        x, _ = self.encoder(x, mask, training)
+        latent = self.latent_layer(x)
+        return latent
+
+    def decode(self, x, inp_embed, mask, look_ahead_mask, training):
+        x = self.decoder(x, inp_embed, mask, look_ahead_mask, training)
+        return x
+
 class Model(tf.keras.Model):
+    def __init__(self, model_type = 'regressive', embed_tokens = 512, **kwargs):
+        super().__init__()
+        self._model_type = model_type
+        self.autoencoder = (RegressiveAutoencoder if model_type == 'regressive' else Autoencoder)(**kwargs) 
+        self.enc_embed = tf.keras.layers.Embedding(embed_tokens, kwargs['d_model'])
+        self.dense = tf.keras.layers.Dense(embed_tokens, activation=None, use_bias=False)
+
+
+    def encode(self, inp, training):
+        masks = tf.cast(tf.math.equal(inp, 0), tf.float32)[:, tf.newaxis, :, tf.newaxis],
+        inp_embed = self.enc_embed(inp)
+        if self._model_type == 'regressive': 
+            look_ahead_mask = create_look_ahead_mask(tf.shape(inp)[1])
+            dec_target_padding_mask = create_padding_mask(inp)
+            look_ahead_mask = tf.maximum(dec_target_padding_mask, look_ahead_mask)
+            masks = (*masks, look_ahead_mask)
+
+        latent = self.autoencoder.encode(inp_embed, masks[0], training = training)
+        outputs = (latent, inp_embed) if self._model_type == 'regressive' else (latent,) 
+        return outputs, masks
+
+    def decode(self, *args):
+        x = self.autoencoder.decode(*args)
+        x = self.dense(x)
+        return x
+
+    def call(self, inp, training):
+        outputs, masks = self.encode(inp, training)
+        #sample latent
+        latent = outputs[0]
+        x = latent.extract(training)
+        y = self.decode(x, *outputs[1:], *masks, training)
+        return y
+        
+#deprecated
+class SetModel(tf.keras.Model):
     def __init__(self, N=4, embed_tokens=256, querry=8, output_length=128, latent_type = 'normal', d_model=128, num_heads=4, dff=256, rate=0.04):
         super().__init__()
         self.encoder = Encoder(N, querry, output_length, d_model, num_heads, dff, rate)  

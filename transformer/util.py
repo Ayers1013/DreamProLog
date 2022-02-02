@@ -23,15 +23,6 @@ def positional_encoding(position, d_model):
 class CategoricalLoss(tf.keras.losses.Loss):
     def __init__(self, omega=0.0):
         super().__init__(reduction=tf.keras.losses.Reduction.SUM)
-        self.omega = omega
-        self.loss_objective = tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True, reduction=tf.keras.losses.Reduction.SUM)
-        
-    def call_dep(self, y_true, y_pred):
-        loss = self.loss_objective(y_true, y_pred)
-        mask = 1-tf.cast(tf.math.equal(y_true, 0), tf.float32)
-        
-        loss *= mask
-        return loss
 
     def call(self, y_true, y_pred):
         batch_dims = len(y_true.shape)
@@ -45,19 +36,18 @@ class CategoricalLoss(tf.keras.losses.Loss):
 
 class RegressiveCategoricalLoss(tf.keras.losses.Loss):
     def __init__(self):
-        super().__init__()
-        self.loss_objective = tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True, reduction=tf.keras.losses.Reduction.SUM)
+        super().__init__(reduction=tf.keras.losses.Reduction.SUM)
 
     def call(self, y_true, y_pred):
-        #loss = self.loss_objective(y_true, y_pred)
+        batch_dims = len(y_true.shape)
         probs = tf.math.softmax(y_pred)
-        probs = tf.gather(probs, y_true, axis = -1)
-        loss = -tf.math.log(probs)
+        probs = tf.gather(probs, y_true, batch_dims = batch_dims)
+        loss = -tf.math.log(probs + 1e-5)
         mask = 1-tf.cast(tf.math.equal(y_true, 0), tf.float32)
-        loss += 0.0*tf.math.cumsum(loss, axis = -1)
+        loss += 0.1*tf.math.cumsum(loss, axis = -1)
         
-        loss *= mask
-        return loss
+        loss = loss*mask
+        return loss/tf.cast(tf.reduce_prod(y_true.shape), tf.float32)
 
 class CustomSchedule(tf.keras.optimizers.schedules.LearningRateSchedule):
     def __init__(self, d_model, warmup_steps=6000):
