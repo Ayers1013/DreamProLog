@@ -2,6 +2,7 @@ from misc.tests import *
 from transformer.tests import *
 
 import tensorflow as tf
+import sys
 
 VERBOSITY = True
 

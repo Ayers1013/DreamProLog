@@ -1,5 +1,5 @@
 from .attention import *
-from .util import *
+from .utils import *
 from misc import latent
 
 import tensorflow as tf

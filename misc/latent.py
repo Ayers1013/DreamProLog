@@ -19,6 +19,9 @@ class LatentSpace:
         if training: return self.sample()
         else: return self.mode()
 
+    def compare(self, other):
+        return tf.reduce_sum(self.comparison_loss(other))/(512*16*128)
+
 class NormalSpace(tf.Module, LatentSpace):
     def __init__(self, scale_init = .1):
         super().__init__()

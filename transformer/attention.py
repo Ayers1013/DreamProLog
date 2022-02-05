@@ -1,7 +1,7 @@
 import tensorflow as tf
 import tensorflow.keras.layers as tfkl
 from tensorflow.keras.layers import Layer
-from .util import *
+from .utils import *
 
 def scaled_dot_product_attention(q, k, v, mask):
     matmul_qk = tf.matmul(q, k, transpose_b=True)  # (..., seq_len_q, seq_len_k)
