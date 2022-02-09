@@ -1,4 +1,4 @@
 '''
 Under construction.
 '''
-from .module import *
+from .module_dep import *

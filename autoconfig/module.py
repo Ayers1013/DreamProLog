@@ -1,13 +1,10 @@
-'''
-This file contains the main module
-'''
 import inspect
 
-class ConfigurationSpace:
-    def __init__(self, ctor, parent = None, **kwargs):
+class ConfigurationWrapper:
+    def __init__(self, ctor, parent = None, name = None, *args, **kwargs):
         signature = inspect.signature(ctor)
         self._parent = parent
-        if parent is not None: self._global_config = self._parent._global_config
+        self._root = parent.root
         self._params = {}
         if self._name in self._global_config:
             self._params.update(self._global_config[self._name])
@@ -15,6 +12,8 @@ class ConfigurationSpace:
             if k not in self._params:
                 self._params[k] = self._querry(k, default = v.default)
         self._params.update(kwargs)
+
+        self._obj = ctor(*args, **self._params)
 
     def _querry(self, k, default):
         node = self
@@ -27,32 +26,94 @@ class ConfigurationSpace:
         else:
             raise Exception(f'The {k} parameter was not configured for {self._name}.')
 
-class Wrapper(ConfigurationSpace):
-    def __init__(self, ctor, parent = None, **kwargs):
-        self._name = 'B'
-        super().__init__(ctor, parent, **kwargs)
-        self._obj = ctor(**self._params)
+class ConfiguredModel:
+    __slots__ = ['_config']
 
+    def __init__(self):
+        'Init should be overwritten.'
 
-class Module(ConfigurationSpace):
-    def create(self, name, ctor, **kwargs):
+    def get(self, name, ctor, *args, **kwargs):
+        'Creates or gathers object which is initialized by the autoConfig.'
+        self._autoConfig.register(name, ctor, *args, **kwargs)
         if not hasattr(self, '_modules'):
             self._modules = {}
-        self._modules[name] = Wrapper(ctor, self)
+        if name not in self._modules:
+            self._modules
         return self._modules[name]
 
-    def get(self, name):
-        return self._modules[name]
+class ConfigurationNode:
+    def __init__(self, ctor = None, name = None, parent = None, *args, **kwargs):
+        'Tree structure:'
+        self._parent = parent
+        self._core = parent._core if parent is not None else self
+        self._childs = []
 
-    def cget(self, name, ctor, **kwargs):
-        if not hasattr(self, '_modules'):
-            self._modules = {}
-        if name in self._modules: return self._modules[name]
-        else: return self.create(name, ctor, **kwargs)
+        self._name = name if name is not None else getattr(ctor, '__name__', 'anonym').lower()
+        self._params = self._load_params()
+        self._params.update(kwargs)
 
-class AutoConfigure(Module):
-    def __init__(self, name, global_config):
-        self._name = name
-        self._params = {}
-        self._parent = None
-        self._global_config = global_config
+        if ctor is not None:
+            signature = inspect.signature(ctor)
+            'Load params from args'
+            for k, v in zip(signature.parameters, args):
+                self._params[k] = v
+            for k, v in signature.parameters:
+                if k not in self._params:
+                    v = self[k]
+                    assert v is not None
+                    self._params[k] = self[k]
+
+        'Others:'
+        self._cache = None
+
+    def __call__(self, name = None, *args, **kwargs):
+        'Caches args and kwargs which will be loaded to the next configured object.'
+        self._cache = (name, args, kwargs)
+
+    @property
+    def _nested_name(self):
+        names = []
+        node = self
+        while node is not None:
+            names.append(node._name)
+            node = node._parent
+        names.reverse()
+        return '/'.join(names)
+
+    def _load_params(self):
+        path = []
+        node = self
+        while node is not None:
+            path.append(node._name)
+            node = node._parent
+        path = path.reverse()
+        config = self._core._load_params(path)
+        return config
+
+    def __sub__(self, ctor):
+        'Initializes object with constructor "ctor" using inherited, cached and loaded configurations.'
+        name, args, kwargs = self._cache
+        self._cache = None
+        node = ConfigurationNode(ctor, name, self, *args, **kwargs)
+        return ctor(**node._params)
+
+
+    def __getitem__(self, name):
+        'Gather parameters by name.'
+        node = self
+        while node is not None:
+            if name in node._params:
+                return node._params[name]
+        return None
+
+class ConfigurationCore(ConfigurationNode):
+    def __init__(self, name = '', *args, **kwargs):
+        super().__init__(None, name, None, *args, **kwargs)
+        self._config_dict = {}
+
+    def _load_params(self, path):
+        x = self._config_dict
+        for name in path:
+            if name not in x: return {}
+            x = x[name]
+        return {k: v for k, v in x.items() if not isinstance(v, dict)}
