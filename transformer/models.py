@@ -8,7 +8,7 @@ The state autoencoder decodes a set of goals embedded into R^lxd
 Our data will come in the shape of (batch, goal_max, goal_length_max, dimension)
 '''
 
-class StateNet(tf.keras.Model):
+class StateModel(tf.keras.Model):
     def __init__(self, 
     goal_N = 3, state_N = 3, embed_tokens = 512, goal_querry = 16, state_querry = 8, goal_length = 128, state_length = 128,
     d_model = 128, dff = 512, 
@@ -97,20 +97,3 @@ class StateNet(tf.keras.Model):
         for k, l in losses.items():
             loss += scalars[k]*l
         return loss
-    
-    #@tf.function(input_signature=(sgn, sgn))
-    def train_step(self, data):
-        data, _ = data
-        with tf.GradientTape() as tape:
-            loss = self(data, True)
-            
-        trainable_vars = self.trainable_variables
-        gradients = tape.gradient(loss, trainable_vars)
-        # Update weights
-        self.optimizer.apply_gradients(zip(gradients, trainable_vars))
-        
-               
-        return {'loss': tf.reduce_sum(loss)}
-               
-    
-

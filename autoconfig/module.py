@@ -1,46 +1,5 @@
 import inspect
 
-class ConfigurationWrapper:
-    def __init__(self, ctor, parent = None, name = None, *args, **kwargs):
-        signature = inspect.signature(ctor)
-        self._parent = parent
-        self._root = parent.root
-        self._params = {}
-        if self._name in self._global_config:
-            self._params.update(self._global_config[self._name])
-        for k, v in signature.parameters.items():
-            if k not in self._params:
-                self._params[k] = self._querry(k, default = v.default)
-        self._params.update(kwargs)
-
-        self._obj = ctor(*args, **self._params)
-
-    def _querry(self, k, default):
-        node = self
-        while node is not None:
-            if k in node._params:
-                return node._params[k]
-            node = node._parent
-        if default is not inspect._empty:
-            return default
-        else:
-            raise Exception(f'The {k} parameter was not configured for {self._name}.')
-
-class ConfiguredModel:
-    __slots__ = ['_config']
-
-    def __init__(self):
-        'Init should be overwritten.'
-
-    def get(self, name, ctor, *args, **kwargs):
-        'Creates or gathers object which is initialized by the autoConfig.'
-        self._autoConfig.register(name, ctor, *args, **kwargs)
-        if not hasattr(self, '_modules'):
-            self._modules = {}
-        if name not in self._modules:
-            self._modules
-        return self._modules[name]
-
 class ConfigurationNode:
     def __init__(self, ctor = None, name = None, parent = None, *args, **kwargs):
         'Tree structure:'
@@ -94,6 +53,7 @@ class ConfigurationNode:
         name, args, kwargs = self._cache
         self._cache = None
         node = ConfigurationNode(ctor, name, self, *args, **kwargs)
+        self._children.append(node)
         return ctor(**node._params)
 
 
@@ -116,3 +76,18 @@ class ConfigurationCore(ConfigurationNode):
             if name not in x: return {}
             x = x[name]
         return {k: v for k, v in x.items() if not isinstance(v, dict)}
+
+class ConfiguredModel:
+    __slots__ = ['_config']
+
+    def __init__(self):
+        'Init should be overwritten.'
+
+    def get(self, name, ctor, *args, **kwargs):
+        'Creates or gathers object which is initialized by the autoConfig.'
+        self._autoConfig.register(name, ctor, *args, **kwargs)
+        if not hasattr(self, '_modules'):
+            self._modules = {}
+        if name not in self._modules:
+            self._modules
+        return self._modules[name]

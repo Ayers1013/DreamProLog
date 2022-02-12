@@ -11,7 +11,7 @@ def test_modules_0(logger):
     obj = ccore(4, b = 5) - A
     assert obj._a == 4
     assert obj._b == 5
-    assert len(obj._children) == 1
+    assert len(ccore._children) == 1
     
     return 'autoconfig.module test 0 passed.'
 
