@@ -1,9 +1,8 @@
 import numpy as np
 from numpy.lib.function_base import select
 
-
 class DataStorage:
-  def __init__(self, section_length=[6,18], batch_length=[2,4,8]):
+  def __init__(self):
     #container for episodes
     self._episodes = {}
     self._meta = {}
@@ -12,73 +11,11 @@ class DataStorage:
     #statistics
     self._stats = {}
 
-    ssmall, smedium=section_length
-    bsmall, bmedium, blarge=batch_length
-    
-    self._lengthToTag = lambda x: 'small' if x<ssmall else 'medium' if x<smedium else 'large'
-    self._tagToLength = lambda x: bsmall if x=='small' else bmedium if x=='medium' else blarge
-    seed=69
-    self._random = np.random.RandomState(seed)
-
-  def sample_problem(self, treshold, balance=False):
-    if treshold:
-      options=[opt for opt, stat in self._stats.items() if isinstance(stat, dict) and stat['stats_count']>=treshold]
-    else:
-      options=self._stats.keys()
-    if self._random.randint(2):
-      new_options=[opt for opt in options if self._stats[opt]['stats_done']>0]
-      if len(new_options):
-        options=new_options
-    return self._random.choice(options)
-
-  def sample_lengthIndex(self, problem, treshold, weigth=lambda x:x**0.7):
-    x=self._stats[problem]
-    options={}
-    for k in x.keys():
-      if k[:6]=='stats_': continue
-      options[k]=x[k]['stats_count']
-    #Emit small ones and weigth
-    options={k: v for k,v in options.items() if v>=treshold}
-    probs=np.array(list(options.values()))
-    probs=weigth(probs)
-    probs/=np.sum(probs)
-
-    lengthIndex=self._random.choice(list(options.keys()), p=probs)
-    return lengthIndex
-  
-  def sample_episode(self, problem, lengthIndex, positive=True):
-    episodes=self._storage[problem][lengthIndex]
-    if positive:
-      ep_names=[]
-      for ep in reversed(episodes):
-        #ep=(stat, name), stat=(reward, end_reward, length)
-        if ep[0][0]>=1: ep_names.append(ep)
-        else: break
-      if len(ep_names)>0:
-        selected_ep=ep_names[self._random.randint(len(ep_names))]
-      else:
-        selected_ep=episodes[self._random.randint(len(episodes))]
-    else:
-      selected_ep=episodes[self._random.randint(len(episodes))]
-
-    episode, stat=self._episodes[selected_ep[1]], selected_ep[0]
-    length=self._tagToLength(lengthIndex)
-    ep_length=stat[2]
-
-    if positive and self._random.randint(2):
-      index=ep_length-length
-    else:
-      index=self._random.randint(ep_length-length+1)
-    episode = {k: v[index: index + length] for k, v in episode.items() if k!='action_space'}
-    episode['gnn']={k: [episode['gnn'][i][k] for i in range(length)] for k in episode['gnn'][0].keys()}
-    return episode
-
   def store(self, episode, ep_name):
     self._episodes[ep_name]=episode
     problem_name, _, _, length=ep_name[:-4].split("-")
     #problem_name=problem_name.split('\\')[-1]
-    lengthTag=self._lengthToTag(int(length))
-    self.add_episode(ep_name, [problem_name, lengthTag], (np.sum(episode['reward']), episode['reward'][-1], int(length)))
+    self.add_episode(ep_name, [problem_name], (np.sum(episode['reward']), episode['reward'][-1], int(length)))
 
   def get_stat(self, keys, name):
     x=self._stats
@@ -152,4 +89,92 @@ class DataStorage:
 
   def __len__(self):
     return len(self._episodes)
+
+class DataSamplerDep(DataStorage):
+  def __init__(self, section_length=[6,18], batch_length=[2,4,8]):
+    super().__init__()
+    ssmall, smedium=section_length
+    bsmall, bmedium, blarge=batch_length
+    
+    self._lengthToTag = lambda x: 'small' if x<ssmall else 'medium' if x<smedium else 'large'
+    self._tagToLength = lambda x: bsmall if x=='small' else bmedium if x=='medium' else blarge
+    seed=69
+    self._random = np.random.RandomState(seed)
+
+  def sample_problem(self, treshold, balance=False):
+    if treshold:
+      options=[opt for opt, stat in self._stats.items() if isinstance(stat, dict) and stat['stats_count']>=treshold]
+    else:
+      options=self._stats.keys()
+    if self._random.randint(2):
+      new_options=[opt for opt in options if self._stats[opt]['stats_done']>0]
+      if len(new_options):
+        options=new_options
+    return self._random.choice(options)
+
+  def sample_lengthIndex(self, problem, treshold, weigth=lambda x:x**0.7):
+    x=self._stats[problem]
+    options={}
+    for k in x.keys():
+      if k[:6]=='stats_': continue
+      options[k]=x[k]['stats_count']
+    #Emit small ones and weigth
+    options={k: v for k,v in options.items() if v>=treshold}
+    probs=np.array(list(options.values()))
+    probs=weigth(probs)
+    probs/=np.sum(probs)
+
+    lengthIndex=self._random.choice(list(options.keys()), p=probs)
+    return lengthIndex
+  
+  def sample_episode(self, problem, lengthIndex, positive=True):
+    episodes=self._storage[problem][lengthIndex]
+    if positive:
+      ep_names=[]
+      for ep in reversed(episodes):
+        #ep=(stat, name), stat=(reward, end_reward, length)
+        if ep[0][0]>=1: ep_names.append(ep)
+        else: break
+      if len(ep_names)>0:
+        selected_ep=ep_names[self._random.randint(len(ep_names))]
+      else:
+        selected_ep=episodes[self._random.randint(len(episodes))]
+    else:
+      selected_ep=episodes[self._random.randint(len(episodes))]
+
+    episode, stat=self._episodes[selected_ep[1]], selected_ep[0]
+    length=self._tagToLength(lengthIndex)
+    ep_length=stat[2]
+
+    if positive and self._random.randint(2):
+      index=ep_length-length
+    else:
+      index=self._random.randint(ep_length-length+1)
+    episode = {k: v[index: index + length] for k, v in episode.items() if k!='action_space'}
+    episode['gnn']={k: [episode['gnn'][i][k] for i in range(length)] for k in episode['gnn'][0].keys()}
+    return episode
+
+
+class DataSampler(DataStorage):
+  def __init__(self):
+    super().__init__()
+
+  def sample_problem(self, treshold, balance=False):
+    if treshold:
+      options=[opt for opt, stat in self._stats.items() if isinstance(stat, dict) and stat['stats_count']>=treshold]
+    else:
+      options=self._stats.keys()
+    if self._random.randint(2):
+      new_options=[opt for opt in options if self._stats[opt]['stats_done']>0]
+      if len(new_options):
+        options=new_options
+    return self._random.choice(options)
+
+  def sample_episode(self, episode):
+    episodes=self._storage[problem]
+    stat, ep_ref = episodes[self._random.randint(len(episodes))]
+
+    episode, stat=self._episodes[selected_ep[1]], selected_ep[0]
+    return episode
+
 
