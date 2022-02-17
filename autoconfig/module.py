@@ -17,15 +17,16 @@ class ConfigurationNode:
             for k, v in zip(signature.parameters, args):
                 self._params[k] = v
             for k in signature.parameters:
+                if k == 'args' or k == 'kwargs': continue
                 if k not in self._params:
                     self._params[k] = self[k]
 
         'Others:'
         self._cache = None
 
-    def __call__(self,*args, **kwargs):
+    def __call__(self,*args, name = None, **kwargs):
         'Caches args and kwargs which will be loaded to the next configured object.'
-        self._cache = (None, args, kwargs)
+        self._cache = (name, args, kwargs)
         return self
 
     @property
@@ -63,6 +64,7 @@ class ConfigurationNode:
         while node is not None:
             if name in node._params:
                 return node._params[name]
+            node = node._parent
         return None
 
 class ConfigurationCore(ConfigurationNode):
@@ -77,11 +79,11 @@ class ConfigurationCore(ConfigurationNode):
             x = x[name]
         return {k: v for k, v in x.items() if not isinstance(v, dict)}
 
-class ConfiguredModel:
-    __slots__ = ['_config']
+class ConfiguredModule:
 
-    def __init__(self):
-        'Init should be overwritten.'
+    def __init__(self, *args, **kwargs):
+        if not hasattr(self, '_config'):
+            self._config = ConfigurationCore('', *args, **kwargs)
 
     def get(self, name, ctor, *args, **kwargs):
         'Creates or gathers object which is initialized by the autoConfig.'
