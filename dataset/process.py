@@ -12,7 +12,7 @@ from gnn.graph_data import GraphData
 import pathlib
 
 import numpy as np
-from dataset.data_storage import DataStorage
+from dataset.data_storage import DataStorage, DataSampler
 
 'We need to import envs.ProLog.meta_data to collect meta for new environments.'
 from envs.ProLog import meta_data
@@ -200,7 +200,7 @@ def process_episode(config, logger, mode, train_eps, eval_eps, episode):
 def load_episodes(directory, limit=None):
   directory = pathlib.Path(directory).expanduser()
   if version==2:
-    episodes = DataStorage()
+    episodes = DataSampler()  # dep: DataStorage()
   else:
     episodes = {}
   total = 0

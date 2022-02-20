@@ -158,8 +158,10 @@ class DataSamplerDep(DataStorage):
 class DataSampler(DataStorage):
   def __init__(self):
     super().__init__()
+    seed=69
+    self._random = np.random.RandomState(seed)
 
-  def sample_problem(self, treshold, balance=False):
+  def sample_problem(self, treshold=1, balance=False):
     if treshold:
       options=[opt for opt, stat in self._stats.items() if isinstance(stat, dict) and stat['stats_count']>=treshold]
     else:
@@ -170,11 +172,11 @@ class DataSampler(DataStorage):
         options=new_options
     return self._random.choice(options)
 
-  def sample_episode(self, episode):
+  def sample_episode(self, problem):
     episodes=self._storage[problem]
     stat, ep_ref = episodes[self._random.randint(len(episodes))]
 
-    episode, stat=self._episodes[selected_ep[1]], selected_ep[0]
+    episode, stat=self._episodes[ep_ref], stat
     return episode
 
 

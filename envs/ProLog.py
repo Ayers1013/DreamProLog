@@ -205,6 +205,7 @@ class ProLog:
 
 def meta_data(problem_name, image_gnn = False, image_text = True):
     env=ProLog()
+    env.reset("leancop/theorems/"+problem_name)
     image = {}
 
     if image_gnn:
