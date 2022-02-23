@@ -51,7 +51,7 @@ class LoggerWandb:
     self._scalars = {}
     self._images = {}
     self._videos = {}
-    self.step = step
+    self.step = 1 # step
 
   def __del__(self):
     self.run.finish()
@@ -81,6 +81,9 @@ class LoggerWandb:
     self._scalars = {}
     self._images = {}
     self._videos = {}
+
+    # TODO remove it
+    self.step += 1
 
   
 

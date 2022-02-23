@@ -8,7 +8,7 @@ The state autoencoder decodes a set of goals embedded into R^lxd
 Our data will come in the shape of (batch, goal_max, goal_length_max, dimension)
 '''
 
-class StateModel(tf.keras.Model):
+class StateModel(tf.Module):
     def __init__(self, 
     goal_N = 3, state_N = 3, embed_tokens = 512, goal_querry = 16, state_querry = 8, goal_length = 128, state_length = 128,
     d_model = 128, dff = 512, 
@@ -58,7 +58,7 @@ class StateModel(tf.keras.Model):
         return dist
         
     
-    def calc_loss(self, inp, target, training):
+    def __call__(self, inp, target, training):
         assert len(inp.shape)==3
         batch_size = inp.shape[0]
         goal_outputs, state_outputs, goal_masks, state_masks = self.encode(inp, training)
@@ -70,7 +70,7 @@ class StateModel(tf.keras.Model):
         
         goal_latent_reconst_logits = self.state_autoencoder.decode(*(state_sample, *state_outputs[1:]), *state_masks, training)
         goal_latent_reconst_logits = self.out_dense(goal_latent_reconst_logits)
-        goal_latent_reconst_logits = tf.reshape(goal_latent_reconst_logits, (512, 16, 128))
+        goal_latent_reconst_logits = tf.reshape(goal_latent_reconst_logits, (batch_size *128, 16, 128))
         goal_latent_reconst = self.goal_latent(goal_latent_reconst_logits)
         goal_latent_reconst_sample = goal_latent_reconst.extract(training)
         goal_latent_reconst_sample = tf.reshape(goal_latent_reconst_sample, (batch_size*128,) + (self.goal_querry, 128))
@@ -83,11 +83,6 @@ class StateModel(tf.keras.Model):
         losses['goal_to_goal'] = self._loss(target, decoded_from_latent)#*((0.25/tf.stop_gradient(losses['goal_embedder']))**1.5)
         losses['state_to_state'] = goal_outputs[0].compare(goal_latent_reconst)
         #self._loss2(goal_embed, goal_embed_reconst)
-        return losses
-    
-    def call(self, x, training):
-        inp, target = x
-        losses = self.calc_loss(inp, target, training)
         scalars = {
                 'goal_autoencoder': 2.5,
                 'goal_to_goal': 0.5,
@@ -96,4 +91,4 @@ class StateModel(tf.keras.Model):
         loss = 0.0
         for k, l in losses.items():
             loss += scalars[k]*l
-        return loss
+        return state_outputs[0], loss, losses

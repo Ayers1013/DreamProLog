@@ -1,6 +1,6 @@
 import tensorflow as tf
 from .autoencoder import Model, RegressiveModel
-from .model import StateNet
+from .models import StateModel
 
 def test_autoencoder_Model(logger):
     shape = (16, 64)
@@ -51,12 +51,12 @@ def test_autoencoder_RegressiveModel(logger):
     return 'transformer.autoencoder.RegressiveModel checks out.'
 
 def test_model_StateNet(logger):
-    shape = (4, 128, 128)
+    shape = (2, 128, 128)
     inp = tf.random.uniform(shape, 1, 100, dtype = tf.int32)
 
-    model = StateNet()
+    model = StateModel()
 
-    x = model.calc_loss(inp, inp, False)
-    print(x)
+    x = model(inp, inp, False)
+    logger(x)
 
-    return 'transformer.model.StateNet checks out.'
+    return 'transformer.model.StateModel checks out.'

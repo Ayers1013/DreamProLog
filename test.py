@@ -1,5 +1,5 @@
-#from misc.tests import *
-#from transformer.tests import *
+from misc.tests import *
+from transformer.tests import *
 from autoconfig.tests import *
 
 #import tensorflow as tf
@@ -7,8 +7,8 @@ import sys
 
 VERBOSITY = True
 
-#logger = lambda *args, **kwargs: None
-logger = lambda *args: print('\t', *args)
+logger = lambda *args, **kwargs: None
+#logger = lambda *args: print('\t', *args)
 
 if __name__ == '__main__':
     #allow tensorflow to be initialized before tests start

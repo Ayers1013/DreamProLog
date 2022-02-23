@@ -105,9 +105,6 @@ class DatasetManager:
         data.append(stat_list)
     self._logger._scalars.update(scalars)
     self._logger.table('Dataset', columns, data)
-    
-
-
 
   def __iter__(self):
     names=[

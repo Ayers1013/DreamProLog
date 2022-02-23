@@ -69,7 +69,7 @@ class Controller:
     if config.debug:
       tf.config.experimental_run_functions_eagerly(True)
       #tf.debugging.experimental.enable_dump_debug_info(str(logdir), tensor_debug_mode="FULL_HEALTH", circular_buffer_size=-1)
-    if False: #config.gpu_growth:
+    if True: #config.gpu_growth:
       message = 'No GPU found. To actually train on CPU remove this assert.'
       #print(message)
       #TODO
@@ -85,7 +85,7 @@ class Controller:
     config.traindir.mkdir(parents=True, exist_ok=True)
     config.evaldir.mkdir(parents=True, exist_ok=True)
     step = count_steps(config.traindir)
-    logger = tools.LoggerEmpty(logdir, step, config)# tools.LoggerWandb(logdir, step, config)
+    logger = tools.LoggerWandb(logdir, step, config) # tools.LoggerEmpty(logdir, step, config)# 
 
     return logger
 

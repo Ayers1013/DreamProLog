@@ -23,7 +23,7 @@ prolog:
   envs: 1
   action_repeat: 1
   time_limit: 1000
-  prefill: 60000
+  prefill: 64000
   eval_noise: 0.0
   clip_rewards: 'identity'
   atari_grayscale: False
@@ -82,7 +82,7 @@ prolog:
   value_lr: 0.001
   actor_lr: 0.001
   opt_eps: 0.0008
-  grad_clip: 200
+  grad_clip: 0 # not supported
   value_grad_clip: 100
   actor_grad_clip: 100
   dataset_size: 100000

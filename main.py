@@ -5,12 +5,14 @@ import warnings
 import argparse
 import functools
 
+import collections
+
 #import tensorflow as tf
 #from tensorflow.keras.mixed_precision import experimental as prec
 #from tensorflow.python.util import tf_decorator
 
 #warnings.filterwarnings('ignore', '.*box bound precision lowered.*')
-#os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 # os.environ['MUJOCO_GL'] = 'egl'
 
 import tools
@@ -65,10 +67,35 @@ if __name__ == '__main__':
   from controller import Controller
   ctrl=Controller(config, logdir)
   #ctrl.simulate()
-  ctrl.train_only_worldModel(2222)
+  #ctrl.train_only_worldModel(2222)
   #ctrl.train_only(10000)
   """from evalute import Judge
   judge=Judge(ctrl.agent)
   for _ in range(10):
     episode=next(ctrl.datasetManager)
     judge.simulate_trajectory(0, episode)"""
+  from models_new import WorldModel
+
+  batch_size = 2
+  wm = WorldModel(0, ctrl._config)
+  ds = iter(ctrl.datasetManager.dataset(batch_size))
+  
+  # remove
+  import tensorflow as tf
+  train = tf.function(wm.train, input_signature = [ctrl.datasetManager.signature(batch_size)])
+  _metrics = collections.defaultdict(tf.metrics.Mean)
+  _should_log = tools.Every(64)
+  _logger = ctrl._logger
+  ctrl.datasetManager.logging()
+  for i in range(2**15):
+      data = next(ds)
+      metrics = train(data)
+      for name, value in metrics.items():
+        _metrics[name].update_state(value)
+      if _should_log(i):
+        for name, mean in _metrics.items():
+          _logger.scalar(name, float(mean.result()))
+          mean.reset_states()
+        _logger.write()
+    
+    

@@ -64,7 +64,7 @@ class DatasetManager:
         length = len(sample['action'])
         
         #sample episode snapshot along with the next one 
-        r = random.randint(len(sample)-1)
+        r = random.randint(len(sample['action'])-1)
         {k: ep0[k].append(v[r]) if k != 'text' else 
           ep0[k].append(convert_text(v[r])) for k, v in sample.items() if k != 'action'}
         actions.append(sample['action'][r+1])
@@ -85,7 +85,8 @@ class DatasetManager:
     return [functools.partial(
       process_episode, config, self._logger, mode, self._train_eps, self._eval_eps)]
 
-  def dataset(self, batch_size, balance=True):
+  def signature(self, batch_size):
+    
     signature_ep = {
       'action_mask': tf.TensorSpec((batch_size, None), dtype=tf.int32),
       'text': tf.TensorSpec((batch_size, 128, 129), dtype=tf.int32),
@@ -95,11 +96,14 @@ class DatasetManager:
     signature_action = tf.TensorSpec((batch_size,), dtype=tf.int32)
     signature_meta = tf.TensorSpec((None, 129), dtype=tf.int32)
     signature = (signature_ep, signature_action, signature_ep, signature_meta)
+    return signature
+
+  def dataset(self, batch_size, balance=True):
 
     generator = lambda: self._sample(
       'train', batch_size, balance)
     #output_sign=self._output_sign(batch_size, self._train_eps._tagToLength(batch_length))
-    dataset = tf.data.Dataset.from_generator(generator, output_signature=signature)
+    dataset = tf.data.Dataset.from_generator(generator, output_signature=self.signature(batch_size))
     dataset = dataset.prefetch(10)
     return dataset
 
@@ -121,6 +125,6 @@ class DatasetManager:
     self._logger.table('Dataset', columns, data)
 
     def __iter__(self, *args, **kwargs):
-      return self.dataset(*args, **kwargs)
+      return iter(self.dataset(*args, **kwargs))
 
 
