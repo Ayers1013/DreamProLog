@@ -22,7 +22,7 @@ class ConfigurationNode:
                     self._params[k] = self[k]
 
         'Others:'
-        self._cache = None
+        self._cache = (None, [], {})
 
     def __call__(self,*args, name = None, **kwargs):
         'Caches args and kwargs which will be loaded to the next configured object.'
@@ -52,10 +52,14 @@ class ConfigurationNode:
     def __sub__(self, ctor):
         'Initializes object with constructor "ctor" using inherited, cached and loaded configurations.'
         name, args, kwargs = self._cache
-        self._cache = None
+        self._cache = (None, [], {})
         node = ConfigurationNode(ctor, name, self, *args, **kwargs)
         self._children.append(node)
-        return ctor(**node._params)
+
+        res = ctor(**node._params)
+        if isinstance(res, ConfiguredModule):
+            res._config = node
+        return res
 
 
     def __getitem__(self, name):

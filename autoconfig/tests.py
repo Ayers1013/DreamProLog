@@ -1,3 +1,5 @@
+import tensorflow as tf
+
 from .module import *
 
 def test_modules_0(logger):
@@ -53,3 +55,25 @@ def test_modules_2(logger):
     logger(*b.test())
     logger(b._config._name, *[c._name for c in b._config._children])
     return 'autoconfig.module test 2 passed.'
+
+def dense(units, activation=None, use_bias=True,
+    kernel_initializer='glorot_uniform',
+    bias_initializer='zeros', kernel_regularizer=None,
+    bias_regularizer=None, activity_regularizer=None, kernel_constraint=None,
+    bias_constraint=None, **kwargs): tf.keras.layers.Dense(units, activation, use_bias, bias_initializer, kernel_regularizer, bias_regularizer, activity_regularizer, kernel_constraint, bias_constraint, **kwargs)
+
+
+def test_modules_3(logger):
+    class Module(ConfiguredModule, tf.Module):
+        def __init__(self, num_layers, units, *args, **kwargs):
+            # initialise parent classes
+            ConfiguredModule.__init__(self, num_layers=num_layers, units=units, *args, **kwargs)
+            tf.Module.__init__(self)
+
+            cf = self._config
+            layers = [cf(activation='relu') - dense for i in range(num_layers)]
+            end_layer = cf(activation='sigmoid') - dense
+
+    module = Module(3, 32)
+
+    return 'autoconfig.module test 3 passed.'
