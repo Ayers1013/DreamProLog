@@ -10,13 +10,13 @@ class WorldModel(tools.Module):
     self._step = step
     self._config = config
     #NOTE to gnn
-    self.autoencoder = StateModel()
+    self.autoencoder = StateModel(state_length=config.state_length, goal_length=config.goal_length)
     self.dense = tf.keras.layers.Dense(128, )
     self.heads = {}
 
     #NOTE to gnn
     self.heads['reward'] = networks.DenseHead(
-      [], config.reward_layers, config.units, config.act)
+      [], config.reward_layers, config.units, config.act, std=.1)
     if config.pred_discount:
       self.heads['discount'] = networks.DenseHead(
         [], config.discount_layers, config.units, config.act, dist='binary')
@@ -46,7 +46,7 @@ class WorldModel(tools.Module):
         like = pred.log_prob(tf.cast(ep0[name], tf.float32))
         mse = (tf.cast(ep0[name], tf.float32)-tf.cast(pred.mode(), tf.float32))**2
         losses[name] = tf.reduce_mean(mse)
-        loss += mse
+        loss += -tf.reduce_mean(like) #mse
 
     model_parts = [self.autoencoder] + list(self.heads.values())
     varibs = self.trainable_variables

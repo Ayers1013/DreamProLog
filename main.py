@@ -78,11 +78,12 @@ if __name__ == '__main__':
 
   batch_size = 2
   wm = WorldModel(0, ctrl._config)
-  ds = iter(ctrl.datasetManager.dataset(batch_size))
+  shape = (ctrl._config.batch_size, ctrl._config.state_length, ctrl._config.goal_length)
+  ds = iter(ctrl.datasetManager.dataset(*shape))
   
   # remove
   import tensorflow as tf
-  train = tf.function(wm.train, input_signature = [ctrl.datasetManager.signature(batch_size)])
+  train = tf.function(wm.train, input_signature = [ctrl.datasetManager.signature(*shape)])
   _metrics = collections.defaultdict(tf.metrics.Mean)
   _should_log = tools.Every(64)
   _logger = ctrl._logger

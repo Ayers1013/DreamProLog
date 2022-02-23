@@ -51,12 +51,23 @@ def test_autoencoder_RegressiveModel(logger):
     return 'transformer.autoencoder.RegressiveModel checks out.'
 
 def test_model_StateNet(logger):
-    shape = (2, 128, 128)
-    inp = tf.random.uniform(shape, 1, 100, dtype = tf.int32)
+    def exp(shape, **kwargs):
+        inp = tf.random.uniform(shape, 1, 100, dtype = tf.int32)
+        bs, sl, gl = shape
+        model = StateModel(state_length=sl, goal_length=gl, **kwargs)
 
-    model = StateModel()
-
-    x = model(inp, inp, False)
-    logger(x)
+        x = model(inp, inp, False)
+        logger(x)
+    for shape in [
+        (2, 128, 128), (4, 96, 96), (8, 64, 64),
+    ]:
+      exp(shape)  
+    
+    config = {'d_model': 32}
+    exp(shape, **config)
+    config = {'d_model': 32, 'd_scale': 2}
+    exp(shape, **config)
+    config = {'d_model': 32, 'd_scale': 2, 'state_N': 1, 'goal_querry': 4, 'state_querry': 1, 'dff': 64, 'num_heads': 2}
+    exp(shape, **config)
 
     return 'transformer.model.StateModel checks out.'

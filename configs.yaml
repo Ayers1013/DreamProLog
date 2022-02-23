@@ -74,6 +74,9 @@ prolog:
 
   # Training
   #....batch_size: 50
+  batch_size: 2
+  state_length: 64
+  goal_length: 64
   #....batch_length: 1
   train_every: 25
   train_steps: 10

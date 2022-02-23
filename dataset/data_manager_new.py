@@ -33,22 +33,22 @@ class DatasetManager:
 
     self.tokenParser = TokenParser()
 
-  def _sample(self, mode, batch = None, seed=0):
+  def _sample(self, mode, batch, state_length, goal_length, seed=0):
     random = np.random.RandomState(seed)
     selected_eps=dict(train=self._train_eps, eval=self._eval_eps)[mode]
 
     def pad(narr):
       size = narr.size
-      if size>128:
-          narr = narr[:128]
-          size = 128
-      return np.pad(narr, [1, 128-size], constant_values= [(299, 0)])
+      if size>goal_length:
+          narr = narr[:goal_length]
+          size = goal_length
+      return np.pad(narr, [1, goal_length-size], constant_values= [(299, 0)])
 
     parser = self.tokenParser
 
     def convert_text(state, apply_pad = True):
-      state = np.array([pad(np.array(parser.parse(str(goal)[1:]), dtype = np.int32)) for goal in state])
-      if apply_pad: state = np.pad(state[:128], [(0, 128-state.shape[0]), (0,0)])
+      state = np.array([pad(np.array(parser.parse(str(goal)[1:]), dtype = np.int32)) for goal in state[:state_length]])
+      if apply_pad: state = np.pad(state, [(0, state_length-state.shape[0]), (0,0)])
       return state
 
     while True:
@@ -85,25 +85,25 @@ class DatasetManager:
     return [functools.partial(
       process_episode, config, self._logger, mode, self._train_eps, self._eval_eps)]
 
-  def signature(self, batch_size):
+  def signature(self, batch_size, state_length, goal_length):
     
     signature_ep = {
       'action_mask': tf.TensorSpec((batch_size, None), dtype=tf.int32),
-      'text': tf.TensorSpec((batch_size, 128, 129), dtype=tf.int32),
+      'text': tf.TensorSpec((batch_size, state_length, goal_length+1), dtype=tf.int32),
       'reward': tf.TensorSpec((batch_size), dtype=tf.float32),
       'discount': tf.TensorSpec((batch_size,), dtype=tf.float32),
     }
     signature_action = tf.TensorSpec((batch_size,), dtype=tf.int32)
-    signature_meta = tf.TensorSpec((None, 129), dtype=tf.int32)
+    signature_meta = tf.TensorSpec((None, goal_length+1), dtype=tf.int32)
     signature = (signature_ep, signature_action, signature_ep, signature_meta)
     return signature
 
-  def dataset(self, batch_size, balance=True):
+  def dataset(self, batch_size, state_length, goal_length, balance=True):
 
     generator = lambda: self._sample(
-      'train', batch_size, balance)
+      'train', batch_size, state_length, goal_length, balance)
     #output_sign=self._output_sign(batch_size, self._train_eps._tagToLength(batch_length))
-    dataset = tf.data.Dataset.from_generator(generator, output_signature=self.signature(batch_size))
+    dataset = tf.data.Dataset.from_generator(generator, output_signature=self.signature(batch_size, state_length, goal_length))
     dataset = dataset.prefetch(10)
     return dataset
 

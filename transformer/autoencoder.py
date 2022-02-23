@@ -188,7 +188,7 @@ class RegressiveModel(tf.keras.Model):
         self.enc_embed = tf.keras.layers.Embedding(embed_tokens, d_model)
         self.decoder = RegressiveDecoder(N, output_length, d_model, num_heads, dff, rate)
 
-        #TODO add the other latent space options
+        # TODO add the other latent space options
         self.latent_layer = latent.NormalSpace(scale_init = 0.15)
         
         self.dense = tf.keras.layers.Dense(embed_tokens, activation=None, use_bias=False)
