@@ -2,18 +2,20 @@ import tensorflow as tf
 import tensorflow_probability as tfp
 from tensorflow_probability import distributions as tfd
 
-
 class LatentSpace:
     '''
     Creates a tensorflow layer to handle latent space. 
     Subclasses may have self._dist, otherwise sample, mode methods have to be overwritten.
     '''
 
-    def sample(self):
-        return self._dist.sample()
+    def sample(self, *args, **kwargs):
+        return self._dist.sample(*args, **kwargs)
 
-    def mode(self):
-        return self._dist.mode()
+    def mode(self, *args, **kwargs):
+        return self._dist.mode(*args, **kwargs)
+
+    def log_prob(self, *args, **kwargs):
+        return self._dist.log_prob(*args, **kwargs)
     
     def extract(self, training):
         if training: return self.sample()
@@ -39,14 +41,22 @@ class NormalSpace(tf.Module, LatentSpace):
         return tfd.kl_divergence(self._dist, latent._dist)
 
 class ScaledNormalSpace(tf.Module, LatentSpace):
-    def __init__(self, d_model, scale_init = 1.0, scale_min = 0.001):
+    def __init__(self, d_model, scale_min=0.001):
         super().__init__()
+        self._scale_min = scale_min
+
         self._latent_dense = tf.keras.layers.Dense(d_model)
-        self._scale_dense = tf.keras.layers.Dense(1, activation = 'sigmoid')
+        self._scale_dense = tf.keras.layers.Dense(d_model, activation = 'sigmoid')
+        
+        self.base_dist = tfd.Independent(
+            tfd.Normal(tf.zeros(d_model), 1.),
+            reinterpreted_batch_ndims = 1
+        )
 
     def __call__(self, logit):
         self._loc = self._latent_dense(logit)
         self._scale = self._scale_dense(logit)
+        if self._scale_min: self._scale = tf.math.minimum(self._scale, self._scale_min)
         self._dist = tfd.Independent(
             tfd.Normal(self._loc, self._scale),
             reinterpreted_batch_ndims = 1)

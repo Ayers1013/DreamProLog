@@ -58,12 +58,12 @@ def init_config():
     parser.add_argument(f'--{key}', type=arg_type, default=arg_type(value))
   #main(args.logdir, parser.parse_args(remaining))
   config=parser.parse_args(remaining)
-  print(config)
+  #print(config)
   return config, args.logdir
 
 if __name__ == '__main__':
   config, logdir= init_config()
-  print(config)
+  #print(config)
   from controller import Controller
   ctrl=Controller(config, logdir)
   #ctrl.simulate()
@@ -83,6 +83,7 @@ if __name__ == '__main__':
   
   # remove
   import tensorflow as tf
+  #train = wm.train
   train = tf.function(wm.train, input_signature = [ctrl.datasetManager.signature(*shape)])
   _metrics = collections.defaultdict(tf.metrics.Mean)
   _should_log = tools.Every(64)

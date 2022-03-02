@@ -104,7 +104,8 @@ class RegressiveAutoencoder(tf.Module):
         self.encoder = Encoder(N, querry, output_length, d_model, num_heads, dff, rate)
         self.decoder = RegressiveDecoder(N, output_length, d_model, num_heads, dff, rate)
 
-        self.latent_layer = latent.NormalSpace(scale_init = 0.15)
+        # TODO it was modified by hand
+        self.latent_layer = latent.ScaledNormalSpace(d_model)#scale_init = 0.15)
         
     def encode(self, x, mask, training):
         x, _ = self.encoder(x, mask, training)

@@ -44,6 +44,12 @@ def test_latent_ScaledNormalSpace(logger):
     assert mode.shape == (4, 6)
     assert loss.shape == (4,)
 
+    logprob = x.base_dist.log_prob(sample)
+    logger('\n\n')
+    logger(logprob)
+
+    assert logprob.shape ==(4,)
+
     return 'misc.latent.ScaledNormalSpace checks out.'
 
 def test_latent_DiscrateSpace(logger):

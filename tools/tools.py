@@ -24,9 +24,11 @@ class LoggerEmpty:
 
   def __init__(self, logdir, step, config):
     self._scalars={}
+    self.step = step
     pass
 
   def scalar(self, name, value):
+    self._scalars[name] = float(value)
     pass
 
   def image(self, name, value):
@@ -36,7 +38,10 @@ class LoggerEmpty:
     pass
 
   def write(self):
-    pass
+    print(f'[{self.step}]', ' / '.join(f'{k} {v:.1f}' for k, v in self._scalars.items()))
+    # TODO remove it
+    self.step += 1
+    self._scalars = {}
 
   def table(self, name, columns, data):
     pass

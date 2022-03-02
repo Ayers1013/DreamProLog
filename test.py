@@ -1,14 +1,16 @@
 from misc.tests import *
-from transformer.tests import *
-from autoconfig.tests import *
+#from transformer.tests import *
+#from autoconfig.tests import *
 
 #import tensorflow as tf
 import sys
 
 VERBOSITY = True
 
-logger = lambda *args, **kwargs: None
-#logger = lambda *args: print('\t', *args)
+USE_PRINT = False
+
+logger = print if USE_PRINT else lambda *args, **kwargs: None
+#logger = lambda *args, **kwargs: print('\t', *args, **kwargs)
 
 if __name__ == '__main__':
     #allow tensorflow to be initialized before tests start

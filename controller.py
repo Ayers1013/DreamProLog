@@ -85,7 +85,10 @@ class Controller:
     config.traindir.mkdir(parents=True, exist_ok=True)
     config.evaldir.mkdir(parents=True, exist_ok=True)
     step = count_steps(config.traindir)
-    logger = tools.LoggerWandb(logdir, step, config) # tools.LoggerEmpty(logdir, step, config)# 
+    if self._config.logger == 'wandb':
+      logger = tools.LoggerWandb(logdir, step, config) 
+    elif self._config.logger == 'empty':
+      logger = tools.LoggerEmpty(logdir, step, config)# 
 
     return logger
 
