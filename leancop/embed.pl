@@ -373,7 +373,7 @@ state2gnnInput(State, GnnInput):-
     tab_comp(todos, Tableau, Todos),
     goals_list(Todos, [Goal], AllGoals), append(AllGoals, AllGoals1),
     ( Result= -1 -> AllGoals2 = []
-    ; Result=1 -> append(_,[H],Path), AllGoals2 = [H]
+    % ; Result=1 -> append(_,[H],Path), AllGoals2 = [H]
     ; AllGoals2 = AllGoals1
     ),
     goal2gnnInput(Actions, Goal, Path, AllGoals2, GnnInput).
