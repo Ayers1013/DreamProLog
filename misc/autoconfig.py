@@ -4,6 +4,17 @@ import pathlib
 import ruamel.yaml as yaml
 
 GET_PARAMETER_BY_ATTR = True
+DEEP_NAME_STRUCTURE = True
+
+def update_nested(to_dict, from_dict):
+    for k, v in from_dict.items():
+        if isinstance(v, dict):
+            if k not in to_dict: to_dict[k] = v
+            else:
+                to_dict[k] = {}
+                update_nested(to_dict[k], v)
+        else:
+            to_dict[k] = v
 
 class Configuration:
     def __init__(self, config, **kwargs):
@@ -36,6 +47,8 @@ class ConfigurationNode:
         self.__config_name = config_name
         self.__unique_name = unique_name
 
+        if parent is not None: parent.__children[self.__unique_name] = self
+
         self.__params = self.__load_params()
         #print(config_name, '----\n', params, self.__params, '\n----\n')
         if params is not None: self.__params.update(params)
@@ -58,6 +71,17 @@ class ConfigurationNode:
             return self.__parent.__params[self.__config_name]        
         return {}
 
+    '''
+    def __load_params(self):
+        if self.__parent is None: return {}
+        params = {}
+        if self.__config_name in self.__parent.__params:
+            params = self.__parent.__params[self.__config_name] 
+        if self.__unique_name in self.__parent.__params:
+            update_nested(params, self.__parent.__params[self.__unique_name])
+        return params
+    '''
+
     def __getattr__(self, name):
         if GET_PARAMETER_BY_ATTR and name[0] != '_':
             param = self[name]
@@ -78,13 +102,14 @@ class ConfigurationNode:
         if unique_name is None:
             index = [child.__config_name for child in self.__children.values()].count(config_name)
             unique_name = config_name + f'_{index}'
-        
-        #node = ConfigurationNode(self, config_name, unique_name)
-        #node.__params.update(kwargs)
 
         if issubclass(ctor, ConfiguredModule):
             return ctor(*args, parent=self, config_name=config_name, unique_name=unique_name, **kwargs)
         else:
+            if DEEP_NAME_STRUCTURE:
+                node = ConfigurationNode(self, config_name, unique_name)
+                node.__params.update(kwargs)
+
             ckwargs = {}
             signature = inspect.signature(ctor)
             for k in list(signature.parameters)[len(args):]:
@@ -95,13 +120,28 @@ class ConfigurationNode:
             return ctor(*args, **ckwargs)
 
     def _stats(self):
-        print(self.__config_name, self.__unique_name)
-        print(self.__params)
-        print(self.__parent)
+        return (self.__config_name, self.__unique_name, self.__params, self.__parent)
+
+    def _name_structure(self, suff = '', include_config_name = True, display_params = True, full_depth = True):
+        res = suff
+        if include_config_name: res+= f'{self.__config_name}: '
+        res+= self.__unique_name
+        if display_params: res += '\n' + suff + ' -' + ', '.join([f'{k}: {v}' for k,v in self.__params.items() if not isinstance(v, dict)]) 
+        res += '\n'
+        for child in self.__children.values():
+            if full_depth or isinstance(child, ConfiguredModule):
+                res += child._name_structure(suff+'\t', include_config_name, display_params, full_depth)
+        return res
 
 class ConfiguredModule(ConfigurationNode):
 
     def __init__(self, parent=None, config_name=None, unique_name=None, params=None, **kwargs):
+        if parent is None:
+            if config_name is None: 
+                config_name = type(self).__name__
+                if unique_name is None: unique_name = config_name +'_0'
+            elif unique_name is None: unique_name = config_name
+
         if params is None:
             params = {}
         params.update(kwargs)

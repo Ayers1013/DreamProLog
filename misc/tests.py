@@ -136,8 +136,96 @@ def test_autoconfig_1(logger):
             for l in self.layers:
                 x = l(x)
             x = self.end_layer(x)
+            return x
 
     nn = NN(num_layers=2, dims=8)
     inp = tf.zeros((8,8))
     x = nn(inp)
-    return 'misc.autoconfig test 0 passed.'
+    assert x.shape == (8,8)
+    return 'misc.autoconfig test 1 passed.'
+
+def test_autoconfig_2(logger):
+    class NN(ConfiguredModule, tf.keras.layers.Layer):
+        def __init__(self, **kwargs):
+            super().__init__(**kwargs)
+
+            self.layers = [self.configure(tf.keras.layers.Dense, self.dims, activation='relu') for i in range(self.num_layers)]
+            self.end_layer = self.configure(tf.keras.layers.Dense, self.dims, activation='sigmoid')
+
+        def call(self, x):
+            for l in self.layers:
+                x = l(x)
+            x = self.end_layer(x)
+            return x
+
+    class NN2(NN):
+        def __init__(self, **kwargs):
+            super().__init__(**kwargs)
+
+            self.end_layer2 = self.configure(tf.keras.layers.Dense, 1, activation = self.act)
+            self.nn = self.configure(NN)
+
+        def call(self, x):
+            x = super().call(x)
+            x = self.end_layer2(x)
+
+    
+    nn = NN2(num_layers=2, dims=8, act='')
+    inp = tf.zeros((8,8))
+    x = nn(inp)
+    logger(nn._name_structure(full_depth = False))
+    return 'misc.autoconfig test 2 passed.'
+
+def test_autoconfig_3(logger):
+    'Test whether param inheritenc correctly works.'
+    # NOTE autoconfig does not support param inheritence, therefore this test is disabled
+    class NN(ConfiguredModule, tf.keras.layers.Layer):
+        def __init__(self, **kwargs):
+            super().__init__(**kwargs)
+
+            self.layers = [self.configure(tf.keras.layers.Dense, self.dims, activation='relu') for i in range(self.num_layers)]
+            self.end_layer = self.configure(tf.keras.layers.Dense, self.dims, activation='sigmoid')
+            self.string = f'{self.x}'
+
+        def call(self, x):
+            for l in self.layers:
+                x = l(x)
+            x = self.end_layer(x)
+            return x
+
+    class NN2(NN):
+        def __init__(self, **kwargs):
+            super().__init__(**kwargs)
+
+            self.end_layer2 = self.configure(tf.keras.layers.Dense, 1, activation = self.act)
+            self.nn1 = self.configure(NN)
+            self.nn2 = self.configure(NN, unique_name = 'dr_strange')
+            self.nn3 = self.configure(NN, unique_name = 'spiderman')
+
+        def call(self, x):
+            x = super().call(x)
+            x = self.end_layer2(x)
+
+    params = {
+        'dims': 8,
+        'act': 'relu',
+        'num_layers': 3,
+        'x': 42,
+        'NN': {
+            'x': 3
+        },
+        'dr_strange': {
+        },
+        'spiderman': {
+            'x': 7
+        },
+    }
+
+    nn = NN2(params=params)
+    logger(nn._name_structure())
+
+    assert nn.nn1.x == 3
+    # NOTE nn.nn2.x should be 3 when param inheritence is supported
+    assert nn.nn2.x == 42
+    assert nn.nn3.x == 7
+    return 'misc.autoconfig test 3 passed.'
