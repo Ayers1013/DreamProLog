@@ -94,3 +94,50 @@ def test_latent_GumbleSpace(logger):
     assert loss.shape == (4,)
 
     return 'misc.latent.GumbleSpace checks out.'
+
+from .autoconfig import *
+def test_autoconfig_0(logger):
+    class A(ConfiguredModule):
+        def __init__(self, *args, **kwargs):
+            ConfiguredModule.__init__(self, *args, **kwargs)
+            self.z = self.x + self.y
+
+        def __call__(self):
+            return f'x:{self.x}, y:{self.y}, z:{self.z}.'
+        
+    class B(ConfiguredModule):
+        def __init__(self, *args, **kwargs):
+            ConfiguredModule.__init__(self, *args, **kwargs)
+            self.a = self.configure(A)
+
+        def __call__(self):
+            return f'B.z:{self.z}, A.{self.a()}'
+
+    b = B(x=4, y=5, z=420)
+    assert b() == 'B.z:420, A.x:4, y:5, z:9.'
+    #b._stats()
+    params = {'A': {'x': 69}, 'x': 707, 'z': 42}
+    b2 = B(y=5, z=420, params=params)
+    #b2._stats()
+    logger(b2())
+    assert b2() == 'B.z:420, A.x:69, y:5, z:74.'
+
+    return 'misc.autoconfig test 0 passed.'
+
+def test_autoconfig_1(logger):
+    class NN(ConfiguredModule, tf.keras.layers.Layer):
+        def __init__(self, **kwargs):
+            super().__init__(**kwargs)
+
+            self.layers = [self.configure(tf.keras.layers.Dense, self.dims, activation='relu') for i in range(self.num_layers)]
+            self.end_layer = self.configure(tf.keras.layers.Dense, self.dims, activation='sigmoid')
+
+        def call(self, x):
+            for l in self.layers:
+                x = l(x)
+            x = self.end_layer(x)
+
+    nn = NN(num_layers=2, dims=8)
+    inp = tf.zeros((8,8))
+    x = nn(inp)
+    return 'misc.autoconfig test 0 passed.'
