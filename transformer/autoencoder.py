@@ -1,3 +1,4 @@
+from misc.autoconfig import ConfiguredModule
 from .attention import *
 from .utils import *
 from misc import latent
@@ -7,7 +8,7 @@ import tensorflow_probability as tfp
 from tensorflow_probability import distributions as tfd
 
 class Encoder(tf.keras.layers.Layer):
-    def __init__(self, N, querry, output_length, d_model, num_heads, dff, rate):
+    def __init__(self, N, querry, output_length, d_model, num_heads, dff, rate, collapse_querry=True):
         super().__init__()
 
         self.positional_encoding = tf.Variable(initial_value = positional_encoding(output_length, d_model), trainable = False)
@@ -27,6 +28,10 @@ class Encoder(tf.keras.layers.Layer):
         latent_tokens = 256
         self.dense = tf.keras.layers.Dense(latent_tokens, use_bias = False)
 
+        self._collapse_querry = collapse_querry
+        if collapse_querry: self.collapse_dense = tf.keras.layers.Dense(d_model)
+
+
     def call(self, inp, mask, training):
         batch_size = tf.shape(inp)[0]
         v = inp + self.positional_encoding
@@ -42,6 +47,11 @@ class Encoder(tf.keras.layers.Layer):
 
         q, _att = self.q_layer(v, q, mask, training)
         attention['q_layer_att'] = _att
+
+        if self._collapse_querry:
+            q = tf.concat(q, axis=-2)
+            q = self.collapse_dense(q)
+
         return q, attention
 
 class Decoder(tf.keras.layers.Layer):
@@ -101,11 +111,20 @@ class Autoencoder(tf.Module):
 class RegressiveAutoencoder(tf.Module):
     def __init__(self, N=4, querry=8, output_length=128, latent_type = 'normal', d_model=128, num_heads=4, dff=256, rate=0.04):
         super().__init__()
-        self.encoder = Encoder(N, querry, output_length, d_model, num_heads, dff, rate)
+        self._collapse_querry = True
+        self._querry = querry
+        self._d_model = d_model
+        self.encoder = Encoder(N, querry, output_length, d_model, num_heads, dff, rate, self._collapse_querry)
         self.decoder = RegressiveDecoder(N, output_length, d_model, num_heads, dff, rate)
 
         # TODO it was modified by hand
         self.latent_layer = latent.ScaledNormalSpace(d_model)#scale_init = 0.15)
+        # TODO it was modified once more :(
+        #self.latent_layer = latent.NormalSpace(d_model)
+
+        # because we want to use multiple querry during reconstruction
+        if self._collapse_querry:
+            self.querry_layer = tf.keras.layers.Dense(querry*d_model)
         
     def encode(self, x, mask, training):
         x, _ = self.encoder(x, mask, training)
@@ -113,16 +132,22 @@ class RegressiveAutoencoder(tf.Module):
         return latent
 
     def decode(self, x, inp_embed, mask, look_ahead_mask, training):
+        if self._collapse_querry:
+            x = self.querry_layer(x)
+            x = tf.reshape(x, x.shape[:-1]+ (self._querry, self._d_model))
         x = self.decoder(x, inp_embed, mask, look_ahead_mask, training)
         return x
 
-class Model(tf.keras.Model):
-    def __init__(self, model_type = 'regressive', embed_tokens = 512, **kwargs):
-        super().__init__()
-        self._model_type = model_type
-        self.autoencoder = (RegressiveAutoencoder if model_type == 'regressive' else Autoencoder)(**kwargs) 
-        self.enc_embed = tf.keras.layers.Embedding(embed_tokens, kwargs['d_model'])
-        self.dense = tf.keras.layers.Dense(embed_tokens, activation=None, use_bias=False)
+class Model(ConfiguredModule, tf.keras.Model):
+    @property
+    def _param_args(self):
+        return ['model_type']
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, param_prefix='_', **kwargs)
+        self.autoencoder = self.configure(RegressiveAutoencoder if self._model_type == 'regressive' else Autoencoder)
+        self.enc_embed = tf.keras.layers.Embedding(self._embed_tokens, kwargs['d_model'])
+        self.dense = tf.keras.layers.Dense(self._embed_tokens, activation=None, use_bias=False)
 
 
     def encode(self, inp, training):

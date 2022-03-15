@@ -1,7 +1,7 @@
 from .latent import *
 import tensorflow as tf
 
-def test_latent_NormalSpace(logger):
+def test_latent_NormalSpace(logger, **kwargs):
     latent_layer = NormalSpace()
     logits = tf.random.uniform((4, 6))
     x = latent_layer(logits)
@@ -25,7 +25,7 @@ def test_latent_NormalSpace(logger):
 
     return 'misc.latent.NormalSpace checks out.'
 
-def test_latent_ScaledNormalSpace(logger):
+def test_latent_ScaledNormalSpace(logger, **kwargs):
     latent_layer = ScaledNormalSpace(6)
     logits = tf.random.uniform((4, 6))
     x = latent_layer(logits)
@@ -52,7 +52,7 @@ def test_latent_ScaledNormalSpace(logger):
 
     return 'misc.latent.ScaledNormalSpace checks out.'
 
-def test_latent_DiscrateSpace(logger):
+def test_latent_DiscrateSpace(logger, **kwargs):
     latent_layer = DiscrateSpace(8, 6)
     logits = tf.random.uniform((4, 6))
     x = latent_layer(logits)
@@ -73,7 +73,7 @@ def test_latent_DiscrateSpace(logger):
 
     return 'misc.latent.DiscrateSpace checks out.'
 
-def test_latent_GumbleSpace(logger):
+def test_latent_GumbleSpace(logger, **kwargs):
     temp = 0.5
     latent_layer = GumbleSpace(8, 6, temp)
     logits = tf.random.uniform((4, 6))
@@ -96,7 +96,7 @@ def test_latent_GumbleSpace(logger):
     return 'misc.latent.GumbleSpace checks out.'
 
 from .autoconfig import *
-def test_autoconfig_0(logger):
+def test_autoconfig_0(logger, **kwargs):
     class A(ConfiguredModule):
         def __init__(self, *args, **kwargs):
             ConfiguredModule.__init__(self, *args, **kwargs)
@@ -122,9 +122,9 @@ def test_autoconfig_0(logger):
     logger(b2())
     assert b2() == 'B.z:420, A.x:69, y:5, z:74.'
 
-    return 'misc.autoconfig test 0 passed.'
+    return 'misc.autoconfig test 0 (base) passed.'
 
-def test_autoconfig_1(logger):
+def test_autoconfig_1(logger, **kwargs):
     class NN(ConfiguredModule, tf.keras.layers.Layer):
         def __init__(self, **kwargs):
             super().__init__(**kwargs)
@@ -142,9 +142,9 @@ def test_autoconfig_1(logger):
     inp = tf.zeros((8,8))
     x = nn(inp)
     assert x.shape == (8,8)
-    return 'misc.autoconfig test 1 passed.'
+    return 'misc.autoconfig test 1 (tf.keras.layers.Layer compatibility) passed.'
 
-def test_autoconfig_2(logger):
+def test_autoconfig_2(logger, **kwargs):
     class NN(ConfiguredModule, tf.keras.layers.Layer):
         def __init__(self, **kwargs):
             super().__init__(**kwargs)
@@ -174,9 +174,9 @@ def test_autoconfig_2(logger):
     inp = tf.zeros((8,8))
     x = nn(inp)
     logger(nn._name_structure(full_depth = False))
-    return 'misc.autoconfig test 2 passed.'
+    return 'misc.autoconfig test 2 (co-inheritence) passed.'
 
-def test_autoconfig_3(logger):
+def test_autoconfig_3(logger, **kwargs):
     'Test whether param inheritenc correctly works.'
     # NOTE autoconfig does not support param inheritence, therefore this test is disabled
     class NN(ConfiguredModule, tf.keras.layers.Layer):
@@ -228,4 +228,16 @@ def test_autoconfig_3(logger):
     # NOTE nn.nn2.x should be 3 when param inheritence is supported
     assert nn.nn2.x == 42
     assert nn.nn3.x == 7
-    return 'misc.autoconfig test 3 passed.'
+    return 'misc.autoconfig test 3 (param inheritence) passed. Not full health!'
+
+def test_autoconfig_4(logger, **kwargs):
+    class A(ConfiguredModule):
+        def __init__(self, **kwargs):
+            super().__init__(param_prefix='_', **kwargs)
+        
+        def __str__(self):
+            return f'x:{self._x}, y:{self._y}'
+
+    a = A(x=3, y=5)
+    assert str(a) == 'x:3, y:5'
+    return 'misc.autonconfig test 4 (param_suffix) passed.'

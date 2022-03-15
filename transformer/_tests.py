@@ -2,7 +2,7 @@ import tensorflow as tf
 from .autoencoder import Model, RegressiveModel
 from .models import StateModel
 
-def test_autoencoder_Model(logger):
+def test_autoencoder_Model(logger, **kwargs):
     shape = (16, 64)
     inp = tf.random.uniform(shape, 1, 100, dtype = tf.int32)
     config = {
@@ -26,7 +26,7 @@ def test_autoencoder_Model(logger):
 
     return 'transformer.autoencoder.Model checks out.'
 
-def test_autoencoder_RegressiveModel(logger):
+def test_autoencoder_RegressiveModel(logger, **kwargs):
     shape = (16, 64)
     inp = tf.random.uniform(shape, 1, 100, dtype = tf.int32)
     config = {
@@ -50,7 +50,8 @@ def test_autoencoder_RegressiveModel(logger):
 
     return 'transformer.autoencoder.RegressiveModel checks out.'
 
-def test_model_StateNet(logger):
+def test_model_StateNet(logger, health='full', **kwargs):
+    if health!='full': return 'Skipped test.'
     def exp(shape, **kwargs):
         inp = tf.random.uniform(shape, 1, 100, dtype = tf.int32)
         bs, sl, gl = shape

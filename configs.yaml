@@ -1,10 +1,9 @@
 change:
   debug: False
 
-
 prolog:
 
-  logger: empty # wandb
+  logger: empty # empty # wandb
   traindir: Null
   evaldir: Null
   offline_traindir: ''

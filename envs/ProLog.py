@@ -1,13 +1,13 @@
-from numpy.core.einsumfunc import einsum
-import pyswip
 import threading
 import sys
 import pathlib
 
-from gnn import GraphData, extractActions, exctractImage, input2actionGraph, input2graph, gnn_output_sign
-#import gym
+import pyswip
 import numpy as np
 import tensorflow as tf
+
+from misc import ConfiguredModule
+from gnn import GraphData, extractActions, exctractImage, input2actionGraph, input2graph, gnn_output_sign
 
 class ProblemLibrary:
     def __init__(self, config=None):
@@ -28,10 +28,11 @@ class ProblemLibrary:
     def get(self):
         return self.problem()
 
-class ProLog:
+class ProLog(ConfiguredModule):
     LOCK=threading.Lock()
     
-    def __init__(self):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
         '''
         This environment is not configurable at the moment.
         '''

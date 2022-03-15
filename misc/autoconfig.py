@@ -23,7 +23,7 @@ class Configuration:
         self.update(kwargs)
 
     def load(self, config):
-        if isinstace(config, str):
+        if isinstance(config, str):
             _, ext = config.split('.')
             if ext == 'yaml':
                 self.load_from_yaml(config)
@@ -33,12 +33,13 @@ class Configuration:
                 self.load(c)
 
 
-    def load_from_yaml(path):
+    def load_from_yaml(self, path):
         self.__params.update(yaml.safe_load((pathlib.Path(path)).read_text()))
 
 
 class ConfigurationNode:
-    def __init__(self, parent=None, config_name=None, unique_name=None, params=None):
+    __param_prefix = ''
+    def __init__(self, parent=None, config_name=None, unique_name=None, param_prefix=None, params=None):
         'Tree structure:'
         super().__init__()
         self.__parent = parent
@@ -46,6 +47,7 @@ class ConfigurationNode:
         self.__children = {}
         self.__config_name = config_name
         self.__unique_name = unique_name
+        self.__param_prefix = param_prefix or ''
 
         if parent is not None: parent.__children[self.__unique_name] = self
 
@@ -82,11 +84,14 @@ class ConfigurationNode:
         return params
     '''
 
+    # TODO works well but a better defined behavior is necessary
     def __getattr__(self, name):
+        length = len(self.__param_prefix)
+        if name == '_ConfigurationNode__params': raise AttributeError
+        if name[:length] == self.__param_prefix: name = name[length:]
         if GET_PARAMETER_BY_ATTR and name[0] != '_':
-            param = self[name]
-            if param is not None: return param
-        raise AttributeError
+                return self[name]
+        raise AttributeError(f'The {name} attribute is not found.')
 
     def __getitem__(self, name):
         'Gather parameters by name.'
@@ -95,7 +100,7 @@ class ConfigurationNode:
             if name in node.__params:
                 return node.__params[name]
             node = node.__parent
-        return None
+        raise AttributeError(f'{name}')
 
     def configure(self, ctor, *args, config_name=None, unique_name=None, **kwargs):
         config_name=config_name if config_name is not None else ctor.__name__
@@ -116,37 +121,36 @@ class ConfigurationNode:
                 if k == 'args' or k == 'kwargs': continue
                 param = self[k]
                 if param is not None:
-                    ckwargs[k] = params
+                    ckwargs[k] = param
             return ctor(*args, **ckwargs)
 
     def _stats(self):
         return (self.__config_name, self.__unique_name, self.__params, self.__parent)
 
-    def _name_structure(self, suff = '', include_config_name = True, display_params = True, full_depth = True):
-        res = suff
+    def _name_structure(self, prefix = '', include_config_name = True, display_params = True, full_depth = True):
+        res = prefix
         if include_config_name: res+= f'{self.__config_name}: '
         res+= self.__unique_name
-        if display_params: res += '\n' + suff + ' -' + ', '.join([f'{k}: {v}' for k,v in self.__params.items() if not isinstance(v, dict)]) 
+        if display_params: res += '\n' + prefix + ' -' + ', '.join([f'{k}: {v}' for k,v in self.__params.items() if not isinstance(v, dict)]) 
         res += '\n'
         for child in self.__children.values():
             if full_depth or isinstance(child, ConfiguredModule):
-                res += child._name_structure(suff+'\t', include_config_name, display_params, full_depth)
+                res += child._name_structure(prefix+'\t', include_config_name, display_params, full_depth)
         return res
 
 class ConfiguredModule(ConfigurationNode):
 
-    def __init__(self, parent=None, config_name=None, unique_name=None, params=None, **kwargs):
+    def __init__(self, *args, parent=None, config_name=None, unique_name=None, param_prefix=None, params=None, **kwargs):
         if parent is None:
             if config_name is None: 
                 config_name = type(self).__name__
                 if unique_name is None: unique_name = config_name +'_0'
             elif unique_name is None: unique_name = config_name
 
-        if params is None:
-            params = {}
+        if params is None: params = {}
         params.update(kwargs)
-        super().__init__(parent, config_name, unique_name, params)
-        #self._param_init(*args, **kwargs)
+        super().__init__(parent, config_name, unique_name, param_prefix, params)
+        self._param_init(*args, params=self._ConfigurationNode__params)
 
     def get(self, ctor, name, *args, type_name=None, **kwargs):
         'Creates or gathers object which is initialized by the autoConfig.'
@@ -156,6 +160,22 @@ class ConfiguredModule(ConfigurationNode):
             self._modules[name] = self.confiugre(ctor, *args, type_name, name, **kwargs)
         return self._modules[name]
 
-    def _param_init(self, *args, **kwargs):
+    def _param_init(self, *args, params):
         'This method can be overwritten in order to specify specif parameters from other for a module.'
-        pass
+
+        # Collects default parameters
+        for k, v in self._param_default.items():
+            if k not in params: params[k] = v
+        # Collects positional arguments.
+        for k, v in zip(self._param_args, args):
+            params[k] = v
+
+    @property
+    def _param_default(self):
+        'This method can be overwritten in order to specify default parameters.'
+        return {}
+    
+    @property
+    def _param_args(self):
+        'This method can be overwritten to allow the Module to be initialised by positional arguments. It returns a list with the name of positional arguments.'
+        return []

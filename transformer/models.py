@@ -1,41 +1,62 @@
 import tensorflow as tf
 import tensorflow_probability as tfp
+
+from misc.autoconfig import ConfiguredModule
 from .autoencoder import Model, RegressiveModel, RegressiveAutoencoder
 from .utils import *
-from misc.latent import NormalSpace
+from misc.latent import NormalSpace, ScaledNormalSpace
 '''
 The state autoencoder decodes a set of goals embedded into R^lxd
 Our data will come in the shape of (batch, goal_max, goal_length_max, dimension)
 '''
 
-class StateModel(tf.Module):
-    def __init__(self, 
-    goal_N = 3, state_N = 3, embed_tokens = 512, goal_querry = 16, state_querry = 8, goal_length = 128, state_length = 128,
-    d_model = 128, dff = 512, 
-    num_heads = 8, dropout_rate = 0.1, d_scale = 4):
-        super().__init__()
-        self._goal_querry = goal_querry
-        self._state_querry = state_querry
-        self._goal_length = goal_length
-        self._state_length = state_length
-        self._d_model = d_model
+class StateModel(ConfiguredModule, tf.keras.layers.Layer):
+    @property
+    def _param_default(self):
+        default = dict(
+            goal_N = 3, state_N = 3, embed_tokens = 512, goal_querry = 16, state_querry = 8, goal_length = 128, state_length = 128,
+            d_model = 128, dff = 512, 
+            num_heads = 8, dropout_rate = 0.1, d_scale = 4)
+        return default
 
-        self.goal_autoencoder = Model('regressive',
-            N = goal_N, embed_tokens = embed_tokens, querry = goal_querry, output_length = goal_length, 
-            d_model = d_model, num_heads = num_heads, dff = dff, rate = dropout_rate
-        )
-        self.state_autoencoder = RegressiveAutoencoder(
-            N = state_N, querry = state_querry, output_length = state_length, latent_type = 'normal',
-            d_model = d_model * d_scale, num_heads = num_heads, dff = dff * d_scale, rate = dropout_rate
-        )
-        self.latent_dense = tf.keras.layers.Dense(d_model*d_scale)
-        self.out_dense = tf.keras.layers.Dense(d_model*self._goal_querry)
-        self.goal_latent = NormalSpace(scale_init = 0.15)
+    def __init__(self, **kwargs):
+        '''
+        args:
+            goal_N: number of goal model layers
+            state_N: number of state model layers
+            embed_tokens: size of embed dictionary
+            goal_querry: number of querry tokens in goal model
+            state_querry: number of querry token in state model
+            # NOTE the input_shape = (batch_size, goal_length, state_length)
+            goal_length: length of each goal # TODO migrate to build()
+            state_length: number of goals # TODO migrate
+            d_model: number of neurons in NNs and embedding
+            dff: see SimpleLayer
+            num_heads: number of heads in MHA layers
+            dropout_rate: -
+            d_scale: # TODO repair
+        '''
+        super().__init__(param_prefix='_', **kwargs)
+
+        #self.goal_autoencoder = Model('regressive',
+        #    N = goal_N, embed_tokens = embed_tokens, querry = goal_querry, output_length = goal_length, 
+        #    d_model = d_model, num_heads = num_heads, dff = dff, rate = dropout_rate
+        #)
+        self.goal_autoencoder = self.configure(Model,'regressive', N=self._goal_N, querry=self._goal_querry)
+        #self.state_autoencoder = RegressiveAutoencoder(
+        #    N = state_N, querry = state_querry, output_length = state_length, latent_type = 'normal',
+        #    d_model = d_model * d_scale, num_heads = num_heads, dff = dff * d_scale, rate = dropout_rate
+        #)
+        self.state_autoencoder = self.configure(RegressiveAutoencoder, N=self._state_N, querry=self._state_querry)
+        self.latent_dense = tf.keras.layers.Dense(self._d_model*self._d_scale)
+        self.out_dense = tf.keras.layers.Dense(self._d_model*self._goal_querry)
+        #self.goal_latent = NormalSpace(scale_init = 0.15)
+        self.goal_latent = ScaledNormalSpace(self._d_model)
         
         self._loss = CategoricalLoss()
-        lr = CustomSchedule(d_model, 100)
+        lr = CustomSchedule(self._d_model, 100)
         self.optimizer = tf.optimizers.Adam(lr, beta_1=0.9, beta_2=0.98, epsilon=1e-9)
-        
+
     def encode(self, inp, training):
         # inp.shape == (batch_size, state_length, goal_length)
         # TODO state_length and goal_length could be gathered from input and we could avoid explicitly setting them as a parameters
