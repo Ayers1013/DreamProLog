@@ -87,7 +87,7 @@ class ConfigurationNode:
     # TODO works well but a better defined behavior is necessary
     def __getattr__(self, name):
         length = len(self.__param_prefix)
-        if name == '_ConfigurationNode__params': raise AttributeError
+        if name == '_ConfigurationNode__params': raise AttributeError('ConfiguredModule must be initialized. Just add super().__init__()')
         if name[:length] == self.__param_prefix: name = name[length:]
         if GET_PARAMETER_BY_ATTR and name[0] != '_':
                 return self[name]
@@ -101,6 +101,14 @@ class ConfigurationNode:
                 return node.__params[name]
             node = node.__parent
         raise AttributeError(f'{name}')
+
+    def __get_param(self, name):
+        node = self
+        while node is not None:
+            if name in node.__params:
+                return node.__params[name]
+            node = node.__parent
+        return None
 
     def configure(self, ctor, *args, config_name=None, unique_name=None, **kwargs):
         config_name=config_name if config_name is not None else ctor.__name__
@@ -119,9 +127,10 @@ class ConfigurationNode:
             signature = inspect.signature(ctor)
             for k in list(signature.parameters)[len(args):]:
                 if k == 'args' or k == 'kwargs': continue
-                param = self[k]
-                if param is not None:
-                    ckwargs[k] = param
+                # TODO:ow_order decide about the order
+                param = self.__get_param(k)
+                if k in kwargs: param = kwargs[k]
+                if param is not None: ckwargs[k] = param
             return ctor(*args, **ckwargs)
 
     def _stats(self):

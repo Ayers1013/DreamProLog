@@ -15,8 +15,12 @@ class ProblemLibrary:
         #self.problem=lambda: "leancop/pelletier21.p"
         directory="leancop/theorems/m2n140"
         self._load(directory)
-        print(f'Found {self.total} problem files.')
-        self.problem=lambda: "/".join(str(self.problems[np.random.randint(self.total)]).split("\\"))
+        #print(f'Found {self.total} problem files.')
+        #self.problem=lambda: "/".join(str(self.problems[np.random.randint(self.total)]).split("\\"))
+        #self.problem=lambda: "leancop/pelletier21.p"
+
+    def problem(self):
+        return "leancop/pelletier21.p"
 
     def _load(self, directory):
         directory = pathlib.Path(directory).expanduser()
@@ -29,7 +33,7 @@ class ProblemLibrary:
         return self.problem()
 
 class ProLog(ConfiguredModule):
-    LOCK=threading.Lock()
+    #LOCK=threading.Lock()
     
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -63,7 +67,7 @@ class ProLog(ConfiguredModule):
         self.settings = "[conj, nodef, eager_reduction(1)]"
         problem=self.problems.get()
         query = 'init_python("{}",{},GnnInput, SimpleFeatures, TextFeatures, TextActions, ActionsMask, Result)'.format(problem, self.settings)
-        print("Query:\n   ", query, "\n")
+        #print("Query:\n   ", query, "\n")
         result = list(self.prolog.query(query))[0]
         self.result = result["Result"]
         self.gnnInput = result["GnnInput"]

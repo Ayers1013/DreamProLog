@@ -42,12 +42,13 @@ class StateModel(ConfiguredModule, tf.keras.layers.Layer):
         #    N = goal_N, embed_tokens = embed_tokens, querry = goal_querry, output_length = goal_length, 
         #    d_model = d_model, num_heads = num_heads, dff = dff, rate = dropout_rate
         #)
-        self.goal_autoencoder = self.configure(Model,'regressive', N=self._goal_N, querry=self._goal_querry)
+        self.goal_autoencoder = self.configure(Model,'regressive', N=self._goal_N, querry=self._goal_querry, output_length=self._goal_length)
         #self.state_autoencoder = RegressiveAutoencoder(
         #    N = state_N, querry = state_querry, output_length = state_length, latent_type = 'normal',
         #    d_model = d_model * d_scale, num_heads = num_heads, dff = dff * d_scale, rate = dropout_rate
         #)
-        self.state_autoencoder = self.configure(RegressiveAutoencoder, N=self._state_N, querry=self._state_querry)
+        self.state_autoencoder = self.configure(RegressiveAutoencoder, N=self._state_N, querry=self._state_querry, output_length=self._state_length, 
+            d_model=self._d_model*self._d_scale, dff=self._dff*self._d_scale)
         self.latent_dense = tf.keras.layers.Dense(self._d_model*self._d_scale)
         self.out_dense = tf.keras.layers.Dense(self._d_model*self._goal_querry)
         #self.goal_latent = NormalSpace(scale_init = 0.15)

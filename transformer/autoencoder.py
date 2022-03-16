@@ -146,7 +146,7 @@ class Model(ConfiguredModule, tf.keras.Model):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, param_prefix='_', **kwargs)
         self.autoencoder = self.configure(RegressiveAutoencoder if self._model_type == 'regressive' else Autoencoder)
-        self.enc_embed = tf.keras.layers.Embedding(self._embed_tokens, kwargs['d_model'])
+        self.enc_embed = tf.keras.layers.Embedding(self._embed_tokens, self._d_model)
         self.dense = tf.keras.layers.Dense(self._embed_tokens, activation=None, use_bias=False)
 
 

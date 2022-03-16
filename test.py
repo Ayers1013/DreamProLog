@@ -1,5 +1,6 @@
 from misc._tests import *
 from transformer._tests import *
+from envs._tests import *
 
 #import tensorflow as tf
 import sys

@@ -53,6 +53,8 @@ class CollectDataset:
     return obs
 
   def _convert(self, value):
+    # TODO this pain in the ass
+    return value
     #TODO 
     value = np.array(value)
     if np.issubdtype(value.dtype, np.floating):
@@ -178,4 +180,21 @@ class RewardObs:
   def reset(self):
     obs = self._env.reset()
     obs['reward'] = 0.0
+    return obs
+
+class MultiProcessing:
+  def __init__(self, env, pool):
+    self._env = env
+    self.pool = pool
+
+  def __getattr__(self, name):
+    return getattr(self._env, name)
+
+  def step(self, action):
+    obs, reward, done, info = self.pool.apply(self._env.step, action)
+    obs['reward'] = reward
+    return obs, reward, done, info
+
+  def reset(self):
+    obs = self.pool.apply_async(self._env.reset())
     return obs
