@@ -1,3 +1,4 @@
+from misc.analytics import Analytics, AnalyticsModule
 from .latent import *
 import tensorflow as tf
 
@@ -313,7 +314,25 @@ def test_analytics_0(logger, **kwargs):
             self.log_analytics('output_mean', tf.reduce_mean(y))
             return y
     mylayer = MyLayer(dims=4, N=1)
-    y = mylayer(np.random.rand(4,4))
+    with Analytics():
+        y = mylayer(np.random.rand(4,4))
     #print(mylayer.analytics)
     assert len(mylayer.analytics) == 4
     return 'misc.Model test 0 passed.'
+
+def test_analytics_1(logger, **kwargs):
+    class MyLayer(Module):
+        def __init__(self, dims):
+            super().__init__()
+            self.dims = dims
+
+        def __call__(self, x):
+            self.log_analytics('input', x)
+            return x
+
+    mylayer = MyLayer(4)
+    mylayer(33)
+    assert len(mylayer.analytics) == 0
+    with Analytics():
+        mylayer(24)
+    assert len(mylayer.analytics) == 1
