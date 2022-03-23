@@ -138,7 +138,7 @@ class RegressiveAutoencoder(tf.Module):
         x = self.decoder(x, inp_embed, mask, look_ahead_mask, training)
         return x
 
-class Model(ConfiguredModule, tf.keras.Model):
+class Model(ConfiguredModule, tf.keras.layers.Layer):
     @property
     def _param_args(self):
         return ['model_type']

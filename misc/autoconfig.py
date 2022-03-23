@@ -39,11 +39,11 @@ class Configuration:
 
 class ConfigurationNode:
     __param_prefix = ''
+    __slots__ = ['__parent', '__dict__']
     def __init__(self, parent=None, config_name=None, unique_name=None, param_prefix=None, params=None):
         'Tree structure:'
         super().__init__()
         self.__parent = parent
-        self.__core = parent.__core if parent is not None else self
         self.__children = {}
         self.__config_name = config_name
         self.__unique_name = unique_name

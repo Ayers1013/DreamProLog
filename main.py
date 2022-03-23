@@ -65,7 +65,7 @@ if __name__ == '__main__':
   config, logdir= init_config()
   #print(config)
   from controller import Controller
-  ctrl=Controller(params=config, logdir=logdir)
+  ctrl=Controller(params=vars(config), logdir=logdir)
   #ctrl.simulate()
   #ctrl.train_only_worldModel(2222)
   #ctrl.train_only(10000)

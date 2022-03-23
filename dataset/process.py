@@ -183,7 +183,9 @@ def process_episode(config, logger, mode, train_eps, eval_eps, episode):
     filenames, meta = save_episodes(directory, [episode])
     filename = filenames[0]
     length = len(episode['reward']) - 1
-    score = float(episode['reward'].astype(np.float64).sum())
+    # TODO This modificatioon wasn't here
+    score = float(np.array(episode['reward']).astype(np.float64).sum())
+    #score = float(episode['reward'].astype(np.float64).sum())
     if version==2:
       cache.store(episode, str(filename))
       if meta: cache._meta[str(filename)] = meta
