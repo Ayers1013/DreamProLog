@@ -241,3 +241,55 @@ def test_autoconfig_4(logger, **kwargs):
     a = A(x=3, y=5)
     assert str(a) == 'x:3, y:5'
     return 'misc.autonconfig test 4 (param_suffix) passed.'
+
+def test_autoconfig_5(logger, **kwargs):
+    'Test whether param inheritenc correctly works.'
+    # NOTE autoconfig does not support param inheritence, therefore this test is disabled
+    class NN(ConfiguredModule, tf.keras.layers.Layer):
+        def __init__(self, **kwargs):
+            super().__init__(**kwargs)
+
+            self.layers = [self.configure(tf.keras.layers.Dense, self.dims, activation='relu') for i in range(self.num_layers)]
+            self.end_layer = self.configure(tf.keras.layers.Dense, self.dims, activation='sigmoid')
+            self.string = f'{self.x}'
+
+        def call(self, x):
+            for l in self.layers:
+                x = l(x)
+            x = self.end_layer(x)
+            return x
+
+    class NN2(NN):
+        def __init__(self, **kwargs):
+            super().__init__(**kwargs)
+
+            self.end_layer2 = self.configure(tf.keras.layers.Dense, 1, activation = self.act)
+            self.nn1 = self.configure(NN)
+            self.nn2 = self.configure(NN, unique_name = 'dr_strange')
+            self.nn3 = self.configure(NN, unique_name = 'spiderman')
+
+        def call(self, x):
+            x = super().call(x)
+            x = self.end_layer2(x)
+
+    params = {
+        'dims': 8,
+        'act': 'relu',
+        'num_layers': 3,
+        'x': 42,
+        'NN': {
+            'x': 3
+        },
+        'dr_strange': {
+        },
+        'spiderman': {
+            'x': 7
+        },
+    }
+
+    nn = NN2(params=params)
+    res = ''
+    for layer in nn:
+        res += layer._ConfigurationNode__unique_name
+    assert res == 'NN2_0Dense_0Dense_1Dense_2Dense_3Dense_4NN_0Dense_0Dense_1Dense_2Dense_3dr_strangeDense_0Dense_1Dense_2Dense_3spidermanDense_0Dense_1Dense_2Dense_3'
+    return 'misc.autoconfig test 5 (iterate through submodules) passed.'

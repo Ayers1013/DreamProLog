@@ -86,12 +86,14 @@ class ConfigurationNode:
 
     # TODO works well but a better defined behavior is necessary
     def __getattr__(self, name):
-        length = len(self.__param_prefix)
-        if name == '_ConfigurationNode__params': raise AttributeError('ConfiguredModule must be initialized. Just add super().__init__()')
-        if name[:length] == self.__param_prefix: name = name[length:]
-        if GET_PARAMETER_BY_ATTR and name[0] != '_':
-                return self[name]
-        raise AttributeError(f'The {name} attribute is not found.')
+        try: super().__getattr__(name)
+        except:
+            length = len(self.__param_prefix)
+            if name == '_ConfigurationNode__params': raise AttributeError('ConfiguredModule must be initialized. Just add super().__init__()')
+            if name[:length] == self.__param_prefix: name = name[length:]
+            if GET_PARAMETER_BY_ATTR and name[0] != '_':
+                    return self[name]
+            raise AttributeError(f'The {name} attribute is not found.')
 
     def __getitem__(self, name):
         'Gather parameters by name.'
@@ -109,6 +111,22 @@ class ConfigurationNode:
                 return node.__params[name]
             node = node.__parent
         return None
+
+    def __iter__(self):
+        iter_pointer = []
+        current_node = self
+        while True:
+            yield current_node
+            if len(current_node.__children)>0:
+                iter_pointer.append(iter(current_node.__children.values()))
+            while len(iter_pointer)>0:
+                try: 
+                    current_node = next(iter_pointer[-1])
+                    break
+                except StopIteration:
+                    iter_pointer.pop()
+            if len(iter_pointer) == 0:
+                break
 
     def configure(self, ctor, *args, config_name=None, unique_name=None, **kwargs):
         config_name=config_name if config_name is not None else ctor.__name__
