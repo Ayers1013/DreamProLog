@@ -240,7 +240,7 @@ def test_autoconfig_4(logger, **kwargs):
 
     a = A(x=3, y=5)
     assert str(a) == 'x:3, y:5'
-    return 'misc.autonconfig test 4 (param_suffix) passed.'
+    return 'misc.autoconfig test 4 (param_suffix) passed.'
 
 def test_autoconfig_5(logger, **kwargs):
     'Test whether param inheritenc correctly works.'
@@ -293,3 +293,27 @@ def test_autoconfig_5(logger, **kwargs):
         res += layer._ConfigurationNode__unique_name
     assert res == 'NN2_0Dense_0Dense_1Dense_2Dense_3Dense_4NN_0Dense_0Dense_1Dense_2Dense_3dr_strangeDense_0Dense_1Dense_2Dense_3spidermanDense_0Dense_1Dense_2Dense_3'
     return 'misc.autoconfig test 5 (iterate through submodules) passed.'
+
+from misc import Module
+import numpy as np
+def test_analytics_0(logger, **kwargs):
+    class MyLayer(Module):
+        def __init__(self, *args, **kwargs):
+            super().__init__(*args, **kwargs)
+
+            if self._N>0:
+                self.nested_mylayer = self.configure(MyLayer, N=self._N-1)
+            self.dense0 = self.configure(tf.keras.layers.Dense, self._dims)
+        
+        def call(self, x):
+            if self._N>0:
+                self.nested_mylayer(x)
+            self.log_analytics('input_mean', tf.reduce_mean(x))
+            y = self.dense0(x)
+            self.log_analytics('output_mean', tf.reduce_mean(y))
+            return y
+    mylayer = MyLayer(dims=4, N=1)
+    y = mylayer(np.random.rand(4,4))
+    #print(mylayer.analytics)
+    assert len(mylayer.analytics) == 4
+    return 'misc.Model test 0 passed.'

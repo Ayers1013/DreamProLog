@@ -38,7 +38,7 @@ class Configuration:
 
 
 class ConfigurationNode:
-    __param_prefix = ''
+    __param_prefix = '_'
     __slots__ = ['__parent', '__dict__']
     def __init__(self, parent=None, config_name=None, unique_name=None, param_prefix=None, params=None):
         'Tree structure:'
@@ -47,7 +47,7 @@ class ConfigurationNode:
         self.__children = {}
         self.__config_name = config_name
         self.__unique_name = unique_name
-        self.__param_prefix = param_prefix or ''
+        self.__param_prefix = param_prefix or '_'
 
         if parent is not None: parent.__children[self.__unique_name] = self
 
@@ -56,11 +56,11 @@ class ConfigurationNode:
         if params is not None: self.__params.update(params)
 
     @property
-    def __nested_name(self):
+    def _nested_name(self):
         names = []
         node = self
         while node is not None:
-            names.append(node.__name)
+            names.append(node.__unique_name)
             node = node.__parent
         names.reverse()
         return '/'.join(names)
