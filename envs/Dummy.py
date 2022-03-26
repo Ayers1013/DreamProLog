@@ -3,7 +3,7 @@ import tensorflow as tf
 import threading
 
 class DummyEnv:
-    LOCK=threading.Lock()
+    #LOCK=threading.Lock()
     
     def __init__(self):
         #problems is a generator function
@@ -17,14 +17,18 @@ class DummyEnv:
     @property
     def action_space_size(self)->int:
         return 4
+
+    @property
+    def current_problem(self):
+        return 'Sirius Black'
     
     def step(self,action):
         self.steps+=1
 
         #TODO output obs,reward,done, info
         #TODO BUG#001
-        if(action.shape!=(1)):
-            action=np.argmax(action)
+        #if(action.shape!=(1)):
+        #    action=np.argmax(action)
         
         reward=0.0
 

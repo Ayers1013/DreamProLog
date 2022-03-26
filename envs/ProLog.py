@@ -20,7 +20,8 @@ class ProblemLibrary:
         #self.problem=lambda: "leancop/pelletier21.p"
 
     def problem(self):
-        return "leancop/pelletier21.p"
+        #return "leancop/pelletier21.p"
+        return  "/".join(str(self.problems[np.random.randint(self.total)]).split("\\"))
 
     def _load(self, directory):
         directory = pathlib.Path(directory).expanduser()

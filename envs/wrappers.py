@@ -183,18 +183,20 @@ class RewardObs:
     return obs
 
 class MultiProcessing:
-  def __init__(self, env, pool):
+  def __init__(self, env):
     self._env = env
-    self.pool = pool
 
   def __getattr__(self, name):
     return getattr(self._env, name)
 
+  def async_step(self, action):
+    self.output = self._env.step(action)
+
+  def async_reset(self):
+    self.output = self._env.reset()
+
   def step(self, action):
-    obs, reward, done, info = self.pool.apply(self._env.step, action)
-    obs['reward'] = reward
-    return obs, reward, done, info
+    return self.output
 
   def reset(self):
-    obs = self.pool.apply_async(self._env.reset())
-    return obs
+    return self.output
