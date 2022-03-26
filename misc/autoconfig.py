@@ -47,7 +47,7 @@ class ConfigurationNode:
         self.__children = {}
         self.__config_name = config_name
         self.__unique_name = unique_name
-        self.__param_prefix = param_prefix or '_'
+        self.__param_prefix = '_' if param_prefix is None else param_prefix
 
         if parent is not None: parent.__children[self.__unique_name] = self
 
@@ -90,10 +90,12 @@ class ConfigurationNode:
         except:
             length = len(self.__param_prefix)
             if name == '_ConfigurationNode__params': raise AttributeError('ConfiguredModule must be initialized. Just add super().__init__()')
-            if name[:length] == self.__param_prefix: name = name[length:]
-            if GET_PARAMETER_BY_ATTR and name[0] != '_':
-                    return self[name]
-            raise AttributeError(f'The {name} attribute is not found.')
+            if name[:length] == self.__param_prefix: 
+                name = name[length:]
+                return self[name]
+            #if GET_PARAMETER_BY_ATTR and name[0] != '_':
+            #        return self[name]
+            raise AttributeError(f'The {name} attribute is not found. Available parameters are: {", ".join(list(self.__params.keys()))}')
 
     def __getitem__(self, name):
         'Gather parameters by name.'
@@ -102,7 +104,7 @@ class ConfigurationNode:
             if name in node.__params:
                 return node.__params[name]
             node = node.__parent
-        raise AttributeError(f'{name}')
+        raise AttributeError(f'The {name} attirbute is not found. Available parameters are: {", ".join(list(self.__params.keys()))}')
 
     def __get_param(self, name):
         node = self
@@ -142,9 +144,12 @@ class ConfigurationNode:
                 node.__params.update(kwargs)
 
             ckwargs = {}
-            signature = inspect.signature(ctor)
+            if hasattr(ctor, '__init__'):
+                signature = inspect.signature(ctor.__init__)
+            else:
+                signature = inspect.signature(ctor)
             for k in list(signature.parameters)[len(args):]:
-                if k == 'args' or k == 'kwargs': continue
+                if k in ['self', 'args','kwargs']: continue
                 # TODO:ow_order decide about the order
                 param = self.__get_param(k)
                 if k in kwargs: param = kwargs[k]
@@ -192,7 +197,9 @@ class ConfiguredModule(ConfigurationNode):
 
         # Collects default parameters
         for k, v in self._param_default.items():
-            if k not in params: params[k] = v
+            #if k not in params: params[k] = v
+            if self._ConfigurationNode__get_param(k) is None:
+                params[k] = v
         # Collects positional arguments.
         for k, v in zip(self._param_args, args):
             params[k] = v

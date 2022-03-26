@@ -1,3 +1,4 @@
+from ast import Mod
 from misc.analytics import Analytics, AnalyticsModule
 from .latent import *
 import tensorflow as tf
@@ -100,7 +101,7 @@ from .autoconfig import *
 def test_autoconfig_0(logger, **kwargs):
     class A(ConfiguredModule):
         def __init__(self, *args, **kwargs):
-            ConfiguredModule.__init__(self, *args, **kwargs)
+            ConfiguredModule.__init__(self, param_prefix='', *args, **kwargs)
             self.z = self.x + self.y
 
         def __call__(self):
@@ -108,7 +109,7 @@ def test_autoconfig_0(logger, **kwargs):
         
     class B(ConfiguredModule):
         def __init__(self, *args, **kwargs):
-            ConfiguredModule.__init__(self, *args, **kwargs)
+            ConfiguredModule.__init__(self, param_prefix='', *args, **kwargs)
             self.a = self.configure(A)
 
         def __call__(self):
@@ -128,7 +129,7 @@ def test_autoconfig_0(logger, **kwargs):
 def test_autoconfig_1(logger, **kwargs):
     class NN(ConfiguredModule, tf.keras.layers.Layer):
         def __init__(self, **kwargs):
-            super().__init__(**kwargs)
+            super().__init__(param_prefix='', **kwargs)
 
             self.layers = [self.configure(tf.keras.layers.Dense, self.dims, activation='relu') for i in range(self.num_layers)]
             self.end_layer = self.configure(tf.keras.layers.Dense, self.dims, activation='sigmoid')
@@ -148,7 +149,7 @@ def test_autoconfig_1(logger, **kwargs):
 def test_autoconfig_2(logger, **kwargs):
     class NN(ConfiguredModule, tf.keras.layers.Layer):
         def __init__(self, **kwargs):
-            super().__init__(**kwargs)
+            super().__init__(param_prefix='', **kwargs)
 
             self.layers = [self.configure(tf.keras.layers.Dense, self.dims, activation='relu') for i in range(self.num_layers)]
             self.end_layer = self.configure(tf.keras.layers.Dense, self.dims, activation='sigmoid')
@@ -171,7 +172,7 @@ def test_autoconfig_2(logger, **kwargs):
             x = self.end_layer2(x)
 
     
-    nn = NN2(num_layers=2, dims=8, act='')
+    nn = NN2(num_layers=2, dims=8, act='relu')
     inp = tf.zeros((8,8))
     x = nn(inp)
     logger(nn._name_structure(full_depth = False))
@@ -182,7 +183,7 @@ def test_autoconfig_3(logger, **kwargs):
     # NOTE autoconfig does not support param inheritence, therefore this test is disabled
     class NN(ConfiguredModule, tf.keras.layers.Layer):
         def __init__(self, **kwargs):
-            super().__init__(**kwargs)
+            super().__init__(param_prefix='', **kwargs)
 
             self.layers = [self.configure(tf.keras.layers.Dense, self.dims, activation='relu') for i in range(self.num_layers)]
             self.end_layer = self.configure(tf.keras.layers.Dense, self.dims, activation='sigmoid')
@@ -248,7 +249,7 @@ def test_autoconfig_5(logger, **kwargs):
     # NOTE autoconfig does not support param inheritence, therefore this test is disabled
     class NN(ConfiguredModule, tf.keras.layers.Layer):
         def __init__(self, **kwargs):
-            super().__init__(**kwargs)
+            super().__init__(param_prefix='', **kwargs)
 
             self.layers = [self.configure(tf.keras.layers.Dense, self.dims, activation='relu') for i in range(self.num_layers)]
             self.end_layer = self.configure(tf.keras.layers.Dense, self.dims, activation='sigmoid')
@@ -336,3 +337,40 @@ def test_analytics_1(logger, **kwargs):
     with Analytics():
         mylayer(24)
     assert len(mylayer.analytics) == 1
+    return 'misc.analytics test 0 passed.'
+
+def test_analytics_2(logger, **kwargs):
+    class  MyLayer(Module):
+        def __init__(self, **kwargs):
+            super().__init__(**kwargs)
+            self.layer = tf.keras.layers.Dense(self._dims)
+
+        def call(self, x):
+            self.log_vector_analytics(x, 'input')
+            y = self.layer(x)
+            self.log_vector_analytics(y, 'output')
+            return y
+
+    mylayer = MyLayer(dims=4)
+    with Analytics():
+        mylayer(np.random.rand(4,4))
+    assert len(mylayer.analytics) == 6
+    return 'misc.analytics test 1 passed.'
+
+def test_analytics_3(logger, **kwargs):
+    class MyLayer(Module):
+        def __init__(self, **kwargs):
+            super().__init__(**kwargs)
+            self.layer = tf.keras.layers.Dense(self._dims)
+
+        def call(self, x):
+            y = self.layer(x)
+            self.log_matrix_analytics(tf.expand_dims(self.layer.kernel, axis=0), 'kernel')
+            return y
+
+    mylayer = MyLayer(dims=4)
+    with Analytics():
+        mylayer(np.random.rand(4,4))
+    for k,v in mylayer.analytics.items():
+        logger(k, v)
+    return 'misc.analytics test 2 passed.'

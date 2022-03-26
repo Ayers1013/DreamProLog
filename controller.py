@@ -16,7 +16,7 @@ from misc import ConfiguredModule
 class Controller(ConfiguredModule):
   def __init__(self, **kwargs):
     super().__init__(param_prefix='_', **kwargs)
-    self.logdir = pathlib.Path(self.logdir).expanduser()
+    self.logdir = pathlib.Path(self._logdir).expanduser()
     self.logger = self.preinit()
 
     self.datasetManager = DatasetManager(self.logger, self.get_signature, self._traindir, self._evaldir)
@@ -25,8 +25,8 @@ class Controller(ConfiguredModule):
       def __init__(self, **kwargs):
           self.__dict__.update(kwargs)
     make = lambda mode: make_env(self, self.datasetManager.get_callbacks(mode, Namespace(traindir=self._traindir, evaldir=self._evaldir)))
-    self.train_envs = [make('train') for _ in range(self.envs)]
-    self.eval_envs = [make('eval') for _ in range(self.envs)]
+    self.train_envs = [make('train') for _ in range(self._envs)]
+    self.eval_envs = [make('eval') for _ in range(self._envs)]
 
     self._signature=self.train_envs[0].output_sign
 
@@ -65,8 +65,8 @@ class Controller(ConfiguredModule):
       #assert tf.config.experimental.list_physical_devices('GPU'), message
       for gpu in tf.config.experimental.list_physical_devices('GPU'):
         tf.config.experimental.set_memory_growth(gpu, True)
-    assert self.precision in (16, 32), self.precision
-    if self.precision == 16:
+    assert self._precision in (16, 32), self._precision
+    if self._precision == 16:
       prec.set_policy(prec.Policy('mixed_float16'))
 
     print('Logdir', logdir)
