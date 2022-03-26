@@ -1,7 +1,6 @@
 import tensorflow as tf
 import tensorflow.keras.layers as tfkl
 from tensorflow.keras.layers import Layer
-from misc import Module, Model
 from .utils import *
 
 def scaled_dot_product_attention(q, k, v, mask):
@@ -24,22 +23,21 @@ def scaled_dot_product_attention(q, k, v, mask):
     return output, attention_weights
 
 PRE_LAYER_NORM = True
-class MultiHeadAttention(Module):
-  @property
-  def _param_args(self):
-      return ['d_model', 'num_heads']
-  
-  def __init__(self, *args, **kwargs):
-    super().__init__(*args, **kwargs)
-    assert self._d_model % self._num_heads == 0
+class MultiHeadAttention(Layer):
+  def __init__(self, d_model, num_heads):
+    super(MultiHeadAttention, self).__init__()
+    self.num_heads = num_heads
+    self.d_model = d_model
 
-    self._depth = self._d_model // self._num_heads
+    assert d_model % self.num_heads == 0
 
-    self.wq = tfkl.Dense(self._d_model)
-    self.wk = tfkl.Dense(self._d_model)
-    self.wv = tfkl.Dense(self._d_model)
+    self.depth = d_model // self.num_heads
 
-    self.dense = tfkl.Dense(self._d_model)
+    self.wq = tfkl.Dense(d_model)
+    self.wk = tfkl.Dense(d_model)
+    self.wv = tfkl.Dense(d_model)
+
+    self.dense = tfkl.Dense(d_model)
 
     if PRE_LAYER_NORM:
         self.layerNorms_v = tfkl.LayerNormalization()
@@ -50,7 +48,7 @@ class MultiHeadAttention(Module):
     """Split the last dimension into (num_heads, depth).
     Transpose the result such that the shape is (batch_size, num_heads, seq_len, depth)
     """
-    x = tf.reshape(x, (batch_size, -1, self._num_heads, self._depth))
+    x = tf.reshape(x, (batch_size, -1, self.num_heads, self.depth))
     return tf.transpose(x, perm=[0, 2, 1, 3])
 
   def call(self, v, k, q, mask=None):
@@ -80,32 +78,21 @@ class MultiHeadAttention(Module):
     scaled_attention = tf.transpose(scaled_attention, perm=[0, 2, 1, 3])  # (batch_size, seq_len_q, num_heads, depth)
 
     concat_attention = tf.reshape(scaled_attention,
-                                  (batch_size_kv, -1, self._d_model))  # (batch_size, seq_len_q, d_model)
+                                  (batch_size_kv, -1, self.d_model))  # (batch_size, seq_len_q, d_model)
 
     output = self.dense(concat_attention)  # (batch_size, seq_len_q, d_model)
-
-    #log useful metrics
-    self.log_matrix_analytics(attention_weights, 'attention_matrix')
-    
+    self._attention_weights = attention_weights
     return output, attention_weights
 
-class MLP(Module):
-    @property
-    def _param_args(self):
-        return ['d_model', 'dff']
-
-    @property
-    def _param_default(self):
-        return dict(rate=0.04)
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.dense = tfkl.Dense(self._dff, activation='relu')  # (batch_size, seq_len, dff)
-        self.dense2 = tfkl.Dense(self._d_model)  # (batch_size, seq_len, d_model)
-        self.dropout = tfkl.Dropout(self._rate)
+class MLP(Layer):
+    def __init__(self, d_model, dff, rate=0.04):
+        super().__init__()
+        self.dense = tfkl.Dense(dff, activation='relu')  # (batch_size, seq_len, dff)
+        self.dense2 = tfkl.Dense(d_model)  # (batch_size, seq_len, d_model)
+        self.dropout = tfkl.Dropout(rate)
         self.layernorm = tfkl.LayerNormalization()
-        self.dropout2 = tfkl.Dropout(self._rate)
-        self.dropout3 = tfkl.Dropout(self._rate)
+        self.dropout2 = tfkl.Dropout(rate)
+        self.dropout3 = tfkl.Dropout(rate)
 
     def call(self, inp, training):
         x = self.dropout(inp, training)
@@ -119,19 +106,15 @@ class MLP(Module):
         
         return x + inp
 
-class CrossAttention(Module):
-    @property
-    def _param_args(self):
-        return ['d_model', 'num_heads', 'dff', 'rate']
-    
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+class CrossAttention(Layer):
+    def __init__(self, d_model, num_heads, dff, rate):
+        super().__init__()
 
-        self.mha_v = self.configure(MultiHeadAttention)
-        self.mha_q = self.configure(MultiHeadAttention)
+        self.mha_v = MultiHeadAttention(d_model, num_heads)
+        self.mha_q = MultiHeadAttention(d_model, num_heads)
 
-        self.mlp_v = self.configure(MLP)
-        self.mlp_q = self.configure(MLP)
+        self.mlp_v = MLP(d_model, dff, rate)
+        self.mlp_q = MLP(d_model, dff, rate)
 
     def call(self, v, q, mask, training):
         'mask:  (batch_size, len_q, len_v)'
@@ -147,15 +130,11 @@ class CrossAttention(Module):
 
         return v, q, (att_v, att_q)
 
-class SelfAttention(Module):
-    @property
-    def _param_args(self):
-        return ['d_model', 'num_heads', 'dff', 'rate']
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.mha = self.configure(MultiHeadAttention)
-        self.mlp = self.configure(MLP)
+class SelfAttention(tf.keras.layers.Layer):
+    def __init__(self, d_model, num_heads, dff, rate):
+        super().__init__()
+        self.mha = MultiHeadAttention(d_model, num_heads)
+        self.mlp = MLP(d_model, dff, rate)
 
     def call(self, x, mask, training):
 
@@ -165,15 +144,11 @@ class SelfAttention(Module):
 
         return x, _att
 
-class ConditionedAttention(Module):
-    @property
-    def _param_args(self):
-        return ['d_model', 'num_heads', 'dff', 'rate']
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.mha = self.configure(MultiHeadAttention)
-        self.mlp = self.configure(MLP)
+class ConditionedAttention(tf.keras.layers.Layer):
+    def __init__(self, d_model, num_heads, dff, rate):
+        super().__init__()
+        self.mha = MultiHeadAttention(d_model, num_heads)
+        self.mlp = MLP(d_model, dff, rate)
 
     def call(self, v, q, mask, training):
         
@@ -184,17 +159,13 @@ class ConditionedAttention(Module):
 
         return q, _att
 
-class Attention(Module):
-    @property
-    def _param_args(self):
-        return ['d_model', 'num_heads', 'dff', 'rate']
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.mha1 = self.configure(MultiHeadAttention)
-        self.mha2 = self.configure(MultiHeadAttention)
-        self.mlp1 = self.configure(MLP)
-        self.mlp2 = self.configure(MLP)
+class Attention(tf.keras.layers.Layer):
+    def __init__(self, d_model, num_heads, dff, rate):
+        super().__init__()
+        self.mha1 = MultiHeadAttention(d_model, num_heads)
+        self.mha2 = MultiHeadAttention(d_model, num_heads)
+        self.mlp1 = MLP(d_model, dff, rate)
+        self.mlp2 = MLP(d_model, dff, rate)
 
     def call(self, x, y, mask, look_ahead_mask, training):
         
@@ -209,13 +180,15 @@ class Attention(Module):
         return x, y
 
 class DeepCrossAttention(CrossAttention):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+    def __init__(self, d_model, num_heads, dff, rate):
+        super().__init__(d_model, num_heads, dff, rate)
 
         #self.satt_v = SelfAttention(d_model, num_heads, dff, rate)
-        self.satt_q = self.configure(SelfAttention)
+        self.satt_q = SelfAttention(d_model, num_heads, dff, rate)
 
     def call(self, v, q, mask, training):
+
+        #v = self.satt_v(v, mask, training)
 
         v, q, att = super().call(v, q, mask, training)
         q, _att = self.satt_q(q, None, training)

@@ -54,25 +54,32 @@ class AnalyticsModule:
 def analyse_vector(tensor, name=''):
     metrics = {}
 
-    metrics[name + '_norm'] = tf.norm(tensor, axis=-1)
+    metrics[name + '_norm'] = tf.reduce_mean(tf.norm(tensor, axis=-1))
     metrics[name + '_mean_norm'] = tf.norm(tf.reduce_mean(tensor, axis=-1))
-    metrics[name + '_std_norm'] = tf.norm(tf.reduce_std(tensor, axis=-1))
+    metrics[name + '_std_norm'] = tf.norm(tf.math.reduce_std(tensor, axis=-1))
 
     return metrics
 
 def analyse_matrix(tensor, name=''):
     metrics = {}
 
-    metrics[name + '_norm'] = tf.norm(tensor, axis=(-2, -1))
+    metrics[name + '_rank'] = tf.reduce_mean(tf.linalg.matrix_rank(tensor))
 
-    size = tf.reduce_max(tensor.shape[-2:])
+    return metrics
+
+def analyse_matrix_dep(tensor, name=''):
+    metrics = {}
+
+    metrics[name + '_norm'] = tf.reduce_mean(tf.norm(tensor, axis=(-2, -1)))
+
+    size = tf.cast(tf.reduce_max(tensor.shape[-2:]), tf.float32)
     s = tf.linalg.svd(tensor, compute_uv=False)
-    max_s = tf.reshape(tensor, [-1] + [i for i in range(len(tensor.shape)-1)])[0]
+    max_s = tf.reshape(tensor, [-1] + [i for i in range(len(tensor.shape)-3)])[0]
     mean_s = tf.reduce_mean(max_s)
     metrics[name + '_mean_max_singular_value'] = mean_s
-    metrics[name + '_std_max_singular_value'] = tf.reduce_std(max_s)
+    metrics[name + '_std_max_singular_value'] = tf.math.reduce_std(max_s)
     for i, eps in enumerate([4e3, 1e3, 4e4, 1e4]):
-        metrics[f'name_rank_{i}'] = tf.linalg.matrix_rank(tensor, tol=size*mean_s*eps)
+        metrics[f'name_rank_{i}'] = tf.reduce_mean(tf.linalg.matrix_rank(tensor, tol=size*mean_s*eps))
 
     return metrics
 
