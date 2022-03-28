@@ -1,0 +1,32 @@
+
+logger: empty # empty # wandb
+traindir: Null
+evaldir: Null
+offline_traindir: ''
+offline_evaldir: ''
+seed: 0
+steps: 1000000
+eval_every: 500
+log_every: 10
+reset_every: 0
+gpu_growth: True
+precision: 32
+debug: False
+expl_gifs: False
+
+# Environment
+task: 'prolog_void'
+envs: 1
+action_repeat: 1
+time_limit: 1000
+prefill: 64000
+eval_noise: 0.0
+clip_rewards: 'identity'
+atari_grayscale: False
+
+batch_size: 2
+state_length: 64
+goal_length: 128
+
+dreamer: 
+  path: configs/model_configs/model_1.yaml

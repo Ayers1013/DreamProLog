@@ -16,6 +16,26 @@ def update_nested(to_dict, from_dict):
         else:
             to_dict[k] = v
 
+def search_dict(d):
+    if 'path' in d:
+        v = d['path']
+        assert isinstance(v, str), 'The path name is reserved.'
+        split_text = v.split('.')
+        if len(split_text) == 2:
+            _, ext = split_text
+            if ext == 'yaml':
+                d.update({k: v for k,v in load_config(v).items() if k not in d})
+        del d['path']
+    for k, v in d.items():
+        if isinstance(v, dict):
+            search_dict(v)
+
+def load_config(path):
+    res = yaml.safe_load((pathlib.Path(path)).read_text())
+    search_dict(res)
+    return res
+
+
 class Configuration:
     def __init__(self, config, **kwargs):
         self.__params = {}

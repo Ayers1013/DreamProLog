@@ -1,4 +1,4 @@
-from .autoconfig import ConfiguredModule
+from .autoconfig import ConfiguredModule, load_config
 from .analytics import AnalyticsModule
 
 import tensorflow as tf
