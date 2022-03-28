@@ -30,8 +30,8 @@ class Encoder(Module):
         self.variable_sl = MLP(self._d_model, self._dff, self._rate)
 
         #self.mha = MultiHeadAttention(d_model, num_heads)
-        self.layers = [SelfAttention(self._d_model, self._num_heads, self._dff, self._rate) for _ in range(self._N)]
-        self.q_layer = ConditionedAttention(self._d_model, self._num_heads, self._dff, self._rate)
+        self.layers = [self.configure(SelfAttention) for _ in range(self._N)]
+        self.q_layer = self.configure(ConditionedAttention)
 
         if self._collapse_querry: self.collapse_dense = tf.keras.layers.Dense(self._d_model)
 

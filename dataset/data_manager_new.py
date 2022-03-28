@@ -33,6 +33,10 @@ class DatasetManager:
 
     self.tokenParser = TokenParser()
 
+  def get_callbacks(self, mode, config):
+    return [functools.partial(
+      process_episode, config, self._logger, mode, self._train_eps, self._eval_eps)]
+
   def _sample(self, mode, batch, state_length, goal_length, seed=0):
     random = np.random.RandomState(seed)
     selected_eps=dict(train=self._train_eps, eval=self._eval_eps)[mode]
@@ -80,10 +84,6 @@ class DatasetManager:
         {k: np.stack(v) for k, v in ep1.items()},
         convert_text(selected_eps._meta[problem]['action_space_text'], apply_pad=False)
         )
-  
-  def get_callbacks(self, mode, config):
-    return [functools.partial(
-      process_episode, config, self._logger, mode, self._train_eps, self._eval_eps)]
 
   def signature(self, batch_size, state_length, goal_length):
     
@@ -99,13 +99,50 @@ class DatasetManager:
     return signature
 
   def dataset(self, batch_size, state_length, goal_length, balance=True):
-
     generator = lambda: self._sample(
       'train', batch_size, state_length, goal_length, balance)
     #output_sign=self._output_sign(batch_size, self._train_eps._tagToLength(batch_length))
     dataset = tf.data.Dataset.from_generator(generator, output_signature=self.signature(batch_size, state_length, goal_length))
-    dataset = dataset.prefetch(10)
+    dataset = dataset.prefetch(16)
     return dataset
+
+  def dataset_goal(self, batch_size, goal_length):
+    generator = lambda: self._sample_goal('train', batch_size, goal_length)
+    dataset = tf.data.Dataset.from_generator(generator, output_signature=tf.TensorSpec((batch_size, goal_length+1), dtype=tf.int32))
+    dataset = dataset.prefetch(16)
+    return dataset
+
+  def _sample_goal(self, mode, batch, goal_length, seed=0):
+    random = np.random.RandomState(seed)
+    selected_eps=dict(train=self._train_eps, eval=self._eval_eps)[mode]
+
+    def pad(narr):
+      size = narr.size
+      if size>goal_length:
+          narr = narr[:goal_length]
+          size = goal_length
+      return np.pad(narr, [1, goal_length-size], constant_values= [(299, 0)])
+
+    parser = self.tokenParser
+
+    def convert_text(goal, apply_pad = True):
+      return pad(np.array(parser.parse(str(goal)[1:]), dtype = np.int32))
+
+    while True:
+      sample_ep = lambda: selected_eps.sample_episode(selected_eps.sample_problem())
+
+      goals = []
+      for i in range(batch):
+        sample = sample_ep()
+        length = len(sample['action'])
+        r = random.randint(length)
+        if len(sample['text'][r])>0:
+          goal = random.choice(sample['text'][r])
+          goals.append(convert_text(goal))
+        else:
+          goals.append(np.zeros(goal_length+1, np.int32))
+      
+      yield np.stack(goals)
 
   def logging(self):
     stats=self._train_eps._stats

@@ -5,12 +5,13 @@ from misc.autoconfig import ConfiguredModule
 from .autoencoder import Model, RegressiveModel, RegressiveAutoencoder
 from .utils import *
 from misc.latent import NormalSpace, ScaledNormalSpace
+import misc
 '''
 The state autoencoder decodes a set of goals embedded into R^lxd
 Our data will come in the shape of (batch, goal_max, goal_length_max, dimension)
 '''
 
-class StateModel(ConfiguredModule, tf.keras.layers.Layer):
+class StateModel(misc.Module):
     @property
     def _param_default(self):
         default = dict(
