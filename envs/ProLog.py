@@ -88,8 +88,8 @@ class ProLog(ConfiguredModule):
     def step(self,action):
         self.steps+=1
 
-        if self.step_base == 'action_mask':
-            action = self.action_mask[action]
+        if self.step_base == 'actions_mask':
+            action = self.actions_mask[action]
         elif self.step_base == 'axiom_mask':
             if(self.gnnInput[4][action]==0):
                 action=-1
@@ -196,18 +196,23 @@ class ProLog(ConfiguredModule):
         return sign
 
 
-    def viz_state(self):
+    def viz_state(self, mask=False):
         print("--------------------")
         print("Open goals:")
         for g in self.text_features:
             print("   G:", g)
 
-        print("All actions: ")
-        for a in self.text_actions:
-            print("  AA:", a)
+        if mask:
+            print('Available actions:')
+            for i, (a, m) in enumerate(zip(self.text_actions, self.actions_mask)):
+                if m>=0: print(f'{i}: ', a)
+        else:
+            print("All actions: ")
+            for a in self.text_actions:
+                print("  AA:", a)
 
-        print("Action mask: ")
-        print(self.actions_mask)
+            print("Action mask: ")
+            print(self.actions_mask)
 
 def meta_data(problem_name, image_gnn = False, image_text = True):
     env=ProLog()

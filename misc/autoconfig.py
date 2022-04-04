@@ -1,5 +1,6 @@
 import inspect
 import pathlib
+import argparse
 
 import ruamel.yaml as yaml
 
@@ -15,6 +16,23 @@ def update_nested(to_dict, from_dict):
                 update_nested(to_dict[k], v)
         else:
             to_dict[k] = v
+
+def init_config():
+    try:
+        print('Running the DreamProlog algorithm.')
+        parser = argparse.ArgumentParser()
+        parser.add_argument('--configs', nargs='+', default=[])
+        parser.add_argument('--logdir', default='logdir')
+        args, remaining = parser.parse_known_args()
+    except:
+        print("There was a problem with the provided arguments. The program will run in the default setting:")
+    print('--configs', " ".join(args.configs), '--logdir', args.logdir)
+
+    if len(args.configs)>0: raise NotImplementedError
+    config = load_config('configs/config.yaml')
+    config['logdir'] = args.logdir
+    #print(config)
+    return config
 
 def search_dict(d):
     if 'path' in d:
@@ -156,7 +174,7 @@ class ConfigurationNode:
             index = [child.__config_name for child in self.__children.values()].count(config_name)
             unique_name = config_name + f'_{index}'
 
-        if issubclass(ctor, ConfiguredModule):
+        if inspect.isclass(ctor) and issubclass(ctor, ConfiguredModule):
             return ctor(*args, parent=self, config_name=config_name, unique_name=unique_name, **kwargs)
         else:
             if DEEP_NAME_STRUCTURE:
@@ -164,7 +182,7 @@ class ConfigurationNode:
                 node.__params.update(kwargs)
 
             ckwargs = {}
-            if hasattr(ctor, '__init__'):
+            if inspect.isclass(ctor): # hasattr(ctor, '__init__'):
                 signature = inspect.signature(ctor.__init__)
             else:
                 signature = inspect.signature(ctor)

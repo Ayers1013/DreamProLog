@@ -28,5 +28,5 @@ batch_size: 2
 state_length: 64
 goal_length: 128
 
-dreamer: 
+WorldModel: 
   path: configs/model_configs/model_1.yaml

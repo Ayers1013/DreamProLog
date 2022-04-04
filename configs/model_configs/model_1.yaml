@@ -1,2 +1,18 @@
-num_dims: 100
-output_length: 128
+model_lr: 0.005
+opt_eps: 1e-4
+grad_clip: Null
+weight_decay: 0.
+opt: 'adam'
+d_model: 128
+
+Model:
+  model_type: 'regressive'
+  N : 6
+  embed_tokens : 512
+  querry : 16
+  output_length : 128
+  latent_type : 'normal'
+  d_model : 128
+  dff : 512
+  num_heads : 8
+  rate : 0.1

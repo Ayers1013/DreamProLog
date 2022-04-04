@@ -54,7 +54,6 @@ class Controller(ConfiguredModule):
     logdir = pathlib.Path(self._logdir).expanduser()
     self._traindir = self._traindir or logdir / 'train_eps'
     self._evaldir = self._evaldir or logdir / 'eval_eps'
-    self._act = getattr(tf.nn, self._act)
 
     if self._debug:
       tf.config.experimental_run_functions_eagerly(True)

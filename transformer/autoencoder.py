@@ -166,6 +166,10 @@ class Model(Module):
         self.enc_embed = tf.keras.layers.Embedding(self._embed_tokens, self._d_model)
         self.dense = tf.keras.layers.Dense(self._embed_tokens, activation=None, use_bias=False)
 
+        self.loss = CategoricalLoss()
+        self.all_loss = tf.keras.metrics.Sum()
+        self.add_loss(lambda: self.all_loss.result())
+
 
     def encode(self, inp, training):
         masks = tf.cast(tf.math.equal(inp, 0), tf.float32)[:, tf.newaxis, :, tf.newaxis],
@@ -192,6 +196,18 @@ class Model(Module):
         x = latent.extract(training)
         y = self.decode(x, *outputs[1:], *masks, training)
         return y
+    
+    # This method will be the default call method. The only difference is that it returns the latent space instead of the reconstracted input.
+    def call_new(self, inp, training):
+        outputs, masks = self.encode(inp, training)
+
+        latent = outputs[0]
+        x = latent.extract(training)
+        y = self.decode(x, *outputs[1:], *masks, training)
+        return x, y
+
+    def calc_loss(self, inp, latent, pred):
+        self.all_loss.update_state(self.loss(inp, pred))
         
 #deprecated
 class SetModel(Module):
