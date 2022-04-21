@@ -24,9 +24,9 @@ eval_noise: 0.0
 clip_rewards: 'identity'
 atari_grayscale: False
 
-batch_size: 2
-state_length: 64
-goal_length: 128
+batch_size: 8
+state_length: 16
+goal_length: 64
 
 WorldModel: 
   path: configs/model_configs/model_1.yaml

@@ -10,7 +10,7 @@ Model:
   N : 6
   embed_tokens : 512
   querry : 16
-  output_length : 128
+  output_length : 64
   latent_type : 'normal'
   d_model : 128
   dff : 512

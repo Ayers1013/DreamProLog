@@ -72,6 +72,7 @@ class DatasetManager:
 
     def convert_text(state, apply_pad = True):
       state = np.array([pad(np.array(parser.parse(str(goal)[1:]), dtype = np.int32)) for goal in state[:state_length]])
+      if len(state)==0: state = np.array([pad(np.zeros(0))])
       if apply_pad: state = np.pad(state, [(0, state_length-state.shape[0]), (0,0)])
       return state
 
@@ -81,14 +82,18 @@ class DatasetManager:
       sample_ep=lambda: selected_eps.sample_episode(problem)
       sample = sample_ep()
       ep = {k: [] for k in sample if k != 'action'}
-      for i in range(batch):
-        sample = sample_ep()
-        length = len(sample['action'])
-        
-        #sample episode snapshot along with the next one 
-        r = random.randint(len(sample['action']))
-        {k: ep[k].append(v[r]) if k != 'text' else 
-          ep[k].append(convert_text(v[r])) for k, v in sample.items() if k != 'action'}
+      try:
+        for i in range(batch):
+          sample = sample_ep()
+          length = len(sample['action'])
+          
+          #sample episode snapshot along with the next one 
+          r = random.randint(len(sample['action']))
+          {k: ep[k].append(v[r]) if k != 'text' else 
+            ep[k].append(convert_text(v[r])) for k, v in sample.items() if k != 'action'}
+      except:
+        print(sample)
+        raise Exception
       
       # TODO we use different formats to access ._storage and ._meta
       problem = '/'.join(problem.split('/')[:-1])

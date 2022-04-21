@@ -1,3 +1,4 @@
+from tkinter.tix import InputOnly
 import tensorflow as tf
 
 from transformer import StateModel
@@ -10,12 +11,12 @@ class WorldModel(misc.Module):
   def __init__(self, *args, **kwargs):
     super().__init__(*args, **kwargs)
     self.autoencoder = self.configure(Model)
-    self._model_opt = tools.Optimizer('model', self._model_lr, self._opt_eps, self._grad_clip, self._weight_decay, opt=self._opt)
+    self._model_opt = tf.keras.optimizers.Adam()#tools.Optimizer('model', self._model_lr, self._opt_eps, self._grad_clip, self._weight_decay, opt=self._opt)
 
   def __call__(self, data, training):
     ep, meta = data
     goals = ep['text']
-    inp, target = goals[:, :, :128], goals[:, :, 1:]
+    inp, target = goals[:, :, :self._goal_length], goals[:, :, 1:]
     mask = ep['action_mask']
 
     goal_shape = inp.shape
@@ -24,20 +25,32 @@ class WorldModel(misc.Module):
 
     encoded_goals, pred = self.autoencoder.call_new(inp, training)
     #encoded_goals = tf.reshape(encoded_goals, goal_shape[:2] + (goal_shape[2]*self._d_model,))
-    goal_loss = self.autoencoder.loss(target, pred)
-    meta_enc, pred = self.autoencoder.call_new(meta[:, :128], training)
+    goal_loss = self.autoencoder.calc_loss(inp=target, pred=pred)
+    meta_enc, pred = self.autoencoder.call_new(meta[:, :self._goal_length], training)
     #meta_enc = tf.reshape(meta_enc, (-1, tf.reduce_prod(meta_enc.shape[1:])))
-    meta_loss = self.autoencoder.loss(meta[:, 1:], pred)
+    meta_loss = self.autoencoder.calc_loss(inp=meta[:, 1:], pred=pred)
 
     mask = ep['action_mask']
 
-    return encoded_goals, meta_enc
-
-    
+    return encoded_goals, meta_enc, [goal_loss, meta_loss]
 
     
 
   def train(self, data):
+    with tf.GradientTape() as tape:
+      _, _, losses = self(data, training=True)
+      loss = sum(losses)
+    
+    model_parts = [self.autoencoder]
+    varibs = self.trainable_variables
+    #losses = self.losses
+    print(loss)
+    grads = tape.gradient(loss, varibs)
+    #Logginh metrics
+    metrics = self._model_opt.apply_gradients(zip(grads, varibs)) # dep: (model_tape, tf.squeeze(loss), model_parts)
+    return loss
+
+  def train_dep(self, data):
     ep0, act, ep1, meta = data
 
     losses = {}

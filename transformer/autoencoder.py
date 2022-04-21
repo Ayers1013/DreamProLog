@@ -206,8 +206,10 @@ class Model(Module):
         y = self.decode(x, *outputs[1:], *masks, training)
         return x, y
 
-    def calc_loss(self, inp, latent, pred):
-        self.all_loss.update_state(self.loss(inp, pred))
+    def calc_loss(self, inp=None, latent=None, pred=None):
+        loss = self.loss(inp, pred)
+        self.all_loss.update_state(loss)
+        return loss
         
 #deprecated
 class SetModel(Module):

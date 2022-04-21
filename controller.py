@@ -106,7 +106,7 @@ class Controller(ConfiguredModule):
       else:
         mask=o['action_mask'][0]
         mask_x = np.where(mask>=0, 1, 0)
-        ind = np.random.choice(mask, p=mask_x/np.sum(mask_x))
+        ind = np.random.choice(np.arange(len(mask)), p=mask_x/np.sum(mask_x))
       return ind
     
     random_agent = lambda o, d, s: ([sample_smart(o) for _ in d], s)
